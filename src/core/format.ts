@@ -72,3 +72,11 @@ export function formatResets(iso: string, now: Date): string {
     ? `Resets ${when.slice('today '.length)}`
     : `Resets ${when} at ${formatClock(iso)}`
 }
+
+/** A short duration: "41m", "1h 5m", "<1m". */
+export function formatDuration(ms: number): string {
+  const minutes = Math.floor(ms / 60_000)
+  if (minutes < 1) return '<1m'
+  const hours = Math.floor(minutes / 60)
+  return hours === 0 ? `${String(minutes)}m` : `${String(hours)}h ${String(minutes % 60)}m`
+}

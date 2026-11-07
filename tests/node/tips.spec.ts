@@ -69,7 +69,7 @@ await test('the analyzer finds cold rebuilds, large context, and what skills and
       line('s1', at(1), warmWrite, { isSidechain: true }),
     ]
     writeFileSync(join(root, 'session.jsonl'), lines.join('\n'))
-    const { tips } = await summarize(root, now)
+    const { tips, cacheLifetimeMs } = await summarize(root, now)
 
     assert.equal(tips.last30.coldRebuilds, 1)
     assert.ok(Math.abs(tips.last30.coldWaste - (200_000 * (8 - 0.2)) / 1_000_000) < 1e-9)
@@ -80,6 +80,7 @@ await test('the analyzer finds cold rebuilds, large context, and what skills and
       ['anthropic-skills:docs'],
     )
     assert.deepEqual(tips.last24h.mcpServers, [{ name: 'claude_ai_Linear', cost: 20 }])
+    assert.equal(cacheLifetimeMs, HOUR)
   } finally {
     rmSync(root, { recursive: true, force: true })
   }

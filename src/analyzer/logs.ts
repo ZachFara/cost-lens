@@ -11,7 +11,14 @@ import { daysBefore, localDay } from '../core/days.ts'
 
 import { branchTracker, currentProject, trackBranch } from './branches.ts'
 import type { BranchTracker } from './branches.ts'
-import { addTipsRequest, fileState, noteUses, tipsSummary, tipsTracker } from './tips.ts'
+import {
+  addTipsRequest,
+  fileState,
+  latestCacheLifetimeMs,
+  noteUses,
+  tipsSummary,
+  tipsTracker,
+} from './tips.ts'
 import type { FileState, TipsTracker } from './tips.ts'
 import { PRICES_FETCHED } from '../core/pricing.ts'
 import { withTilde } from '../core/paths.ts'
@@ -252,5 +259,6 @@ export async function summarize(
     projects: topProjects(into.projects, home),
     currentProject: currentProject(into.branches, home),
     tips: tipsSummary(into.tips),
+    cacheLifetimeMs: latestCacheLifetimeMs(into.tips),
   }
 }

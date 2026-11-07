@@ -48,6 +48,7 @@ export type History =
         byModel: { today: SummaryModel[]; last30: SummaryModel[]; allTime: SummaryModel[] }
         projects: { path: string; last30: SummarySpend }[]
         currentProject: { path: string; branches: { branch: string; spend: SummarySpend }[] } | null
+        cacheLifetimeMs: number
         tips: {
           last30: {
             cost: number
@@ -70,6 +71,13 @@ export type History =
     }
   | { status: 'error'; message: string }
 
+/** The main conversation's latest request: when, on which model, with how big a prompt. */
+export interface LastRequest {
+  at: number
+  model: string
+  promptTokens: number
+}
+
 /** The last `gh pr list` in the session's repository. */
 export type PullRequests =
   | { status: 'idle' }
@@ -85,6 +93,9 @@ declare module 'claude-code' {
       pullRequests: Shaped<PullRequests>
       /** This session's requests so far, as each response completes. */
       live: Shaped<SummaryTotals>
+      lastRequest: Shaped<LastRequest | null>
+      isBandHidden: boolean
+      minute: number
     }
   }
 }

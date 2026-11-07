@@ -37,6 +37,7 @@ function summary(output: number) {
     byModel: { today: [], last30: [], allTime: [] },
     projects: [],
     currentProject: null,
+    cacheLifetimeMs: 3_600_000,
     tips: {
       last30: { cost: 0, coldRebuilds: 0, coldWaste: 0, largeContextCost: 0 },
       last24h: { cost: 0, largeContextCost: 0, skills: [], mcpServers: [] },
