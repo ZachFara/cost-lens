@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) 6 (per model), 7 (Projects), 7b (Branches), 7c (PRs), 8 (Now), 9 (cache line), 10 (cold-cache warning), 11 (Tips), 12 (model advisor) and 13 (live prices) are done. Tasks 14 (marketplace), 15 (context grid) and 16 (model recommendation) are done: every task in the plan is complete.
+Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) 6 (per model), 7 (Projects), 7b (Branches), 7c (PRs), 8 (Now), 9 (cache line), 10 (cold-cache warning), 11 (Tips), 12 (model advisor) and 13 (live prices) are done. Tasks 14 (marketplace), 15 (context grid) and 16 (model recommendation) and 17 (Model tab and settings) are done: every task in the plan is complete.
 
 ## Tasks
 
@@ -29,6 +29,8 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 15. **(done)** **Context grid in the Now tab.** Entry: Now tab. Done when: the context window is drawn as a grid of colored squares, filled by category as `/context` draws it (`$.session.usage({ breakdown: 'summary', columns })`'s grid), with a legend; it fits the pane's width. (Owner request, 2026-11-07.)
 16. **(done)** **Model recommendation.** Entry: prompt submit and the Now tab. Done when: each substantive prompt is judged into a tier (Haiku: trivial lookups and formatting; Sonnet: routine coding; Opus: complex reasoning or multi-file work; Fable: the hardest, long-running work); the Now tab shows the recommendation for the last prompt beside the current model; a toast suggests switching when the recommendation differs from the current model, in either direction, at most every ten minutes. Replaces task 12's Sonnet-only advice. (Owner request, 2026-11-07.)
 
+17. **(done)** **Model tab and settings.** Entry: Model tab and `/config`. Done when: the recommendation lives in its own Model tab (latest card, recent recommendations without prompt text, how prompts are judged, the settings' state), no longer in Now; `userConfig` declares "Allow LLM features" (off by default; nothing is sent to a model while off) and "Model recommendation notifications" (on); the owner's own setting is on. (Owner request, 2026-11-07.)
+
 ## Open Questions
 
 None.
@@ -46,6 +48,7 @@ None.
 - Decided in review: the repository is public; personal spend figures and organization details stay out of it; the engine's generated API types are not committed (decision 0004).
 - Folders reach the logs both as `~/Development/...` and as `~/Ark/Development/...` (a link); the analyzer resolves links before matching a project.
 - The engine reports a request's cache writes without their lifetime (`turn.step` usage); the Now tab prices them as one-hour writes, which this machine's sessions use, and takes the session total from `$.session.usage()` (exact, as `/cost`).
+- Owner's settings (2026-11-07): `pluginConfigs.cost-lens.options.llmFeatures = true` in `~/.claude/settings.json`, saved with `chezmoi re-add`; the owner also switched to `/tui fullscreen`.
 - Installed 2026-11-07: `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` (saved with `chezmoi re-add`); a fresh `claude -p "/cost-lens"` with no flags loads the mod.
 - The analyzer reads the owner's full logs in about 3 seconds (2026-11-07), and its totals land within about 5% of the VS Code usage extension's, by category as well as overall.
 - Answered in review (2026-11-07): MIT license; the narrowed lint rule is approved; prices come from Anthropic's pricing page (decision 0006), with a live price table as task 13; the model advisor may send prompt text to Haiku; the cold-cache check only warns and never stops a prompt.
