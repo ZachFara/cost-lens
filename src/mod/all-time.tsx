@@ -27,8 +27,10 @@ export interface Ui {
 }
 
 const CATEGORIES = [
+  // Theme colors, so they follow the person's theme; four different hues
+  // (blue, yellow, red, green) so no two categories look alike.
   { key: 'input', label: 'Input', color: 'suggestion' },
-  { key: 'output', label: 'Output', color: 'claude' },
+  { key: 'output', label: 'Output', color: 'warning' },
   { key: 'cacheWrite', label: 'Cache writes', color: 'error' },
   { key: 'cacheRead', label: 'Cache reads', color: 'success' },
 ] as const
