@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) 6 (per model), 7 (Projects), 7b (Branches), 7c (PRs), 8 (Now), 9 (cache line) and 11 (Tips) are done; every tab is built. Task 10 is next.
+Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) 6 (per model), 7 (Projects), 7b (Branches), 7c (PRs), 8 (Now), 9 (cache line), 10 (cold-cache warning) and 11 (Tips) are done; every tab is built. Task 12 is next.
 
 ## Tasks
 
@@ -20,7 +20,7 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
    7c. **(done)** **PRs tab (current project).** Entry: PRs tab. Done when: the tab lists the repository's pull requests (from `gh`), each with the cost of the work on its head branch, state and title; without `gh` or a GitHub remote it says why. (Owner request, 2026-11-07.)
 8. **(done)** **Now tab: live session.** Entry: Now tab. Done when: a `turn.step` hook records each request's usage; the tab shows model, context used of window, session cost from `$.session.usage()`, this session's cost split and the context categories from `breakdown: 'summary'`. Also at the top: the plan's usage limits from `$.session.usage().rateLimits` (current session, current week for all models, and any per-model week), each with a bar, percent used and reset time, as `/usage` shows them. (Owner request, 2026-11-07.)
 9. **(done)** **Cache band above the prompt.** Entry: the band. Done when: it shows `warm, Nm left` or `cold, next message re-writes Nk tokens ~$X`, refreshes on a timer, uses the time-to-live the analyzer reports (default one hour), and can be hidden.
-10. **Cold-cache warning.** Entry: prompt submit. Done when: a prompt sent while the cache is cold and the context is at least 40k tokens raises a warning toast with the tokens it re-writes and the estimated cost; the prompt is never held, delayed or changed; slash commands and non-composer prompts raise nothing; a failing hook still lets the prompt through.
+10. **(done)** **Cold-cache warning.** Entry: prompt submit. Done when: a prompt sent while the cache is cold and the context is at least 40k tokens raises a warning toast with the tokens it re-writes and the estimated cost; the prompt is never held, delayed or changed; slash commands and non-composer prompts raise nothing; a failing hook still lets the prompt through.
 11. **(done)** **Cold rebuilds and Tips tab.** Entry: Tips tab. Done when: the analyzer reports cold rebuilds and their wasted cost and the share of cost above 150k context; the Tips tab turns them into plain advice; detection tested on fixture logs. Also, as `/usage` shows it, for the last 24 hours: what is contributing to usage (share at large context, so `/clear` when switching tasks; MCP servers' tool definitions per request; computer use), and the share of usage by skill and by MCP server, each labelled approximate. (Owner request, 2026-11-07.)
 12. **Model advisor.** Entry: prompt submit on Opus or Fable. Done when: after the prompt enters, a Haiku classification judges it; routine prompts get one toast suggesting `/model sonnet`, at most every 10 minutes; the prompt is never delayed.
 13. **Live price table.** Entry: Refresh button. Done when: the analyzer fetches Anthropic's pricing page as markdown (decision 0006) at most once a day, parses the model table into the core price table, caches it, and falls back to the built-in snapshot when offline or when the page cannot be parsed; the pane says which prices it used and when they were fetched; parsing tested on a saved copy of the page.
@@ -31,7 +31,7 @@ None.
 
 ## Next steps
 
-- Task 10: cold-cache warning on prompt submit; then 12, 13.
+- Task 12: model advisor; then 13 (live price table).
 - Possible follow-up (not scheduled): skill shares count only the request that invoked a skill, so they read lower than `/usage`, which appears to count the skill's text in later requests too.
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
