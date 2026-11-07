@@ -1,12 +1,20 @@
-import type { EngineInterface, SessionRateLimit } from 'claude-code'
+import type { SessionRateLimit, SessionUsage } from 'claude-code'
 
 import { formatResets, formatShare, formatTokens, formatUsd } from '../core/format.ts'
 import { barWidths } from '../core/format.ts'
 
 import { contextGrid } from './context-grid.tsx'
-import { readLive } from './live.ts'
 import { splitView } from './period-view.tsx'
+import type { SummaryTotals } from '../../types'
+
 import type { Ui } from './ui.ts'
+
+/** What the Now tab draws: read from the engine by the hooks module. */
+export interface NowFacts {
+  usage: SessionUsage
+  model: string
+  live: SummaryTotals
+}
 
 /** The windows `/usage` shows, by the names the API reports them under. */
 function limitLabel(kind: string): string {
@@ -59,31 +67,16 @@ function limitsView(ui: Ui, limits: readonly SessionRateLimit[], columns: number
  * at 80 or more, 20 squares wide. A square takes two cells here, so the full-size grid
  * fits any pane of 40 columns or more.
  */
-function gridColumns(columns: number): number {
+export function gridColumns(columns: number): number {
   return columns >= FULL_GRID_CELLS ? Math.max(columns, FULL_GRID_ASK) : columns
 }
 
 const FULL_GRID_CELLS = 40
 const FULL_GRID_ASK = 80
 
-/** What the Now tab reads from the engine; undefined when the engine cannot answer. */
-async function sessionFacts($: EngineInterface, columns: number) {
-  try {
-    const [usage, model, live] = await Promise.all([
-      $.session.usage({ breakdown: 'summary', columns: gridColumns(columns) }),
-      $.session.model(),
-      readLive($),
-    ])
-    return { usage, model, live }
-  } catch {
-    return undefined
-  }
-}
-
 /** Now: the plan's usage limits, then this session's model, cost, split and context. */
-export async function nowView($: EngineInterface, ui: Ui, columns: number) {
+export function nowView(ui: Ui, facts: NowFacts | undefined, columns: number) {
   const { Box, Text } = ui
-  const facts = await sessionFacts($, columns)
   if (facts === undefined) return <Text dimColor>Session details are not available here.</Text>
   const { usage, model, live } = facts
   const { context } = usage
