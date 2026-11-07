@@ -30,9 +30,9 @@ Then type `/cost-lens` to open the pane. In Claude Code's fullscreen layout (`/t
 - **Today**, **30 days**, **All time**: total cost, cache hit rate, cost by category and by model.
 - **Projects**, **Branches**, **PRs**: where the last 30 days went, and what each branch and pull request of the current repository cost.
 - **Tips**: what drives your usage in the last 24 hours, and the cost of expired-cache rebuilds and large context in the last 30 days.
-- A line above the prompt with the prompt cache's state, a warning when a message re-writes an expired cache, and a suggestion when a routine prompt goes to Opus or Fable.
+- A line above the prompt with the prompt cache's state, a warning when a message re-writes an expired cache, and a model recommendation for each prompt (Haiku, Sonnet, Opus or Fable, by how hard the task looks), shown in the Now tab and suggested when it differs from the model in use.
 
-Costs are estimates from the session logs Claude Code keeps on your machine (`~/.claude/projects`), priced with Anthropic's published prices. Nothing leaves your machine except the pricing page download and the model advisor's short classification request.
+Costs are estimates from the session logs Claude Code keeps on your machine (`~/.claude/projects`), priced with Anthropic's published prices. Nothing leaves your machine except the pricing page download and the model recommendation's short classification request (one small-model call per prompt of 40 characters or more).
 
 ## Load from a working copy instead
 
