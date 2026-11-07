@@ -26,13 +26,23 @@ Then type `/cost-lens` to open the pane. In Claude Code's fullscreen layout (`/t
 
 ## What it shows
 
+- **Model**: the model that fits your last prompts (needs LLM features, below), recent recommendations and how prompts are judged.
 - **Now**: your plan's usage limits (as `/usage` shows them), this session's model, cost, cost split and context.
 - **Today**, **30 days**, **All time**: total cost, cache hit rate, cost by category and by model.
 - **Projects**, **Branches**, **PRs**: where the last 30 days went, and what each branch and pull request of the current repository cost.
 - **Tips**: what drives your usage in the last 24 hours, and the cost of expired-cache rebuilds and large context in the last 30 days.
-- A line above the prompt with the prompt cache's state, a warning when a message re-writes an expired cache, and a model recommendation for each prompt (Haiku, Sonnet, Opus or Fable, by how hard the task looks), shown in the Now tab and suggested when it differs from the model in use.
+- A line above the prompt with the prompt cache's state, a warning when a message re-writes an expired cache, and, with LLM features on, a model recommendation for each prompt (Haiku, Sonnet, Opus or Fable, by how hard the task looks), shown in the Model tab and, optionally, as a notification.
 
-Costs are estimates from the session logs Claude Code keeps on your machine (`~/.claude/projects`), priced with Anthropic's published prices. Nothing leaves your machine except the pricing page download and the model recommendation's short classification request (one small-model call per prompt of 40 characters or more).
+## Settings
+
+In `/config`, under cost-lens (or when installing):
+
+| Setting                            | Default | What it does                                                                                                                                                               |
+| ---------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Allow LLM features                 | off     | Lets a small Claude model (Haiku) read the text of each prompt you type of 40 characters or more, to recommend a model. Off: cost-lens sends none of your data to a model. |
+| Model recommendation notifications | on      | With LLM features on, a notification when the model that fits a prompt differs from the one in use (at most every 10 minutes).                                             |
+
+Costs are estimates from the session logs Claude Code keeps on your machine (`~/.claude/projects`), priced with Anthropic's published prices. Nothing leaves your machine except the pricing page download and, only with LLM features on, the model recommendation's classification request (one small-model call per prompt of 40 characters or more).
 
 ## Load from a working copy instead
 
