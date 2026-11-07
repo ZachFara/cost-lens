@@ -14,6 +14,15 @@ export interface Summary {
   byModel: Record<Period, ModelTotals[]>
   /** The most expensive projects of the last 30 days, by working folder. */
   projects: ProjectSpend[]
+  /** The repository the session runs in, by branch, all time; null when none was asked for. */
+  currentProject: CurrentProject | null
+}
+
+export interface CurrentProject {
+  /** The repository's root folder, with the home folder written as ~. */
+  path: string
+  /** Most expensive first; '' is work outside any branch. */
+  branches: { branch: string; spend: Spend }[]
 }
 
 export interface ProjectSpend {
@@ -76,6 +85,18 @@ function isProjects(value: unknown): value is ProjectSpend[] {
   )
 }
 
+function isCurrentProject(value: unknown): value is CurrentProject | null {
+  if (value === null) return true
+  return (
+    isObject(value) &&
+    typeof value.path === 'string' &&
+    Array.isArray(value.branches) &&
+    value.branches.every(
+      (one) => isObject(one) && typeof one.branch === 'string' && isSpend(one.spend),
+    )
+  )
+}
+
 function isTotals(value: unknown): value is Totals {
   return (
     hasNumbers(value, ['requests', 'unpricedRequests']) &&
@@ -87,6 +108,18 @@ function isTotals(value: unknown): value is Totals {
   )
 }
 
+function isSummary(value: unknown): value is Summary {
+  return (
+    isObject(value) &&
+    typeof value.generatedAt === 'string' &&
+    typeof value.pricesFetched === 'string' &&
+    PERIODS.every((period) => isTotals(value[period])) &&
+    isByModel(value.byModel) &&
+    isProjects(value.projects) &&
+    isCurrentProject(value.currentProject)
+  )
+}
+
 /** Reads the analyzer's output; anything that is not a well-formed summary is rejected. */
 export function parseSummary(text: string): Summary | undefined {
   let value: unknown
@@ -95,10 +128,5 @@ export function parseSummary(text: string): Summary | undefined {
   } catch {
     return undefined
   }
-  if (!isObject(value)) return undefined
-  const { generatedAt, pricesFetched, today, last30, allTime, byModel, projects } = value
-  if (typeof generatedAt !== 'string' || typeof pricesFetched !== 'string') return undefined
-  if (!isTotals(today) || !isTotals(last30) || !isTotals(allTime)) return undefined
-  if (!isByModel(byModel) || !isProjects(projects)) return undefined
-  return { generatedAt, pricesFetched, today, last30, allTime, byModel, projects }
+  return isSummary(value) ? value : undefined
 }

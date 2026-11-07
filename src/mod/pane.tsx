@@ -7,6 +7,7 @@ import { historyView } from './history-view.tsx'
 import { loadHistory, readHistory, refreshHistory, startBackgroundRefresh } from './history.ts'
 import { periodView } from './period-view.tsx'
 import { projectsView } from './projects-view.tsx'
+import { branchesView } from './branches-view.tsx'
 import type { Period } from '../core/summary.ts'
 import type { Actions, Ready, Ui } from './ui.ts'
 
@@ -18,6 +19,8 @@ const TABS: readonly { id: Tab; label: string }[] = [
   { id: 'last30', label: '30 days' },
   { id: 'all', label: 'All time' },
   { id: 'projects', label: 'Projects' },
+  { id: 'branches', label: 'Branches' },
+  { id: 'prs', label: 'PRs' },
   { id: 'tips', label: 'Tips' },
 ]
 
@@ -25,13 +28,14 @@ const TABS: readonly { id: Tab; label: string }[] = [
 const PERIOD_OF: Partial<Record<Tab, Period>> = { today: 'today', last30: 'last30', all: 'allTime' }
 
 /** The tabs that draw the analyzer's summary; opening one starts the first read. */
-const DATA_TABS: ReadonlySet<Tab> = new Set(['today', 'last30', 'all', 'projects'])
+const DATA_TABS: ReadonlySet<Tab> = new Set(['today', 'last30', 'all', 'projects', 'branches'])
 
 /** How a data tab draws the analyzer's summary; undefined for the other tabs. */
 function readyViewFor(tab: Tab, ui: Ui, columns: number) {
   const period = PERIOD_OF[tab]
   if (period !== undefined) return (ready: Ready) => periodView(ui, ready, period, columns)
   if (tab === 'projects') return (ready: Ready) => projectsView(ui, ready)
+  if (tab === 'branches') return (ready: Ready) => branchesView(ui, ready)
   return undefined
 }
 
