@@ -83,6 +83,8 @@ To add a new kind of path, propose it in PROGRESS.md under Open Questions first.
 - A module may hook an event only once without a matcher (`claude plugin validate` refuses a second `on('session.start', …)`). Session start lives in `plugin/src/mod/pane.tsx`; other features export a `start…($)` function it calls.
 - The engine refuses a module that puts `$` in an object (bound, spread, returned or read from one): pass `$` as its own parameter.
 - Settings are `userConfig` in `.claude-plugin/plugin.json`, read once in `plugin/hooks/register.tsx` (`plugin/src/mod/settings.ts`). Features that send the person's data to a model stay behind `llmFeatures`, which is off by default.
+- All hooks, all shared state (atoms) and every call on `$` live in `plugin/hooks/register.tsx`; `plugin/src/mod` holds pure views and helpers that take plain data (`tools/check-mod-calls.ts` enforces it). Anthropic's plugin directory reads engine calls only in that shape: `$.noun.method(...)` called plainly, and `$` or `on` passed whole only to functions of the same file.
+- `plugin/README.md` is what the directory's reviewers read: keep its lists of what the mod runs, reads and sends, and of its hooks, current with every change.
 - Engine tests are `*.test.ts(x)` under `plugin/tests/`; Node tests are `*.spec.ts` under `tests/node/`, so `claude plugin test` never picks up a Node test.
 
 ## Workflow
