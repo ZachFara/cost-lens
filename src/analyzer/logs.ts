@@ -11,6 +11,8 @@ import { daysBefore, localDay } from '../core/days.ts'
 
 import { branchTracker, currentProject, trackBranch } from './branches.ts'
 import type { BranchTracker } from './branches.ts'
+import { addTipsRequest, fileState, noteUses, tipsSummary, tipsTracker } from './tips.ts'
+import type { FileState, TipsTracker } from './tips.ts'
 import { PRICES_FETCHED } from '../core/pricing.ts'
 import { withTilde } from '../core/paths.ts'
 import { addSpend, emptySpend } from '../core/spend.ts'
@@ -65,8 +67,36 @@ export function recordFromLine(line: string): Found | undefined {
   const model = text(message?.model)
   if (!usage || !id || !model || model === '<synthetic>') return undefined
   const record = usageRecord(model, usage)
-  const timestamp = text(entry.timestamp)
-  return { id, record, timestamp, cwd: text(entry.cwd), branch: text(entry.gitBranch) }
+  return {
+    id,
+    record,
+    timestamp: text(entry.timestamp),
+    cwd: text(entry.cwd),
+    branch: text(entry.gitBranch),
+    uses: usesOf(message),
+    isSidechain: entry.isSidechain === true,
+  }
+}
+
+/** A tool call as a tip counts it: `skill:<name>` or `mcp:<server>`; other tools are not. */
+function useOf(block: Json): string | undefined {
+  const name = text(block.name)
+  if (name === 'Skill') {
+    const skill = text(asObject(block.input)?.skill)
+    return skill === undefined ? undefined : `skill:${skill}`
+  }
+  const server = name === undefined ? undefined : /^mcp__(.+?)__/.exec(name)?.[1]
+  return server === undefined ? undefined : `mcp:${server}`
+}
+
+function usesOf(message: Json | undefined): string[] {
+  const content = message?.content
+  if (!Array.isArray(content)) return []
+  return content.flatMap((block) => {
+    const one = asObject(block)
+    const use = one?.type === 'tool_use' ? useOf(one) : undefined
+    return use === undefined ? [] : [use]
+  })
 }
 
 interface Found {
@@ -78,6 +108,10 @@ interface Found {
   cwd: string | undefined
   /** The git branch checked out then; undefined outside a repository. */
   branch: string | undefined
+  /** The skills and MCP servers this line's content called. */
+  uses: string[]
+  /** A subagent's request inside the main session's log. */
+  isSidechain: boolean
 }
 
 function assistantEntry(line: string): Json | undefined {
@@ -103,6 +137,7 @@ interface Accumulator {
   /** Last-30-days spend by working folder. */
   projects: Map<string, Spend>
   branches: BranchTracker
+  tips: TipsTracker
 }
 
 const PROJECTS_SHOWN = 15
@@ -120,15 +155,16 @@ function add(bucket: Bucket, record: UsageRecord): void {
 const LAST_DAYS = 30
 
 /** Every request counts toward All time; dated ones also toward Today and the last 30 days. */
-function addFound(into: Accumulator, found: Found, today: string): void {
+function addFound(into: Accumulator, found: Found, today: string, file: FileState): void {
   const { periods } = into
   add(periods.allTime, found.record)
   trackBranch(into.branches, found)
   const at = found.timestamp === undefined ? Number.NaN : Date.parse(found.timestamp)
-  if (Number.isNaN(at)) return
-  const age = daysBefore(localDay(new Date(at)), today)
+  const age = Number.isNaN(at) ? Number.NaN : daysBefore(localDay(new Date(at)), today)
+  const isRecent = age >= 0 && age < LAST_DAYS
+  addTipsRequest(into.tips, file, { ...found, at, isRecent })
+  if (!isRecent) return
   if (age === 0) add(periods.today, found.record)
-  if (age < 0 || age >= LAST_DAYS) return
   add(periods.last30, found.record)
   if (found.cwd !== undefined) addProject(into.projects, found.cwd, found)
 }
@@ -165,12 +201,15 @@ async function addFile(
   today: string,
 ): Promise<void> {
   const lines = createInterface({ input: createReadStream(path), crlfDelay: Infinity })
+  const file = fileState()
   for await (const line of lines) {
     if (!line.includes('"usage"')) continue
     const found = recordFromLine(line)
-    if (found === undefined || seen.has(found.id)) continue
+    if (found === undefined) continue
+    noteUses(into.tips, found.id, found.uses)
+    if (seen.has(found.id)) continue
     seen.add(found.id)
-    addFound(into, found, today)
+    addFound(into, found, today, file)
   }
 }
 
@@ -191,6 +230,7 @@ export async function summarize(
     periods: emptyPeriods(),
     projects: new Map(),
     branches: branchTracker(project),
+    tips: tipsTracker(now),
   }
   const { periods } = into
   const today = localDay(now)
@@ -211,5 +251,6 @@ export async function summarize(
     },
     projects: topProjects(into.projects, home),
     currentProject: currentProject(into.branches, home),
+    tips: tipsSummary(into.tips),
   }
 }
