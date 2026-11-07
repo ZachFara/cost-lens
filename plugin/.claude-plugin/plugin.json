@@ -1,12 +1,19 @@
 {
   "name": "cost-lens",
+  "displayName": "cost-lens",
   "version": "0.1.0",
+  "description": "See where Claude Code tokens and dollars go, catch cold-cache rebuilds, and pick cheaper models.",
   "license": "MIT",
   "author": {
     "name": "Zachariah Farahany"
   },
+  "homepage": "https://github.com/ZachFara/cost-lens",
+  "repository": "https://github.com/ZachFara/cost-lens",
+  "documentationUrl": "https://github.com/ZachFara/cost-lens#readme",
+  "supportUrl": "https://github.com/ZachFara/cost-lens/issues",
+  "privacyPolicyUrl": "https://github.com/ZachFara/cost-lens/blob/main/plugin/README.md#what-it-sends-and-where",
+  "keywords": ["cost", "usage", "tokens", "prompt cache", "pricing", "model choice"],
   "types": "./types/index.d.ts",
-  "description": "See where Claude Code tokens and dollars go, catch cold-cache rebuilds, and pick cheaper models.",
   "userConfig": {
     "llmFeatures": {
       "type": "boolean",

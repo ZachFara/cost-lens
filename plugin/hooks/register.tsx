@@ -25,12 +25,11 @@ import { paneView } from '../src/mod/pane-view.tsx'
 import type { PaneData, PaneHandlers } from '../src/mod/pane-view.tsx'
 import {
   ANALYZER_TIMEOUT_MS,
-  GH_PR_LIST,
   GH_TIMEOUT_MS,
-  analyzerArgv,
   cacheLifetime,
   errorText,
   loaded,
+  projectArgs,
   readAnalyzerRun,
   readGhRun,
   refreshed,
@@ -87,8 +86,16 @@ async function sessionFolder($: EngineInterface): Promise<string | undefined> {
 
 async function runAnalyzer($: EngineInterface): Promise<AnalyzerRead> {
   try {
-    const argv = analyzerArgv($.plugin.root, await sessionFolder($))
-    return readAnalyzerRun(await $.process.run(argv, { timeoutMs: ANALYZER_TIMEOUT_MS }))
+    const project = projectArgs(await sessionFolder($))
+    const cli = `${$.plugin.root}/src/analyzer/cli.ts`
+    // The plugin's own log reader, at low CPU priority, with today's prices.
+    const run = await $.process.run(
+      ['nice', '-n', '10', 'node', cli, '--live-prices', ...project],
+      {
+        timeoutMs: ANALYZER_TIMEOUT_MS,
+      },
+    )
+    return readAnalyzerRun(run)
   } catch (error) {
     return { error: errorText(error) }
   }
@@ -123,7 +130,21 @@ async function listPullRequests($: EngineInterface): Promise<PullRequests> {
     const repo = await $.session.repo()
     if (repo === null)
       return { status: 'error', message: 'this session is not in a git repository' }
-    return readGhRun(await $.process.run(GH_PR_LIST, { cwd: repo.root, timeoutMs: GH_TIMEOUT_MS }))
+    const run = await $.process.run(
+      [
+        'gh',
+        'pr',
+        'list',
+        '--state',
+        'all',
+        '--limit',
+        '100',
+        '--json',
+        'number,title,state,headRefName',
+      ],
+      { cwd: repo.root, timeoutMs: GH_TIMEOUT_MS },
+    )
+    return readGhRun(run)
   } catch {
     return { status: 'error', message: 'the GitHub CLI (gh) could not run here' }
   }

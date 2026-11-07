@@ -12,28 +12,11 @@ import type { Ready } from './ui.ts'
 export const ANALYZER_TIMEOUT_MS = 5 * 60 * 1000
 export const GH_TIMEOUT_MS = 30 * 1000
 
-/** `gh pr list` for the PRs tab: every state, the newest 100, the fields the tab shows. */
-export const GH_PR_LIST = [
-  'gh',
-  'pr',
-  'list',
-  '--state',
-  'all',
-  '--limit',
-  '100',
-  '--json',
-  'number,title,state,headRefName',
-]
-
 export type AnalyzerRead = { summary: Summary } | { error: string }
 
-/**
- * The analyzer's command: `node` at low CPU priority (nice 10) so a read never competes
- * with the session, with today's prices, for the session's repository when it has one.
- */
-export function analyzerArgv(pluginRoot: string, project: string | undefined): string[] {
-  const argv = ['nice', '-n', '10', 'node', `${pluginRoot}/src/analyzer/cli.ts`, '--live-prices']
-  return project === undefined ? argv : [...argv, '--project', project]
+/** The analyzer's `--project` argument: the session's repository when it has one. */
+export function projectArgs(project: string | undefined): string[] {
+  return project === undefined ? [] : ['--project', project]
 }
 
 function firstLine(stderr: string, fallback: string): string {
