@@ -8,44 +8,45 @@ cost-lens is a Claude Code mod that shows where Claude Code tokens and dollars g
 
 ## Architecture summary
 
-- **Core** (`src/core/`): pure TypeScript. Prices, cost math, aggregation, cold-rebuild detection, formatting. No I/O, no imports outside `src/core/`.
-- **Analyzer** (`src/analyzer/`): a Node CLI (`node src/analyzer/cli.ts`) that reads `~/.claude/projects/**/*.jsonl`, keeps an incremental index in `~/Library/Caches/cost-lens/`, and prints one JSON summary.
-- **Mod** (`hooks/register.tsx` + `src/mod/`): the Claude Code hooks module. Runs in the engine's sandbox: no Node, no DOM, no npm packages. Reaches the outside only through `$`. Starts the analyzer with `$.process.run`.
-- The repository root is the plugin root (`.claude-plugin/plugin.json`, `hooks/hooks.json`).
+- **Core** (`plugin/src/core/`): pure TypeScript. Prices, cost math, aggregation, cold-rebuild detection, formatting. No I/O, no imports outside `plugin/src/core/`.
+- **Analyzer** (`plugin/src/analyzer/`): a Node CLI (`node plugin/src/analyzer/cli.ts`) that reads `~/.claude/projects/**/*.jsonl`, keeps an incremental index in `~/Library/Caches/cost-lens/`, and prints one JSON summary.
+- **Mod** (`plugin/hooks/register.tsx` + `plugin/src/mod/`): the Claude Code hooks module. Runs in the engine's sandbox: no Node, no DOM, no npm packages. Reaches the outside only through `$`. Starts the analyzer with `$.process.run`.
+- The plugin is the `plugin/` folder (`plugin/.claude-plugin/plugin.json`, `plugin/hooks/hooks.json`); everything else in the repository is development tooling and docs, outside what the directory installs (decision 0007).
 
 Module boundaries (enforced by dependency-cruiser in `npm run check`):
 
-| Module          | May import                       |
-| --------------- | -------------------------------- |
-| `src/core/`     | `src/core/` only                 |
-| `src/analyzer/` | `src/core/`, Node built-ins      |
-| `src/mod/`      | `src/core/`, `claude-code` types |
-| `hooks/`        | `src/mod/`, `claude-code` types  |
-| `tools/`        | Node built-ins                   |
-| `tests/`        | anything                         |
+| Module                 | May import                              |
+| ---------------------- | --------------------------------------- |
+| `plugin/src/core/`     | `plugin/src/core/` only                 |
+| `plugin/src/analyzer/` | `plugin/src/core/`, Node built-ins      |
+| `plugin/src/mod/`      | `plugin/src/core/`, `claude-code` types |
+| `plugin/hooks/`        | `plugin/src/mod/`, `claude-code` types  |
+| `tools/`               | Node built-ins                          |
+| `tests/`               | anything                                |
 
 ## Directory layout
 
 Only these paths may exist in the tree (`tools/check-layout.ts` rejects anything else):
 
 ```
-.claude-plugin/plugin.json      plugin manifest
-.claude-plugin/marketplace.json makes the repository a one-plugin marketplace
-.claude-plugin/icon.png          the listing icon (1024 × 1024)
+.claude-plugin/marketplace.json makes the repository a one-plugin marketplace (source ./plugin)
+plugin/.claude-plugin/plugin.json  plugin manifest
+plugin/.claude-plugin/icon.png     the listing icon (1024 × 1024)
+plugin/README.md                what the plugin runs, reads and sends (for the directory)
 docs/media/*.png|gif            README screenshots and the tab tour
 .githooks/                      pre-commit (runs npm run check), commit-msg (commitlint)
 .github/workflows/*.yml         CI (runs npm run check, commitlint)
 .github/pull_request_template.md
 docs/decisions/NNNN-*.md        decision records
-hooks/hooks.json                names the hooks module
-hooks/register.tsx              the hooks module (entry the engine loads)
-src/core/*.ts                   pure shared logic
-src/analyzer/*.ts               Node CLI
-src/mod/*.ts(x)                 mod logic used by hooks/register.tsx
+plugin/hooks/hooks.json                names the hooks module
+plugin/hooks/register.tsx              the hooks module (entry the engine loads)
+plugin/src/core/*.ts                   pure shared logic
+plugin/src/analyzer/*.ts               Node CLI
+plugin/src/mod/*.ts(x)                 mod logic used by plugin/hooks/register.tsx
 tests/node/*.spec.ts            node:test tests (core, analyzer, tools)
-tests/mod/*.test.ts(x)          engine tests, run by `claude plugin test .`
+plugin/tests/*.test.ts(x)          engine tests, run by `claude plugin test plugin`
 tools/*.ts                      repo tooling (layout check)
-types/index.d.ts                the mod's $.state contract
+plugin/types/index.d.ts                the mod's $.state contract
 vendor/                         gitignored; the engine's API types (npm run engine-types)
 root config files, LICENSE and AGENTS.md, CLAUDE.md, DESIGN.md, PROGRESS.md, README.md
 .scratch/                       gitignored; throwaway work only
@@ -56,33 +57,33 @@ To add a new kind of path, propose it in PROGRESS.md under Open Questions first.
 ## How to run, test and lint
 
 - Install: `npm install` (also points git at `.githooks/` through the `prepare` script), then `npm run engine-types` (see Gotchas).
-- Everything: `npm run check`. It runs, in order: `prettier --check`, ESLint (strict type-checked rules plus complexity limits, zero warnings), `tsc` on both tsconfigs, knip (dead code), dependency-cruiser (module boundaries), the layout check, then the tests (`node --test`, `claude plugin validate .`, `claude plugin test .`). The pre-commit hook and CI run exactly this command.
+- Everything: `npm run check`. It runs, in order: `prettier --check`, ESLint (strict type-checked rules plus complexity limits, zero warnings), `tsc` on both tsconfigs, knip (dead code), dependency-cruiser (module boundaries), the layout check, then the tests (`node --test`, `claude plugin validate .`, `claude plugin test plugin`). The pre-commit hook and CI run exactly this command.
 - Fix formatting: `npm run format`.
-- Run the analyzer by hand: `node src/analyzer/cli.ts`.
-- Try the mod in a session: `claude --plugin-dir ~/Development/active/cost-lens`.
+- Run the analyzer by hand: `node plugin/src/analyzer/cli.ts`.
+- Try the mod in a session: `claude --plugin-dir ~/Development/active/cost-lens/plugin`.
 
 ## Gotchas and conventions
 
 - TypeScript is pinned to 6.0.x because typescript-eslint supports TypeScript below 6.1 (decision 0003).
-- The mod's API types are not committed (decision 0004). Run `npm run engine-types` once per machine, after one interactive session has loaded this folder (`claude --plugin-dir .`), which makes the engine write them. Without them `npm run check` fails locally; in CI it skips only the mod type check and the lint of engine-API code. The `claude` CLI is pinned to the version that wrote them; upgrade both together.
+- The mod's API types are not committed (decision 0004). Run `npm run engine-types` once per machine, after one interactive session has loaded this folder (`claude --plugin-dir plugin`), which makes the engine write them. Without them `npm run check` fails locally; in CI it skips only the mod type check and the lint of engine-API code. The `claude` CLI is pinned to the version that wrote them; upgrade both together.
 - `tsconfig.json` is the mod's config (engine runtime: `lib: es2023`, no Node types, JSX with `h`). `tsconfig.node.json` covers Node code. A file belongs to exactly one.
 - Node runs `.ts` files directly; relative imports spell the `.ts` extension.
-- The engine writes `.claude-plugin/types/` whenever it loads the mod from this folder; it is gitignored.
+- The engine writes `plugin/.claude-plugin/types/` (and `plugin/tsconfig.json`) whenever it loads the mod from this folder; it is gitignored.
 - ESLint's `no-misused-promises` argument check is off for engine-API code only (decision 0003): with it, linting any `on(event, hook)` call never finishes. If ESLint seems to hang, a type-aware rule meeting the engine types is the first suspect; bisect with `--rule`.
-- `claude plugin test .` fails when there are no engine tests; `tests/mod/register.test.tsx` is the smoke test that keeps it meaningful.
+- `claude plugin test plugin` fails when there are no engine tests; `plugin/tests/register.test.tsx` is the smoke test that keeps it meaningful.
 - `node_modules/` sits inside the plugin folder; the engine ignores files the hooks module does not import, but `claude plugin validate` reports more than 4096 files.
 - In an engine test, `$.state` persists for the whole test: write one test per surface (loop over surfaces outside `test`) when a test changes state.
 - In an engine test, `$.command.run` takes the full input: `{ command, args: '', origin: { kind: 'composer' }, presentation: { isFullscreen: true, columns: 160 } }`.
 - Element props change between engine releases; `@typescript-eslint/no-deprecated` flags old ones (for example `Text bold`, now `weight`).
-- Check the mod in the real engine without a screen: `claude -p "/cost-lens" --plugin-dir "$PWD"` loads the folder, runs the command and prints its text (a pane reports `no-surface`).
+- Check the mod in the real engine without a screen: `claude -p "/cost-lens" --plugin-dir "$PWD/plugin"` loads the folder, runs the command and prints its text (a pane reports `no-surface`).
 - The owner's sessions load this working copy live (`CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json`), and interactive sessions hot-reload it. Whatever is checked out, including a half-finished branch, is what runs in their sessions. Keep the mod loadable at every commit and switch back to `main` when a session ends.
-- `types/index.d.ts` (the `$.state` contract) must be self-contained: no imports. Types it shares with `src/core/` are written out in both places; code that assigns one to the other in both directions keeps them identical.
+- `plugin/types/index.d.ts` (the `$.state` contract) must be self-contained: no imports. Types it shares with `plugin/src/core/` are written out in both places; code that assigns one to the other in both directions keeps them identical.
 - The engine scans each file for the state it reads: `read($, atom)` must name an atom defined in the same file. Export a small reader function (like `readHistory`) instead of the atom.
 - Where a pane sits is the engine's choice: docked beside the chat only in the fullscreen layout (`/tui fullscreen`, saved per user), above the prompt otherwise. `command.run`'s `presentation.isFullscreen` says which. A pane's `backgroundColor` is set when it opens, so a change shows after reopening.
-- A module may hook an event only once without a matcher (`claude plugin validate` refuses a second `on('session.start', …)`). Session start lives in `src/mod/pane.tsx`; other features export a `start…($)` function it calls.
+- A module may hook an event only once without a matcher (`claude plugin validate` refuses a second `on('session.start', …)`). Session start lives in `plugin/src/mod/pane.tsx`; other features export a `start…($)` function it calls.
 - The engine refuses a module that puts `$` in an object (bound, spread, returned or read from one): pass `$` as its own parameter.
-- Settings are `userConfig` in `.claude-plugin/plugin.json`, read once in `hooks/register.tsx` (`src/mod/settings.ts`). Features that send the person's data to a model stay behind `llmFeatures`, which is off by default.
-- Engine tests are `*.test.ts(x)` under `tests/mod/`; Node tests are `*.spec.ts` under `tests/node/`, so `claude plugin test` never picks up a Node test.
+- Settings are `userConfig` in `.claude-plugin/plugin.json`, read once in `plugin/hooks/register.tsx` (`plugin/src/mod/settings.ts`). Features that send the person's data to a model stay behind `llmFeatures`, which is off by default.
+- Engine tests are `*.test.ts(x)` under `plugin/tests/`; Node tests are `*.spec.ts` under `tests/node/`, so `claude plugin test` never picks up a Node test.
 
 ## Workflow
 

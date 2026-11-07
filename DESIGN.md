@@ -42,23 +42,23 @@ The person at a Claude Code terminal session. Every feature is reached from one 
 
 ### Mod (Claude Code hooks module)
 
-- `hooks/register.tsx` is the only entry the engine loads; it wires hooks from `src/mod/`.
+- `plugin/hooks/register.tsx` is the only entry the engine loads; it wires hooks from `plugin/src/mod/`.
 - Live tracking: a `turn.step` hook reads each request's usage and model; the main loop's last request time and context size drive the band and the cold-cache warning.
 - `$.session.usage()` supplies the session's exact cost and context window; `breakdown: 'summary'` (a local estimate, no API calls) supplies the context categories for the Now tab.
-- Pane, band and toasts use the engine's element tables (`$.ui.resolve`). State a drawing reads lives in `$.state`, declared in `types/index.d.ts`.
+- Pane, band and toasts use the engine's element tables (`$.ui.resolve`). State a drawing reads lives in `$.state`, declared in `plugin/types/index.d.ts`.
 
 ## Module boundaries
 
-| Module          | May import                       | Must not import                           |
-| --------------- | -------------------------------- | ----------------------------------------- |
-| `src/core/`     | `src/core/` only                 | anything else, Node built-ins, packages   |
-| `src/analyzer/` | `src/core/`, Node built-ins      | `src/mod/`, `hooks/`, packages            |
-| `src/mod/`      | `src/core/`, `claude-code` types | `src/analyzer/`, Node built-ins, packages |
-| `hooks/`        | `src/mod/`, `claude-code` types  | `src/analyzer/`, Node built-ins, packages |
-| `tools/`        | Node built-ins                   | `src/`, `hooks/`                          |
-| `tests/`        | anything                         |                                           |
+| Module                 | May import                              | Must not import                                  |
+| ---------------------- | --------------------------------------- | ------------------------------------------------ |
+| `plugin/src/core/`     | `plugin/src/core/` only                 | anything else, Node built-ins, packages          |
+| `plugin/src/analyzer/` | `plugin/src/core/`, Node built-ins      | `plugin/src/mod/`, `plugin/hooks/`, packages     |
+| `plugin/src/mod/`      | `plugin/src/core/`, `claude-code` types | `plugin/src/analyzer/`, Node built-ins, packages |
+| `plugin/hooks/`        | `plugin/src/mod/`, `claude-code` types  | `plugin/src/analyzer/`, Node built-ins, packages |
+| `tools/`               | Node built-ins                          | `plugin/src/`, `plugin/hooks/`                   |
+| `tests/`               | anything                                |                                                  |
 
-The mod runs in the engine's sandbox (no DOM, no Node, no npm packages); the analyzer runs under Node. Shared logic lives in `src/core/` so both can use it.
+The mod runs in the engine's sandbox (no DOM, no Node, no npm packages); the analyzer runs under Node. Shared logic lives in `plugin/src/core/` so both can use it.
 
 ## Data and privacy
 
@@ -66,7 +66,7 @@ Everything stays on the machine. The analyzer reads local logs and writes a loca
 
 ## Installation
 
-The repository root is the plugin root. The owner loads it in every session through `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` (then `chezmoi re-add`). Sharing with other people (a marketplace file and `/plugin install`) is out of scope until the owner asks.
+The plugin is the repository's `plugin/` folder (decision 0007). The owner loads it in every session through `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` (then `chezmoi re-add`). Sharing with other people (a marketplace file and `/plugin install`) is out of scope until the owner asks.
 
 ## Non-goals
 

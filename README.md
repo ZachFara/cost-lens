@@ -61,7 +61,7 @@ Costs are estimates from the session logs Claude Code keeps on your machine (`~/
 Point Claude Code at this folder in `~/.claude/settings.json`:
 
 ```json
-{ "env": { "CLAUDE_CODE_PLUGIN_DIRS": "~/path/to/cost-lens" } }
+{ "env": { "CLAUDE_CODE_PLUGIN_DIRS": "~/path/to/cost-lens/plugin" } }
 ```
 
 Every new session then loads the mod; type `/cost-lens` to open the pane.
@@ -70,10 +70,10 @@ Every new session then loads the mod; type `/cost-lens` to open the pane.
 
 ```sh
 npm install        # also installs the git hooks
-claude --plugin-dir .   # once, so Claude Code writes its mod API types
+claude --plugin-dir plugin   # once, so Claude Code writes its mod API types
 npm run engine-types    # copy them into vendor/ (gitignored)
 npm run check      # everything CI runs
-claude --plugin-dir .   # try the mod in a session
+claude --plugin-dir plugin   # try the mod in a session
 ```
 
 Agents: start with `AGENTS.md`.
