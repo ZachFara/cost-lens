@@ -4,6 +4,10 @@ import type { Totals } from './cost.ts'
 export interface Summary {
   generatedAt: string
   pricesFetched: string
+  /** Requests made on the analyzer's local calendar day. */
+  today: Totals
+  /** Today and the 29 calendar days before it. */
+  last30: Totals
   allTime: Totals
 }
 
@@ -36,13 +40,9 @@ export function parseSummary(text: string): Summary | undefined {
   } catch {
     return undefined
   }
-  if (!isObject(value) || !isTotals(value.allTime)) return undefined
-  if (typeof value.generatedAt !== 'string' || typeof value.pricesFetched !== 'string') {
-    return undefined
-  }
-  return {
-    generatedAt: value.generatedAt,
-    pricesFetched: value.pricesFetched,
-    allTime: value.allTime,
-  }
+  if (!isObject(value)) return undefined
+  const { generatedAt, pricesFetched, today, last30, allTime } = value
+  if (typeof generatedAt !== 'string' || typeof pricesFetched !== 'string') return undefined
+  if (!isTotals(today) || !isTotals(last30) || !isTotals(allTime)) return undefined
+  return { generatedAt, pricesFetched, today, last30, allTime }
 }

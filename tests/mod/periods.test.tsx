@@ -15,16 +15,22 @@ const PANE = {
   },
 } as const
 
-const SUMMARY = {
-  generatedAt: '2026-11-07T12:00:00.000Z',
-  pricesFetched: '2026-11-07',
-  allTime: {
-    requests: 1234,
+function totals(requests: number, output: number) {
+  return {
+    requests,
     unpricedRequests: 0,
     unpricedModels: [],
     tokens: { input: 10, output: 20, cacheWrite5m: 0, cacheWrite1h: 30, cacheRead: 960 },
-    cost: { input: 0, output: 25, cacheWrite: 35, cacheRead: 40 },
-  },
+    cost: { input: 0, output, cacheWrite: 35, cacheRead: 40 },
+  }
+}
+
+const SUMMARY = {
+  generatedAt: '2026-11-07T12:00:00.000Z',
+  pricesFetched: '2026-11-07',
+  today: totals(0, 0),
+  last30: totals(12, 5),
+  allTime: totals(1234, 25),
 }
 
 function ran(stdout: string, exitCode = 0, stderr = '') {
@@ -33,7 +39,7 @@ function ran(stdout: string, exitCode = 0, stderr = '') {
   }
 }
 
-test('opening All time reads the logs and shows the total, split and hit rate', async ($, on) => {
+test('All time reads the logs and shows the total, split and hit rate', async ($, on) => {
   const commands: string[][] = []
   on('process.run', (_, e) => {
     commands.push([...e.argv])
@@ -91,5 +97,27 @@ test('output that is not a summary is reported, not drawn', async ($, on) => {
   expect((await ui.find({ type: 'Text', text: /Could not read/ }))?.text).toBe(
     'Could not read the logs: the analyzer printed something unexpected',
   )
+  await ui.unmount()
+})
+
+test('Today and 30 days show their own period, and an empty day says so', async ($, on) => {
+  let runs = 0
+  on('process.run', () => {
+    runs += 1
+    return ran(JSON.stringify(SUMMARY))
+  })
+  const ui = await $.ui.mount(PANE)
+
+  await ui.press({ key: 'today' })
+  expect((await ui.find({ type: 'Text', text: /No Claude Code use/ }))?.text).toBe(
+    'No Claude Code use today yet.',
+  )
+
+  await ui.press({ key: 'last30' })
+  expect(await ui.find({ type: 'Text', text: '$80.00' })).toBeDefined()
+  expect((await ui.find({ type: 'Text', text: /12 requests/ }))?.text).toBe(
+    '12 requests · cache hit rate 96%',
+  )
+  expect(runs).toBe(1)
   await ui.unmount()
 })
