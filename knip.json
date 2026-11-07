@@ -1,6 +1,11 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["hooks/register.tsx", "tools/*.ts", "tests/**/*.{spec,test}.{ts,tsx}"],
+  "entry": [
+    "hooks/register.tsx",
+    "src/analyzer/cli.ts",
+    "tools/*.ts",
+    "tests/**/*.{spec,test}.{ts,tsx}"
+  ],
   "project": ["hooks/**/*.{ts,tsx}", "src/**/*.{ts,tsx}", "tools/**/*.ts", "tests/**/*.{ts,tsx}"],
   "ignore": ["vendor/**"],
   "ignoreDependencies": ["claude-code"]
