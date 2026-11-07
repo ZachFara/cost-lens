@@ -40,7 +40,7 @@ async function runAnalyzer($: EngineInterface): Promise<Read> {
   try {
     const cli = `${$.plugin.root}/src/analyzer/cli.ts`
     const project = await sessionFolder($)
-    const argv = ['nice', '-n', '10', 'node', cli]
+    const argv = ['nice', '-n', '10', 'node', cli, '--live-prices']
     const run = await $.process.run(
       project === undefined ? argv : [...argv, '--project', project],
       {

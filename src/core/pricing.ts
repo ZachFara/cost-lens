@@ -2,7 +2,7 @@
  * US dollars per million tokens, copied from Anthropic's pricing page
  * (https://platform.claude.com/docs/en/about-claude/pricing.md). Decision 0006.
  */
-export const PRICES_FETCHED = '2026-11-07'
+const PRICES_FETCHED = '2026-11-07'
 
 export interface Rates {
   input: number
@@ -12,7 +12,7 @@ export interface Rates {
   output: number
 }
 
-interface ModelPrice {
+export interface ModelPrice {
   id: string
   rates: Rates
   /** Claude Haiku 5.5: rates for a request whose whole prompt is over 100,000 tokens. */
@@ -46,7 +46,7 @@ const OPUS_4X = rates([5, 6.25, 10, 0.5, 25])
 const OPUS_4_LEGACY = rates([15, 18.75, 30, 1.5, 75])
 const SONNET_4X = rates([3, 3.75, 6, 0.3, 15])
 
-const MODELS: readonly ModelPrice[] = [
+const SNAPSHOT: readonly ModelPrice[] = [
   { id: 'claude-fable-5-1', rates: rates([10, 12.5, 20, 0.25, 50]) },
   { id: 'claude-mythos-5-1', rates: rates([10, 12.5, 20, 0.25, 50]) },
   { id: 'claude-fable-5', rates: rates([10, 12.5, 20, 1, 50]) },
@@ -74,8 +74,29 @@ const MODELS: readonly ModelPrice[] = [
 /** A model id names a priced model exactly, or with a date suffix and/or a bracketed tag. */
 const SUFFIX = /^(-\d{8})?(\[[^\]]*\])?$/
 
+let table: readonly ModelPrice[] = SNAPSHOT
+let tableFetched = PRICES_FETCHED
+
+/**
+ * Prices from a fresh copy of the pricing page (decision 0006), with fast-mode rates kept
+ * from the built-in snapshot, which the page lists in a separate table.
+ */
+export function usePrices(models: readonly ModelPrice[], fetched: string): void {
+  const fastOf = new Map(SNAPSHOT.map((one) => [one.id, one.fast]))
+  table = models.map((one) => {
+    const fast = fastOf.get(one.id)
+    return fast === undefined ? one : { ...one, fast }
+  })
+  tableFetched = fetched
+}
+
+/** The date of the prices in use: the snapshot's, or the day they were fetched. */
+export function pricesFetched(): string {
+  return tableFetched
+}
+
 function modelPrice(model: string): ModelPrice | undefined {
-  return MODELS.find((one) => model.startsWith(one.id) && SUFFIX.test(model.slice(one.id.length)))
+  return table.find((one) => model.startsWith(one.id) && SUFFIX.test(model.slice(one.id.length)))
 }
 
 function scale(base: Rates, inputFactor: number, outputFactor: number): Rates {
