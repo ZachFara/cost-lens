@@ -76,10 +76,12 @@ function tabRow(ui: Ui, selected: Tab, onSelect: (tab: Tab) => void) {
   const { Box, Button } = ui
   return (
     <Box flexDirection="row" flexWrap="wrap" columnGap={1}>
-      {TABS.map((one) => (
+      {TABS.map((one, index) => (
         <Button
           key={one.id}
           label={one.label}
+          // 1 to 9 select a tab while the pane holds the keyboard (ctrl+x tab).
+          hotkey={String(index + 1)}
           variant={one.id === selected ? 'primary' : 'secondary'}
           onPress={() => {
             onSelect(one.id)
