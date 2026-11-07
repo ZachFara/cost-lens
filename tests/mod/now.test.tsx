@@ -105,3 +105,28 @@ test('Now says so when the engine cannot report the session', async ($) => {
   expect(await ui.find({ type: 'Text', text: /not available/ })).toBeDefined()
   await ui.unmount()
 })
+
+for (const [current, expected, color] of [
+  ['claude-opus-5-5', 'Last prompt looks routine: Sonnet 5.5 fits · /model sonnet', 'warning'],
+  ['claude-sonnet-5-5', "Last prompt looks routine: Sonnet 5.5 fits, and you're on it.", 'success'],
+] as const) {
+  test(`Now shows the model that fits the last prompt (on ${current})`, async ($, on) => {
+    on('session.usage', () => ({ value: USAGE }))
+    on('session.model', () => ({ value: current }))
+    on('state.get', { key: 'recommendation' }, () => ({
+      value: {
+        value: {
+          shape: 'recommendation-1',
+          value: { tier: 'routine', model: 'claude-sonnet-5-5', current, at: 0 },
+        },
+        version: 1,
+      },
+    }))
+    const ui = await $.ui.mount(PANE)
+
+    const line = await ui.find({ type: 'Text', text: /^Last prompt looks/ })
+    expect(line?.text).toBe(expected)
+    expect(line?.props.color).toBe(color)
+    await ui.unmount()
+  })
+}
