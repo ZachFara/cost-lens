@@ -1,0 +1,3 @@
+#!/bin/sh
+# Conventional commits, the same rules CI applies to a pull request's commits.
+exec npx --no -- commitlint --edit "$1"

@@ -1,0 +1,3 @@
+#!/bin/sh
+# Runs the same command as CI. Never bypass it (AGENTS.md, ENGINEERING).
+exec npm run --silent check
