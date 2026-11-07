@@ -2,6 +2,7 @@
   "name": "cost-lens",
   "version": "0.1.0",
   "license": "MIT",
+  "author": { "name": "Zachariah Farahany" },
   "types": "./types/index.d.ts",
   "description": "See where Claude Code tokens and dollars go, catch cold-cache rebuilds, and pick cheaper models."
 }

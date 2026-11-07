@@ -10,7 +10,7 @@ const ALLOWED: readonly RegExp[] = [
   /^(package\.json|package-lock\.json|tsconfig\.json|tsconfig\.node\.json|knip\.json)$/,
   /^(eslint\.config\.js|commitlint\.config\.js|\.dependency-cruiser\.cjs)$/,
   /^(\.prettierrc\.json|\.prettierignore|\.gitignore|\.nvmrc)$/,
-  /^\.claude-plugin\/plugin\.json$/,
+  /^\.claude-plugin\/(plugin|marketplace)\.json$/,
   /^\.githooks\/(pre-commit|commit-msg)$/,
   /^\.github\/workflows\/[a-z0-9-]+\.yml$/,
   /^\.github\/pull_request_template\.md$/,
