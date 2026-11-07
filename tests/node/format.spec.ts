@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { barWidths, formatCount, formatShare, formatUsd } from '../../src/core/format.ts'
+import {
+  barWidths,
+  formatClock,
+  formatCount,
+  formatShare,
+  formatUsd,
+} from '../../src/core/format.ts'
 
 await test('money, counts and shares read the way people write them', () => {
   assert.equal(formatUsd(1234.5), '$1,234.50')
@@ -20,4 +26,9 @@ await test('bar widths are proportional and always fill the bar exactly', () => 
   )
   assert.equal(widths[0], 0)
   assert.deepEqual(barWidths([0, 0], 10), [0, 0])
+})
+
+await test('timestamps show as local wall-clock time', () => {
+  const local = new Date(2026, 10, 7, 9, 5)
+  assert.equal(formatClock(local.toISOString()), '09:05')
 })

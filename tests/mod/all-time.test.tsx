@@ -44,8 +44,8 @@ test('opening All time reads the logs and shows the total, split and hit rate', 
   await ui.press({ key: 'all' })
 
   expect(commands).toHaveLength(1)
-  expect(commands[0]?.[0]).toBe('node')
-  expect(commands[0]?.[1]).toMatch(/src\/analyzer\/cli\.ts$/)
+  expect(commands[0]?.slice(0, 4)).toEqual(['nice', '-n', '10', 'node'])
+  expect(commands[0]?.[4]).toMatch(/src\/analyzer\/cli\.ts$/)
   expect((await ui.find({ type: 'Text', text: '$100.00' }))?.text).toBe('$100.00')
   expect((await ui.find({ type: 'Text', text: /1,234 requests/ }))?.text).toBe(
     '1,234 requests · cache hit rate 96%',

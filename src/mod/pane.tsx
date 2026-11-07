@@ -4,7 +4,7 @@ import type { On } from 'claude-code'
 import type { Tab } from '../../types'
 
 import { allTimeView } from './all-time.tsx'
-import { loadHistory, readHistory } from './history.ts'
+import { loadHistory, readHistory, refreshHistory, startBackgroundRefresh } from './history.ts'
 
 const PANE_ID = 'cost-lens'
 
@@ -26,6 +26,7 @@ export function registerPane(on: On): void {
       name: 'cost-lens',
       description: 'Show where Claude Code tokens and dollars go',
     })
+    startBackgroundRefresh($)
     return next(e)
   })
 
@@ -45,8 +46,13 @@ export function registerPane(on: On): void {
     const current = TABS.find((one) => one.id === tab) ?? TABS[0]
     const body =
       tab === 'all' ? (
-        allTimeView(ui, await readHistory($), e.props.bodyColumns, () => {
-          void loadHistory($)
+        allTimeView(ui, await readHistory($), e.props.bodyColumns, {
+          load: () => {
+            void loadHistory($)
+          },
+          refresh: () => {
+            void refreshHistory($)
+          },
         })
       ) : (
         <Text weight="semibold">{current?.label}</Text>

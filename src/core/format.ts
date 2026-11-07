@@ -15,6 +15,13 @@ export function formatShare(share: number): string {
   return `${String(Math.round(share * 100))}%`
 }
 
+/** An ISO timestamp as local wall-clock time, `HH:MM`. */
+export function formatClock(iso: string): string {
+  const date = new Date(iso)
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
 /**
  * Splits `width` cells among values in proportion, using largest remainders so the
  * widths always add up to `width` (or to 0 when every value is 0).
