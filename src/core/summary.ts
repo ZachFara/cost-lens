@@ -17,6 +17,8 @@ export interface Summary {
   /** The repository the session runs in, by branch, all time; null when none was asked for. */
   currentProject: CurrentProject | null
   tips: Tips
+  /** The cache lifetime of the latest request that wrote the cache (5 minutes or 1 hour). */
+  cacheLifetimeMs: number
 }
 
 /** What a skill or MCP server's calls cost: the requests that called it, so shares overlap. */
@@ -157,7 +159,8 @@ function isSummary(value: unknown): value is Summary {
     isByModel(value.byModel) &&
     isProjects(value.projects) &&
     isCurrentProject(value.currentProject) &&
-    isTips(value.tips)
+    isTips(value.tips) &&
+    typeof value.cacheLifetimeMs === 'number'
   )
 }
 

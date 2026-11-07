@@ -1,5 +1,6 @@
 import { costOf, totalCost } from '../core/cost.ts'
 import type { UsageRecord } from '../core/cost.ts'
+import { DEFAULT_CACHE_LIFETIME_MS } from '../core/cache.ts'
 import type { Tips, UseCost } from '../core/summary.ts'
 import { FIVE_MINUTES_MS, cacheLifetimeMs, coldRebuildWaste, isLargeContext } from '../core/tips.ts'
 
@@ -34,6 +35,8 @@ export interface TipsTracker {
   uses: Map<string, Set<string>>
   /** Last-24-hours cost by message id, for attributing to what it called. */
   dayCosts: Map<string, number>
+  /** The latest cache write: when, and how long it was to last. */
+  latestWrite: { at: number; lifetimeMs: number } | undefined
 }
 
 export function tipsTracker(now: Date): TipsTracker {
@@ -45,6 +48,7 @@ export function tipsTracker(now: Date): TipsTracker {
     },
     uses: new Map(),
     dayCosts: new Map(),
+    latestWrite: undefined,
   }
 }
 
@@ -67,6 +71,11 @@ function noteColdRebuild(tracker: TipsTracker, file: FileState, request: TipsReq
   }
   file.lastAt = request.at
   file.lifetimeMs = cacheLifetimeMs(request.record, file.lifetimeMs)
+  const { cacheWrite5m, cacheWrite1h } = request.record.usage
+  const latest = tracker.latestWrite
+  if (cacheWrite5m + cacheWrite1h > 0 && (latest === undefined || request.at > latest.at)) {
+    tracker.latestWrite = { at: request.at, lifetimeMs: file.lifetimeMs }
+  }
 }
 
 /** Adds one request (once per message) to the 30-day and 24-hour tips. */
@@ -91,6 +100,11 @@ function ranked(costs: Map<string, number>): UseCost[] {
     .map(([name, cost]) => ({ name, cost }))
     .sort((a, b) => b.cost - a.cost)
     .slice(0, USES_SHOWN)
+}
+
+/** The latest write's cache lifetime, or one hour when the logs show none. */
+export function latestCacheLifetimeMs(tracker: TipsTracker): number {
+  return tracker.latestWrite?.lifetimeMs ?? DEFAULT_CACHE_LIFETIME_MS
 }
 
 export function tipsSummary(tracker: TipsTracker): Tips {

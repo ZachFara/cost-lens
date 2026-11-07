@@ -1,9 +1,11 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, On } from 'claude-code'
 
-import { emptyTotals, plusRecord } from '../core/cost.ts'
+import { emptyTotals, plusRecord, promptTokens } from '../core/cost.ts'
 import type { UsageRecord } from '../core/cost.ts'
 import type { SummaryTotals } from '../../types'
+
+import { recordMainRequest } from './cache-band.tsx'
 
 // Change the tag when the totals' fields change: it declines what an earlier version stored.
 const live = atom({ plugin: 'cost-lens', key: 'live' } as const, emptyTotals(), {
@@ -46,7 +48,17 @@ export function registerLive(on: On): void {
   on('turn.step', async function* ($, e, next) {
     const result = yield* next(e)
     const usage = result.usage
-    if (usage !== null) await update($, live, (totals) => plusRecord(totals, stepRecord(usage)))
+    if (usage === null) return result
+    const record = stepRecord(usage)
+    await update($, live, (totals) => plusRecord(totals, record))
+    if (e.agentId === undefined) {
+      const at = await $.clock.now()
+      await recordMainRequest($, {
+        at,
+        model: usage.model,
+        promptTokens: promptTokens(record.usage),
+      })
+    }
     return result
   })
 }

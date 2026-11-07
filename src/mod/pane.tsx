@@ -11,6 +11,7 @@ import { branchesView } from './branches-view.tsx'
 import { prsView } from './prs-view.tsx'
 import { nowView } from './now-view.tsx'
 import { tipsView } from './tips-view.tsx'
+import { startBandClock } from './cache-band.tsx'
 import { loadPullRequests, readPullRequests } from './pull-requests.ts'
 import type { Period } from '../core/summary.ts'
 import type { Actions, Ready, Ui } from './ui.ts'
@@ -123,12 +124,16 @@ export function registerPane(on: On): void {
     await $.command.register({
       name: 'cost-lens',
       description: 'Show where Claude Code tokens and dollars go',
+      argumentHint: '[band]',
     })
     startBackgroundRefresh($)
+    startBandClock($)
     return next(e)
   })
 
-  on('command.run', { command: 'cost-lens' }, async ($, e) => {
+  on('command.run', { command: 'cost-lens' }, async ($, e, next) => {
+    // `/cost-lens band` belongs to the cache line (cache-band.tsx).
+    if (e.args.trim() === 'band') return next(e)
     // Transparent: the terminal's own theme shows through, as it does behind the chat.
     const opened = await $.ui.open({
       id: PANE_ID,
