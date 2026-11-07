@@ -1,6 +1,6 @@
 # 0005. The repository root is the plugin root
 
-Date: 2026-11-07. Status: accepted.
+Date: 2026-11-07. Status: superseded by 0007.
 
 ## Context
 
