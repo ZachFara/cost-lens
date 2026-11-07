@@ -22,7 +22,7 @@ const CATEGORIES = [
   { key: 'cacheRead', label: 'Cache reads', color: 'success' },
 ] as const
 
-function splitView(ui: Ui, totals: Totals, columns: number): RenderElement {
+export function splitView(ui: Ui, totals: Totals, columns: number): RenderElement {
   const { Box, Text } = ui
   const total = totalCost(totals.cost)
   const values = CATEGORIES.map((category) => totals.cost[category.key])

@@ -6,6 +6,8 @@ import {
   formatClock,
   formatCount,
   formatShare,
+  formatResets,
+  formatTokens,
   formatUsd,
   formatWhen,
 } from '../../src/core/format.ts'
@@ -39,4 +41,16 @@ await test('last active reads as a time today, or a date before', () => {
   assert.equal(formatWhen(new Date(2026, 10, 7, 9, 30).toISOString(), now), 'today 09:30')
   assert.equal(formatWhen(new Date(2026, 10, 5, 23, 0).toISOString(), now), 'Nov 5')
   assert.equal(formatWhen('', now), '')
+})
+
+await test('token counts read short, and reset times read like /usage', () => {
+  assert.equal(formatTokens(950), '950')
+  assert.equal(formatTokens(12_345), '12.3k')
+  assert.equal(formatTokens(1_234_567), '1.2M')
+  const now = new Date(2026, 10, 7, 11, 0)
+  assert.equal(formatResets(new Date(2026, 10, 7, 12, 40).toISOString(), now), 'Resets 12:40')
+  assert.equal(
+    formatResets(new Date(2026, 10, 12, 22, 59).toISOString(), now),
+    'Resets Nov 12 at 22:59',
+  )
 })
