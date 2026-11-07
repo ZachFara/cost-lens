@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) 6 (per model), 7 (Projects), 7b (Branches), 7c (PRs), 8 (Now), 9 (cache line), 10 (cold-cache warning), 11 (Tips), 12 (model advisor) and 13 (live prices) are done. Tasks 14 (marketplace), 15 (context grid) and 16 (model recommendation) and 17 (Model tab and settings) are done: every task in the plan is complete.
+Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) 6 (per model), 7 (Projects), 7b (Branches), 7c (PRs), 8 (Now), 9 (cache line), 10 (cold-cache warning), 11 (Tips), 12 (model advisor) and 13 (live prices) are done. Tasks 14 (marketplace), 15 (context grid) and 16 (model recommendation) and 17 (Model tab and settings) are done, and launch prep (18) is done. Publishing (19) waits on the owner.
 
 ## Tasks
 
@@ -31,13 +31,16 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 
 17. **(done)** **Model tab and settings.** Entry: Model tab and `/config`. Done when: the recommendation lives in its own Model tab (latest card, recent recommendations without prompt text, how prompts are judged, the settings' state), no longer in Now; `userConfig` declares "Allow LLM features" (off by default; nothing is sent to a model while off) and "Model recommendation notifications" (on); the owner's own setting is on. (Owner request, 2026-11-07.)
 
+18. **(done)** **Launch prep.** Tab hotkeys 1 to 9 (PR #24); the full-size context grid in docked panes (PR #25); listing icon, screenshots and tab tour GIF with project names irreversibly blurred, README Screenshots section, `claude plugin validate --profile directory .` passing (PR #26). (Owner request, 2026-11-07.)
+19. **Publish.** Tag and release `cost-lens--v0.1.0` (`claude plugin tag . --push`, `gh release create`); submit to Anthropic's plugin directory (https://clau.de/plugin-directory-submission, linked from the official marketplace README); PRs adding cost-lens to hamzafer/claude-code-mods (`docs/community.md` row and `community.json` entry) and whyashthakker/awesome-claude-code-mods (`docs/COMMUNITY_MODS.md` row, then `python3 scripts/build-readme.py`); a launch post on r/ClaudeAI and a Show HN. Blocked 2026-11-07: Claude Code's auto mode refuses actions that create public surfaces on its own; the owner approves them one by one in the default permission mode, or does them by hand.
+
 ## Open Questions
 
 None.
 
 ## Next steps
 
-- Nothing scheduled. Candidates: skill shares closer to `/usage` (count a skill's text in later requests); let the mod's own estimates (cache line, advisor, Now split) use the live prices too (today they use the built-in snapshot).
+- Task 19 (publish), with the owner. Other candidates: skill shares closer to `/usage` (count a skill's text in later requests); let the mod's own estimates (cache line, advisor, Now split) use the live prices too (today they use the built-in snapshot).
 - Possible follow-up (not scheduled): skill shares count only the request that invoked a skill, so they read lower than `/usage`, which appears to count the skill's text in later requests too.
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
@@ -49,6 +52,7 @@ None.
 - Folders reach the logs both as `~/Development/...` and as `~/Ark/Development/...` (a link); the analyzer resolves links before matching a project.
 - The engine reports a request's cache writes without their lifetime (`turn.step` usage); the Now tab prices them as one-hour writes, which this machine's sessions use, and takes the session total from `$.session.usage()` (exact, as `/cost`).
 - Owner's settings (2026-11-07): `pluginConfigs.cost-lens.options.llmFeatures = true` in `~/.claude/settings.json`, saved with `chezmoi re-add`; the owner also switched to `/tui fullscreen`.
+- Launch media recipe: run Claude Code in a detached tmux session (`tmux new-session -d -s <name> -x 200 -y 56 -e COLORTERM=truecolor claude`), drive it with `tmux send-keys`, capture frames with `tmux capture-pane -e -p`, turn the ANSI into HTML (private text replaced, then blurred) and screenshot it with headless Chrome in its own `--user-data-dir`; ffmpeg makes the GIF. `ctrl+x tab` gives the keyboard to the cache line first and to the pane on the second press.
 - Installed 2026-11-07: `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` (saved with `chezmoi re-add`); a fresh `claude -p "/cost-lens"` with no flags loads the mod.
 - The analyzer reads the owner's full logs in about 3 seconds (2026-11-07), and its totals land within about 5% of the VS Code usage extension's, by category as well as overall.
 - Answered in review (2026-11-07): MIT license; the narrowed lint rule is approved; prices come from Anthropic's pricing page (decision 0006), with a live price table as task 13; the model advisor may send prompt text to Haiku; the cold-cache check only warns and never stops a prompt.
