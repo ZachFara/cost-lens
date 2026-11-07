@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process'
 
 const ALLOWED: readonly RegExp[] = [
   /^(AGENTS|CLAUDE|DESIGN|PROGRESS|README)\.md$/,
+  /^LICENSE$/,
   /^(package\.json|package-lock\.json|tsconfig\.json|tsconfig\.node\.json|knip\.json)$/,
   /^(eslint\.config\.js|commitlint\.config\.js|\.dependency-cruiser\.cjs)$/,
   /^(\.prettierrc\.json|\.prettierignore|\.gitignore|\.nvmrc)$/,

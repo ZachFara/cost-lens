@@ -2,6 +2,7 @@
   "name": "cost-lens",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Claude Code mod: see where tokens and dollars go, catch cold-cache rebuilds, pick cheaper models.",
   "type": "module",
   "engines": {

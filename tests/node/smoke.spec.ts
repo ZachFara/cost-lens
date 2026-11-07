@@ -28,3 +28,12 @@ await test('engine types are recognized by the Claude Code version in their head
   assert.equal(versionOf('// Written by Claude Code 2.1.319.\n// more'), '2.1.319')
   assert.equal(versionOf('export {}'), undefined)
 })
+
+await test('the license is declared the same way everywhere', () => {
+  const manifest = readJson('.claude-plugin/plugin.json') as { license: string }
+  const pkg = readJson('package.json') as { license: string }
+  const text = readFileSync(new URL('../../LICENSE', import.meta.url), 'utf8')
+  assert.equal(manifest.license, 'MIT')
+  assert.equal(pkg.license, 'MIT')
+  assert.match(text, /^MIT License/)
+})

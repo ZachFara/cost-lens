@@ -15,3 +15,7 @@ claude --plugin-dir .   # try the mod in a session
 ```
 
 Agents: start with `AGENTS.md`.
+
+## License
+
+MIT. See `LICENSE`.
