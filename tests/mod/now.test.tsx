@@ -105,3 +105,22 @@ test('Now says so when the engine cannot report the session', async ($) => {
   expect(await ui.find({ type: 'Text', text: /not available/ })).toBeDefined()
   await ui.unmount()
 })
+
+for (const [bodyColumns, asked] of [
+  [50, 80],
+  [120, 120],
+  [30, 30],
+] as const) {
+  test(`a ${String(bodyColumns)}-column pane asks for a ${String(asked)}-column context grid`, async ($, on) => {
+    const widths: (number | undefined)[] = []
+    on('session.usage', (_, e) => {
+      widths.push(e.columns)
+      return { value: USAGE }
+    })
+    on('session.model', () => ({ value: 'claude-opus-5-5' }))
+    const ui = await $.ui.mount({ ...PANE, props: { ...PANE.props, bodyColumns } })
+
+    expect(widths).toEqual([asked])
+    await ui.unmount()
+  })
+}

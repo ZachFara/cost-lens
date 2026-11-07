@@ -54,11 +54,23 @@ function limitsView(ui: Ui, limits: readonly SessionRateLimit[], columns: number
   )
 }
 
+/**
+ * The width to ask the context grid for. Under 80 columns the engine draws a 5-wide grid;
+ * at 80 or more, 20 squares wide. A square takes two cells here, so the full-size grid
+ * fits any pane of 40 columns or more.
+ */
+function gridColumns(columns: number): number {
+  return columns >= FULL_GRID_CELLS ? Math.max(columns, FULL_GRID_ASK) : columns
+}
+
+const FULL_GRID_CELLS = 40
+const FULL_GRID_ASK = 80
+
 /** What the Now tab reads from the engine; undefined when the engine cannot answer. */
 async function sessionFacts($: EngineInterface, columns: number) {
   try {
     const [usage, model, live] = await Promise.all([
-      $.session.usage({ breakdown: 'summary', columns }),
+      $.session.usage({ breakdown: 'summary', columns: gridColumns(columns) }),
       $.session.model(),
       readLive($),
     ])
