@@ -56,8 +56,19 @@ export type History =
     }
   | { status: 'error'; message: string }
 
+/** The last `gh pr list` in the session's repository. */
+export type PullRequests =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'ready'; prs: { number: number; title: string; state: string; branch: string }[] }
+  | { status: 'error'; message: string }
+
 declare module 'claude-code' {
   interface PluginState {
-    'cost-lens': { tab: Tab; history: Shaped<History> }
+    'cost-lens': {
+      tab: Tab
+      history: Shaped<History>
+      pullRequests: Shaped<PullRequests>
+    }
   }
 }

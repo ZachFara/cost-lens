@@ -1,13 +1,15 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, On } from 'claude-code'
 
-import type { Tab } from '../../types'
+import type { PullRequests, Tab } from '../../types'
 
 import { historyView } from './history-view.tsx'
 import { loadHistory, readHistory, refreshHistory, startBackgroundRefresh } from './history.ts'
 import { periodView } from './period-view.tsx'
 import { projectsView } from './projects-view.tsx'
 import { branchesView } from './branches-view.tsx'
+import { prsView } from './prs-view.tsx'
+import { loadPullRequests, readPullRequests } from './pull-requests.ts'
 import type { Period } from '../core/summary.ts'
 import type { Actions, Ready, Ui } from './ui.ts'
 
@@ -28,14 +30,22 @@ const TABS: readonly { id: Tab; label: string }[] = [
 const PERIOD_OF: Partial<Record<Tab, Period>> = { today: 'today', last30: 'last30', all: 'allTime' }
 
 /** The tabs that draw the analyzer's summary; opening one starts the first read. */
-const DATA_TABS: ReadonlySet<Tab> = new Set(['today', 'last30', 'all', 'projects', 'branches'])
+const DATA_TABS: ReadonlySet<Tab> = new Set([
+  'today',
+  'last30',
+  'all',
+  'projects',
+  'branches',
+  'prs',
+])
 
 /** How a data tab draws the analyzer's summary; undefined for the other tabs. */
-function readyViewFor(tab: Tab, ui: Ui, columns: number) {
+function readyViewFor(tab: Tab, ui: Ui, columns: number, prs: PullRequests) {
   const period = PERIOD_OF[tab]
   if (period !== undefined) return (ready: Ready) => periodView(ui, ready, period, columns)
   if (tab === 'projects') return (ready: Ready) => projectsView(ui, ready)
   if (tab === 'branches') return (ready: Ready) => branchesView(ui, ready)
+  if (tab === 'prs') return (ready: Ready) => prsView(ui, ready, prs)
   return undefined
 }
 
@@ -44,6 +54,7 @@ const selectedTab = atom({ plugin: 'cost-lens', key: 'tab' } as const, 'now')
 function select($: EngineInterface, tab: Tab): void {
   void update($, selectedTab, () => tab)
   if (DATA_TABS.has(tab)) void loadHistory($)
+  if (tab === 'prs') void loadPullRequests($)
 }
 
 function tabRow(ui: Ui, selected: Tab, onSelect: (tab: Tab) => void) {
@@ -65,7 +76,8 @@ function tabRow(ui: Ui, selected: Tab, onSelect: (tab: Tab) => void) {
 }
 
 async function tabBody($: EngineInterface, ui: Ui, tab: Tab, columns: number) {
-  const readyView = readyViewFor(tab, ui, columns)
+  const prs = tab === 'prs' ? await readPullRequests($) : ({ status: 'idle' } as const)
+  const readyView = readyViewFor(tab, ui, columns, prs)
   if (readyView === undefined) {
     const label = TABS.find((one) => one.id === tab)?.label ?? tab
     return <ui.Text weight="semibold">{label}</ui.Text>
@@ -76,6 +88,7 @@ async function tabBody($: EngineInterface, ui: Ui, tab: Tab, columns: number) {
     },
     refresh: () => {
       void refreshHistory($)
+      if (tab === 'prs') void loadPullRequests($, true)
     },
   }
   return historyView(ui, await readHistory($), actions, readyView)
