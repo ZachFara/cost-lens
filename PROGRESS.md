@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2 in progress. Tasks 1 to 3 are done; task 4 is next, pending Open Question 1.
+Phase 2 in progress. Tasks 1 to 4 are done; next is the look of the pane (task 4b), then task 5.
 
 ## Tasks
 
@@ -11,7 +11,8 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 1. **(done)** **`/cost-lens` opens an empty pane with its tab row.** Entry: slash command. Done when: the command opens a pane titled cost-lens showing the tabs Now, Today, 30 days, All time, Projects, Tips; pressing a tab marks it selected; engine test covers both on terminal and desktop.
 2. **(done)** **Install cost-lens for the owner.** Entry: every new Claude Code session. Done when: `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` names this folder, `chezmoi re-add` has run, and a new session lists `/cost-lens`. Depends on 1.
 3. **(done)** **All time tab shows total cost and cost split.** Entry: All time tab. Done when: the pane runs the analyzer through `$.process.run`, shows a loading line, then total cost, request count, cache hit rate and the split (input, output, cache write, cache read) as numbers and a bar; core pricing and cost math tested with node:test; analyzer tested against fixture logs in a temporary folder; engine test with the process call answered by the test.
-4. **Incremental index.** Entry: Refresh button. Done when: a second run reads only changed logs; measured first and second run times on the owner's machine are recorded in a decision record; tests cover changed, unchanged and deleted files.
+4. **(done)** **Refresh, in the background too.** Entry: Refresh button. Done when: Refresh re-reads the logs while the last numbers stay on screen; every five minutes the numbers refresh on their own while the pane is shown and already loaded; reads run at low CPU priority (`nice -n 10`), one at a time; a failed refresh keeps the last numbers and says why. (Replaces the incremental index, owner's decision: a full read takes about 3 seconds.)
+   4b. **The pane matches the terminal.** Entry: the pane. Done when: the pane draws no background of its own (the terminal theme shows through, like the chat), and the four cost categories use clearly different colors.
 5. **Today and 30 days tabs.** Entry: those tabs. Done when: periods use local dates; tests cover the day boundary.
 6. **Per-model breakdown in period tabs.** Entry: period tabs. Done when: each period lists models by cost with tokens and cache hit rate; unpriced models are labelled, not guessed.
 7. **Projects tab.** Entry: Projects tab. Done when: the 30-day cost by project and git branch is listed, top 15, with last active time.
@@ -24,11 +25,11 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 
 ## Open Questions
 
-1. **Is task 4 (incremental index) still worth it?** Reading every log on the owner's machine (about 17,000 API responses, 1.1 GB) takes about 3 seconds, because only lines containing `"usage"` are parsed. Proposal: replace task 4 with "Refresh button re-reads the logs" and drop the index, unless reads grow past about 10 seconds. Waiting for a decision.
+None.
 
 ## Next steps
 
-- Task 4, once Open Question 1 is answered.
+- Task 4b: the pane matches the terminal theme; distinct category colors.
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
 ## Learned
