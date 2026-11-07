@@ -31,6 +31,22 @@ const SUMMARY = {
   today: totals(0, 0),
   last30: totals(12, 5),
   allTime: totals(1234, 25),
+  byModel: {
+    today: [],
+    last30: [model('claude-sonnet-5-5', 12, 5, true)],
+    allTime: [model('claude-fable-5-1', 1000, 25, true), model('mystery-model', 234, 0, false)],
+  },
+}
+
+function model(name: string, requests: number, output: number, isPriced: boolean) {
+  const { tokens, cost } = totals(requests, output)
+  return {
+    model: name,
+    requests,
+    isPriced,
+    tokens,
+    cost: isPriced ? cost : { ...cost, cacheWrite: 0, cacheRead: 0 },
+  }
 }
 
 function ran(stdout: string, exitCode = 0, stderr = '') {
@@ -119,5 +135,22 @@ test('Today and 30 days show their own period, and an empty day says so', async 
     '12 requests · cache hit rate 96%',
   )
   expect(runs).toBe(1)
+  await ui.unmount()
+})
+
+test('each period lists its models by cost, and labels models with no published price', async ($, on) => {
+  on('process.run', () => ran(JSON.stringify(SUMMARY)))
+  const ui = await $.ui.mount(PANE)
+
+  await ui.press({ key: 'all' })
+
+  expect((await ui.find({ type: 'Text', text: 'By model' }))?.text).toBe('By model')
+  expect(await ui.find({ type: 'Text', text: 'claude-fable-5-1' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /^1,000 requests/ })).toBeDefined()
+  expect((await ui.find({ type: 'Text', text: 'no published price' }))?.props.color).toBe('warning')
+
+  await ui.press({ key: 'last30' })
+  expect(await ui.find({ type: 'Text', text: 'claude-sonnet-5-5' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'claude-fable-5-1' })).toBeUndefined()
   await ui.unmount()
 })

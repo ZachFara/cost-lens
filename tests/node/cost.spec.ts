@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { addRecord, cacheHitRate, costOf, emptyTotals, totalCost } from '../../src/core/cost.ts'
+import {
+  addRecord,
+  addToModel,
+  cacheHitRate,
+  costOf,
+  emptyTotals,
+  rankModels,
+  totalCost,
+} from '../../src/core/cost.ts'
+import type { ModelTotals } from '../../src/core/cost.ts'
 import type { UsageRecord } from '../../src/core/cost.ts'
 
 const FABLE: UsageRecord = {
@@ -34,4 +43,23 @@ await test('totals add priced requests and list unpriced models once', () => {
 await test('cache hit rate is cache reads over all prompt tokens', () => {
   assert.equal(cacheHitRate(FABLE.usage), 0.25)
   assert.equal(cacheHitRate(emptyTotals().tokens), 0)
+})
+
+await test('models are totalled separately and ranked by cost, unpriced last', () => {
+  const byModel = new Map<string, ModelTotals>()
+  const sonnet = { ...FABLE, model: 'claude-sonnet-5-5' }
+  addToModel(byModel, sonnet)
+  addToModel(byModel, FABLE)
+  addToModel(byModel, { ...FABLE, model: 'mystery-model' })
+  addToModel(byModel, { ...FABLE, model: 'mystery-model' })
+  const ranked = rankModels(byModel)
+  assert.deepEqual(
+    ranked.map((one) => [one.model, one.requests, one.isPriced]),
+    [
+      ['claude-fable-5-1', 1, true],
+      ['claude-sonnet-5-5', 1, true],
+      ['mystery-model', 2, false],
+    ],
+  )
+  assert.equal(totalCost(ranked[2]?.cost ?? emptyTotals().cost), 0)
 })

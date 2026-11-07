@@ -114,6 +114,11 @@ await test('requests count toward Today and 30 days by their local calendar day'
     assert.equal(summary.today.requests, 1)
     assert.equal(summary.last30.requests, 3)
     assert.equal(summary.allTime.requests, 5)
+    assert.deepEqual(
+      summary.byModel.today.map((one) => [one.model, one.requests]),
+      [['claude-sonnet-5-5', 1]],
+    )
+    assert.equal(summary.byModel.allTime[0]?.requests, 5)
   } finally {
     rmSync(root, { recursive: true, force: true })
   }
