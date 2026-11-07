@@ -22,7 +22,7 @@ claude plugin install cost-lens --marketplace ZachFara/cost-lens
 
 In the desktop app, where `/plugin` does not run: click + next to the prompt box, then Plugins, Add marketplace with `ZachFara/cost-lens`, then Add plugin.
 
-Then type `/cost-lens` to open the pane. In Claude Code's fullscreen layout (`/tui fullscreen`) it docks beside the chat; otherwise it opens above the prompt.
+Then type `/cost-lens` to open the pane. Click a tab, or press `ctrl+x tab` to give the pane the keyboard and then `1` to `9` to switch tabs. In Claude Code's fullscreen layout (`/tui fullscreen`) it docks beside the chat; otherwise it opens above the prompt.
 
 ## What it shows
 

@@ -76,6 +76,9 @@ for (const surface of ['terminal', 'desktop'] as const) {
 
     const buttons = await ui.findAll({ type: 'Button' })
     expect(buttons.map((button) => button.props.label)).toEqual(LABELS)
+    expect(buttons.map((button) => button.props.hotkey)).toEqual(
+      LABELS.map((_, index) => String(index + 1)),
+    )
     expect((await ui.find({ key: 'now' }))?.props.variant).toBe('primary')
 
     await ui.press({ key: 'today' })
