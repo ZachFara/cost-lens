@@ -22,6 +22,20 @@ export function formatClock(iso: string): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/** When something last happened: "today 11:42", or "Nov 5" for an earlier day; '' stays ''. */
+export function formatWhen(iso: string, now: Date): string {
+  if (iso === '') return ''
+  const date = new Date(iso)
+  const isToday =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  if (isToday) return `today ${formatClock(iso)}`
+  return `${MONTHS[date.getMonth()] ?? ''} ${String(date.getDate())}`
+}
+
 /**
  * Splits `width` cells among values in proportion, using largest remainders so the
  * widths always add up to `width` (or to 0 when every value is 0).

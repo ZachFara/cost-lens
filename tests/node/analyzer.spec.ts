@@ -18,9 +18,9 @@ function assistant(
   id: string,
   model: string,
   usage: Record<string, unknown>,
-  timestamp: string = daysAgo(0),
+  { timestamp = daysAgo(0), cwd = '/home/me/code/shop' }: { timestamp?: string; cwd?: string } = {},
 ): string {
-  return JSON.stringify({ type: 'assistant', timestamp, message: { id, model, usage } })
+  return JSON.stringify({ type: 'assistant', timestamp, cwd, message: { id, model, usage } })
 }
 
 const ONE_MILLION_EACH = {
@@ -103,11 +103,11 @@ await test('requests count toward Today and 30 days by their local calendar day'
   try {
     const usage = { output_tokens: 1_000_000 }
     const lines = [
-      assistant('today-early', 'claude-sonnet-5-5', usage, daysAgo(0, 0)),
-      assistant('yesterday-late', 'claude-sonnet-5-5', usage, daysAgo(1, 23)),
-      assistant('day-29', 'claude-sonnet-5-5', usage, daysAgo(29)),
-      assistant('day-30', 'claude-sonnet-5-5', usage, daysAgo(30)),
-      assistant('no-time', 'claude-sonnet-5-5', usage, 'not a time'),
+      assistant('today-early', 'claude-sonnet-5-5', usage, { timestamp: daysAgo(0, 0) }),
+      assistant('yesterday-late', 'claude-sonnet-5-5', usage, { timestamp: daysAgo(1, 23) }),
+      assistant('day-29', 'claude-sonnet-5-5', usage, { timestamp: daysAgo(29) }),
+      assistant('day-30', 'claude-sonnet-5-5', usage, { timestamp: daysAgo(30) }),
+      assistant('no-time', 'claude-sonnet-5-5', usage, { timestamp: 'not a time' }),
     ]
     writeFileSync(join(root, 'session.jsonl'), lines.join('\n'))
     const summary = await summarize(root, NOW)
@@ -119,6 +119,34 @@ await test('requests count toward Today and 30 days by their local calendar day'
       [['claude-sonnet-5-5', 1]],
     )
     assert.equal(summary.byModel.allTime[0]?.requests, 5)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+await test('projects are the last 30 days by working folder, home written as ~', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'cost-lens-projects-'))
+  try {
+    const usage = { output_tokens: 1_000_000 }
+    const sonnet = 'claude-sonnet-5-5'
+    const lines = [
+      assistant('a1', sonnet, usage, { timestamp: daysAgo(0, 9), cwd: '/home/me/code/shop' }),
+      assistant('a2', sonnet, usage, { timestamp: daysAgo(2), cwd: '/home/me/code/shop' }),
+      assistant('b1', sonnet, usage, { timestamp: daysAgo(1), cwd: '/home/me' }),
+      assistant('c1', sonnet, usage, { timestamp: daysAgo(40), cwd: '/home/me/old' }),
+      assistant('d1', 'mystery-model', usage, { timestamp: daysAgo(1), cwd: '/elsewhere' }),
+    ]
+    writeFileSync(join(root, 'session.jsonl'), lines.join('\n'))
+    const summary = await summarize(root, NOW, '/home/me')
+    assert.deepEqual(
+      summary.projects.map((one) => [one.path, one.last30.requests, one.last30.cost.output]),
+      [
+        ['~/code/shop', 2, 20],
+        ['~', 1, 10],
+        ['/elsewhere', 1, 0],
+      ],
+    )
+    assert.equal(summary.projects[0]?.last30.lastActive, daysAgo(0, 9))
   } finally {
     rmSync(root, { recursive: true, force: true })
   }

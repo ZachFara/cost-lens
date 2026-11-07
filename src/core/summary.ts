@@ -1,4 +1,5 @@
 import type { ModelTotals, Totals } from './cost.ts'
+import type { Spend } from './spend.ts'
 
 /** What the analyzer prints and the mod reads. */
 export interface Summary {
@@ -11,6 +12,14 @@ export interface Summary {
   allTime: Totals
   /** Each period's models, most expensive first. */
   byModel: Record<Period, ModelTotals[]>
+  /** The most expensive projects of the last 30 days, by working folder. */
+  projects: ProjectSpend[]
+}
+
+export interface ProjectSpend {
+  /** The session's working folder, with the home folder written as ~. */
+  path: string
+  last30: Spend
 }
 
 export type Period = 'today' | 'last30' | 'allTime'
@@ -51,6 +60,22 @@ function isByModel(value: unknown): value is Record<Period, ModelTotals[]> {
   )
 }
 
+function isSpend(value: unknown): value is Spend {
+  return (
+    isObject(value) &&
+    typeof value.requests === 'number' &&
+    typeof value.lastActive === 'string' &&
+    hasNumbers(value.cost, COST_KEYS)
+  )
+}
+
+function isProjects(value: unknown): value is ProjectSpend[] {
+  return (
+    Array.isArray(value) &&
+    value.every((one) => isObject(one) && typeof one.path === 'string' && isSpend(one.last30))
+  )
+}
+
 function isTotals(value: unknown): value is Totals {
   return (
     hasNumbers(value, ['requests', 'unpricedRequests']) &&
@@ -71,9 +96,9 @@ export function parseSummary(text: string): Summary | undefined {
     return undefined
   }
   if (!isObject(value)) return undefined
-  const { generatedAt, pricesFetched, today, last30, allTime, byModel } = value
+  const { generatedAt, pricesFetched, today, last30, allTime, byModel, projects } = value
   if (typeof generatedAt !== 'string' || typeof pricesFetched !== 'string') return undefined
   if (!isTotals(today) || !isTotals(last30) || !isTotals(allTime)) return undefined
-  if (!isByModel(byModel)) return undefined
-  return { generatedAt, pricesFetched, today, last30, allTime, byModel }
+  if (!isByModel(byModel) || !isProjects(projects)) return undefined
+  return { generatedAt, pricesFetched, today, last30, allTime, byModel, projects }
 }

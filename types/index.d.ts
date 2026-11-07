@@ -27,6 +27,12 @@ export interface SummaryModel {
   cost: SummaryTotals['cost']
 }
 
+export interface SummarySpend {
+  requests: number
+  cost: SummaryTotals['cost']
+  lastActive: string
+}
+
 /** The analyzer's last run, as the pane shows it. */
 export type History =
   | { status: 'idle' }
@@ -40,6 +46,7 @@ export type History =
         last30: SummaryTotals
         allTime: SummaryTotals
         byModel: { today: SummaryModel[]; last30: SummaryModel[]; allTime: SummaryModel[] }
+        projects: { path: string; last30: SummarySpend }[]
       }
       /** A refresh is running; the summary above stays on screen meanwhile. */
       isRefreshing: boolean

@@ -7,6 +7,7 @@ import {
   formatCount,
   formatShare,
   formatUsd,
+  formatWhen,
 } from '../../src/core/format.ts'
 
 await test('money, counts and shares read the way people write them', () => {
@@ -31,4 +32,11 @@ await test('bar widths are proportional and always fill the bar exactly', () => 
 await test('timestamps show as local wall-clock time', () => {
   const local = new Date(2026, 10, 7, 9, 5)
   assert.equal(formatClock(local.toISOString()), '09:05')
+})
+
+await test('last active reads as a time today, or a date before', () => {
+  const now = new Date(2026, 10, 7, 15, 0)
+  assert.equal(formatWhen(new Date(2026, 10, 7, 9, 30).toISOString(), now), 'today 09:30')
+  assert.equal(formatWhen(new Date(2026, 10, 5, 23, 0).toISOString(), now), 'Nov 5')
+  assert.equal(formatWhen('', now), '')
 })

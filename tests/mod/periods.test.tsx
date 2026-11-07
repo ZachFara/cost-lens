@@ -36,6 +36,24 @@ const SUMMARY = {
     last30: [model('claude-sonnet-5-5', 12, 5, true)],
     allTime: [model('claude-fable-5-1', 1000, 25, true), model('mystery-model', 234, 0, false)],
   },
+  projects: [
+    {
+      path: '~/code/shop',
+      last30: {
+        requests: 9,
+        cost: { input: 0, output: 50, cacheWrite: 0, cacheRead: 0 },
+        lastActive: '2026-11-07T11:42:00.000Z',
+      },
+    },
+    {
+      path: '~',
+      last30: {
+        requests: 3,
+        cost: { input: 0, output: 5, cacheWrite: 0, cacheRead: 0 },
+        lastActive: '2026-11-01T09:00:00.000Z',
+      },
+    },
+  ],
 }
 
 function model(name: string, requests: number, output: number, isPriced: boolean) {
@@ -152,5 +170,23 @@ test('each period lists its models by cost, and labels models with no published 
   await ui.press({ key: 'last30' })
   expect(await ui.find({ type: 'Text', text: 'claude-sonnet-5-5' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: 'claude-fable-5-1' })).toBeUndefined()
+  await ui.unmount()
+})
+
+test('Projects lists the last 30 days by project, most expensive first', async ($, on) => {
+  on('process.run', () => ran(JSON.stringify(SUMMARY)))
+  const ui = await $.ui.mount(PANE)
+
+  await ui.press({ key: 'projects' })
+
+  expect(await ui.find({ type: 'Text', text: 'Last 30 days, by project' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'shop' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: '$50.00' })).toBeDefined()
+  expect((await ui.find({ type: 'Text', text: /^~\/code · 9 requests/ }))?.text).toMatch(
+    /^~\/code · 9 requests · last active today \d\d:\d\d$/,
+  )
+  expect((await ui.find({ type: 'Text', text: /^3 requests/ }))?.text).toBe(
+    '3 requests · last active Nov 1',
+  )
   await ui.unmount()
 })
