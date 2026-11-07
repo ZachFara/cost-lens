@@ -42,6 +42,24 @@ test('/cost-lens registers and opens the cost-lens pane', async ($, on) => {
   expect(result.text).toBe('cost-lens pane opened.')
 })
 
+test('in the regular layout, /cost-lens says how to get the side panel', async ($, on) => {
+  on('command.register', (_, e) => ({ value: { command: e.name } }))
+  on('ui.open', () => ({ value: { isPlaced: true } }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+
+  const result = await $.command.run({
+    command: 'cost-lens',
+    args: '',
+    origin: { kind: 'composer' },
+    presentation: { isFullscreen: false, columns: 160 },
+  })
+
+  expect(result.text).toBe(
+    'cost-lens pane opened above the prompt. Run /tui fullscreen to dock it beside the chat.',
+  )
+})
+
 for (const surface of ['terminal', 'desktop'] as const) {
   test(`the tab row shows every tab and pressing one selects it (${surface})`, async ($) => {
     const ui = await $.ui.mount({ ...PANE, surface })

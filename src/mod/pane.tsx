@@ -128,17 +128,20 @@ export function registerPane(on: On): void {
     return next(e)
   })
 
-  on('command.run', { command: 'cost-lens' }, async ($) => {
+  on('command.run', { command: 'cost-lens' }, async ($, e) => {
     // Transparent: the terminal's own theme shows through, as it does behind the chat.
     const opened = await $.ui.open({
       id: PANE_ID,
       title: 'cost-lens',
       backgroundColor: 'transparent',
     })
+    if (!opened.isPlaced)
+      return { text: `cost-lens pane is open but not shown yet: ${opened.reason}` }
+    // Panes dock beside the chat only in the fullscreen layout; elsewhere they sit above the prompt.
     return {
-      text: opened.isPlaced
+      text: e.presentation.isFullscreen
         ? 'cost-lens pane opened.'
-        : `cost-lens pane is open but not shown yet: ${opened.reason}`,
+        : 'cost-lens pane opened above the prompt. Run /tui fullscreen to dock it beside the chat.',
     }
   })
 
