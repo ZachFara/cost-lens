@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) 6 (per model), 7 (Projects) and 7b (Branches) are done; task 7c is next.
+Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) 6 (per model), 7 (Projects), 7b (Branches) and 7c (PRs) are done; task 8 is next.
 
 ## Tasks
 
@@ -17,7 +17,7 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 6. **(done)** **Per-model breakdown in period tabs.** Entry: period tabs. Done when: each period lists models by cost with tokens and cache hit rate; unpriced models are labelled, not guessed.
 7. **(done)** **Projects tab.** Entry: Projects tab. Done when: the 30-day cost by project and git branch is listed, top 15, with last active time.
    7b. **(done)** **Branches tab (current project).** Entry: Branches tab. Done when: for the git repository the session runs in, the tab lists each branch Claude Code worked on with its cost, requests and last active time, most expensive first; sessions outside a repository say so. (Owner request, 2026-11-07.)
-   7c. **PRs tab (current project).** Entry: PRs tab. Done when: the tab lists the repository's pull requests (from `gh`), each with the cost of the work on its head branch, state and title; without `gh` or a GitHub remote it says why. (Owner request, 2026-11-07.)
+   7c. **(done)** **PRs tab (current project).** Entry: PRs tab. Done when: the tab lists the repository's pull requests (from `gh`), each with the cost of the work on its head branch, state and title; without `gh` or a GitHub remote it says why. (Owner request, 2026-11-07.)
 8. **Now tab: live session.** Entry: Now tab. Done when: a `turn.step` hook records each request's usage; the tab shows model, context used of window, session cost from `$.session.usage()`, this session's cost split and the context categories from `breakdown: 'summary'`. Also at the top: the plan's usage limits from `$.session.usage().rateLimits` (current session, current week for all models, and any per-model week), each with a bar, percent used and reset time, as `/usage` shows them. (Owner request, 2026-11-07.)
 9. **Cache band above the prompt.** Entry: the band. Done when: it shows `warm, Nm left` or `cold, next message re-writes Nk tokens ~$X`, refreshes on a timer, uses the time-to-live the analyzer reports (default one hour), and can be hidden.
 10. **Cold-cache warning.** Entry: prompt submit. Done when: a prompt sent while the cache is cold and the context is at least 40k tokens raises a warning toast with the tokens it re-writes and the estimated cost; the prompt is never held, delayed or changed; slash commands and non-composer prompts raise nothing; a failing hook still lets the prompt through.
@@ -31,7 +31,7 @@ None.
 
 ## Next steps
 
-- Task 7c: PRs tab for the current project.
+- Task 8: Now tab (live session and plan usage limits).
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
 ## Learned
