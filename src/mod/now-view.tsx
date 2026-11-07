@@ -3,6 +3,7 @@ import type { EngineInterface, SessionRateLimit } from 'claude-code'
 import { formatResets, formatShare, formatTokens, formatUsd } from '../core/format.ts'
 import { barWidths } from '../core/format.ts'
 
+import { contextGrid } from './context-grid.tsx'
 import { readLive } from './live.ts'
 import { splitView } from './period-view.tsx'
 import type { Ui } from './ui.ts'
@@ -53,13 +54,11 @@ function limitsView(ui: Ui, limits: readonly SessionRateLimit[], columns: number
   )
 }
 
-const CATEGORIES_SHOWN = 6
-
 /** What the Now tab reads from the engine; undefined when the engine cannot answer. */
-async function sessionFacts($: EngineInterface) {
+async function sessionFacts($: EngineInterface, columns: number) {
   try {
     const [usage, model, live] = await Promise.all([
-      $.session.usage({ breakdown: 'summary' }),
+      $.session.usage({ breakdown: 'summary', columns }),
       $.session.model(),
       readLive($),
     ])
@@ -72,7 +71,7 @@ async function sessionFacts($: EngineInterface) {
 /** Now: the plan's usage limits, then this session's model, cost, split and context. */
 export async function nowView($: EngineInterface, ui: Ui, columns: number) {
   const { Box, Text } = ui
-  const facts = await sessionFacts($)
+  const facts = await sessionFacts($, columns)
   if (facts === undefined) return <Text dimColor>Session details are not available here.</Text>
   const { usage, model, live } = facts
   const { context } = usage
@@ -80,10 +79,6 @@ export async function nowView($: EngineInterface, ui: Ui, columns: number) {
     context.tokens === undefined
       ? `Context window ${formatTokens(context.window)}`
       : `Context ${formatTokens(context.tokens)} of ${formatTokens(context.window)} (${formatShare(context.tokens / context.window)})`
-  const categories = (context.breakdown?.categories ?? [])
-    .filter((one) => one.kind === 'used' && one.tokens > 0)
-    .sort((a, b) => b.tokens - a.tokens)
-    .slice(0, CATEGORIES_SHOWN)
   return (
     <Box flexDirection="column" gap={1}>
       <Text weight="semibold">Plan usage</Text>
@@ -97,17 +92,7 @@ export async function nowView($: EngineInterface, ui: Ui, columns: number) {
         <Text dimColor>{`${contextLine} · ${String(live.requests)} requests`}</Text>
       </Box>
       {live.requests > 0 ? splitView(ui, live, columns) : null}
-      {categories.length === 0 ? null : (
-        <Box flexDirection="column">
-          <Text weight="semibold">In the context now</Text>
-          {categories.map((one) => (
-            <Box flexDirection="row" justifyContent="space-between" columnGap={1}>
-              <Text>{one.name}</Text>
-              <Text dimColor>{formatTokens(one.tokens)}</Text>
-            </Box>
-          ))}
-        </Box>
-      )}
+      {context.breakdown === undefined ? null : contextGrid(ui, context.breakdown)}
     </Box>
   )
 }
