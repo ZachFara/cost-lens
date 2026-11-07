@@ -78,6 +78,8 @@ To add a new kind of path, propose it in PROGRESS.md under Open Questions first.
 - The engine scans each file for the state it reads: `read($, atom)` must name an atom defined in the same file. Export a small reader function (like `readHistory`) instead of the atom.
 - Where a pane sits is the engine's choice: docked beside the chat only in the fullscreen layout (`/tui fullscreen`, saved per user), above the prompt otherwise. `command.run`'s `presentation.isFullscreen` says which. A pane's `backgroundColor` is set when it opens, so a change shows after reopening.
 - A module may hook an event only once without a matcher (`claude plugin validate` refuses a second `on('session.start', …)`). Session start lives in `src/mod/pane.tsx`; other features export a `start…($)` function it calls.
+- The engine refuses a module that puts `$` in an object (bound, spread, returned or read from one): pass `$` as its own parameter.
+- Settings are `userConfig` in `.claude-plugin/plugin.json`, read once in `hooks/register.tsx` (`src/mod/settings.ts`). Features that send the person's data to a model stay behind `llmFeatures`, which is off by default.
 - Engine tests are `*.test.ts(x)` under `tests/mod/`; Node tests are `*.spec.ts` under `tests/node/`, so `claude plugin test` never picks up a Node test.
 
 ## Workflow

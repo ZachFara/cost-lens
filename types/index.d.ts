@@ -3,7 +3,8 @@
 // back, so the compiler keeps the two identical.
 
 /** The pane's tabs, in the order the tab row shows them. */
-export type Tab = 'now' | 'today' | 'last30' | 'all' | 'projects' | 'branches' | 'prs' | 'tips'
+export type Tab =
+  'now' | 'model' | 'today' | 'last30' | 'all' | 'projects' | 'branches' | 'prs' | 'tips'
 
 export interface SummaryTotals {
   requests: number
@@ -108,7 +109,8 @@ declare module 'claude-code' {
       minute: number
       /** When the model advisor last suggested a cheaper model (ms since the epoch). */
       lastAdviceAt: number
-      recommendation: Shaped<Recommendation | null>
+      /** This session's model recommendations, newest first (no prompt text). */
+      recommendations: Shaped<Recommendation[]>
     }
   }
 }

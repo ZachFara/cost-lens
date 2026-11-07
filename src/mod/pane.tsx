@@ -11,6 +11,8 @@ import { branchesView } from './branches-view.tsx'
 import { prsView } from './prs-view.tsx'
 import { nowView } from './now-view.tsx'
 import { tipsView } from './tips-view.tsx'
+import { modelView } from './model-view.tsx'
+import type { Settings } from './settings.ts'
 import { startBandClock } from './cache-band.tsx'
 import { loadPullRequests, readPullRequests } from './pull-requests.ts'
 import type { Period } from '../core/summary.ts'
@@ -20,6 +22,7 @@ const PANE_ID = 'cost-lens'
 
 const TABS: readonly { id: Tab; label: string }[] = [
   { id: 'now', label: 'Now' },
+  { id: 'model', label: 'Model' },
   { id: 'today', label: 'Today' },
   { id: 'last30', label: '30 days' },
   { id: 'all', label: 'All time' },
@@ -97,9 +100,17 @@ async function loadedMcpTokens($: EngineInterface): Promise<number | undefined> 
   }
 }
 
-async function tabBody($: EngineInterface, ui: Ui, tab: Tab, columns: number) {
+/** What drawing a tab needs beside `$` (which the engine never lets into an object). */
+interface Drawing {
+  ui: Ui
+  columns: number
+  settings: Settings
+}
+
+async function tabBody($: EngineInterface, { ui, columns, settings }: Drawing, tab: Tab) {
   const prs = tab === 'prs' ? await readPullRequests($) : ({ status: 'idle' } as const)
   if (tab === 'now') return nowView($, ui, columns)
+  if (tab === 'model') return modelView($, ui, settings)
   const mcpTokens = tab === 'tips' ? await loadedMcpTokens($) : undefined
   const readyView = readyViewFor(tab, ui, columns, { prs, mcpTokens })
   if (readyView === undefined) {
@@ -119,7 +130,7 @@ async function tabBody($: EngineInterface, ui: Ui, tab: Tab, columns: number) {
 }
 
 /** `/cost-lens` opens the pane; the pane draws its tab row and the selected tab. */
-export function registerPane(on: On): void {
+export function registerPane(on: On, settings: Settings): void {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'cost-lens',
@@ -158,7 +169,7 @@ export function registerPane(on: On): void {
         {tabRow(ui, tab, (next) => {
           select($, next)
         })}
-        {await tabBody($, ui, tab, e.props.bodyColumns)}
+        {await tabBody($, { ui, columns: e.props.bodyColumns, settings }, tab)}
       </ui.Box>
     )
   })
