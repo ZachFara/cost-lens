@@ -4,6 +4,16 @@ A Claude Code mod that shows where your Claude Code tokens and dollars go, warns
 
 Status: repository setup. See `PROGRESS.md` for what is built and what is next, and `DESIGN.md` for the plan.
 
+## Use it in every session
+
+Point Claude Code at this folder in `~/.claude/settings.json`:
+
+```json
+{ "env": { "CLAUDE_CODE_PLUGIN_DIRS": "~/path/to/cost-lens" } }
+```
+
+Every new session then loads the mod; type `/cost-lens` to open the pane.
+
 ## Develop
 
 ```sh
