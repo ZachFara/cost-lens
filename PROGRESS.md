@@ -2,13 +2,13 @@
 
 ## Status
 
-Phase 1 (repository setup) is merged. Phase 2 has started: task 1 is next.
+Phase 2 in progress. Task 1 is done (in review on `feat/pane-tabs`); task 2 is next.
 
 ## Tasks
 
 Small tasks, one session each, in dependency order. Each starts at a user-facing entry point (see AGENTS.md, CODE).
 
-1. **`/cost-lens` opens an empty pane with its tab row.** Entry: slash command. Done when: the command opens a pane titled cost-lens showing the tabs Now, Today, 30 days, All time, Projects, Tips; pressing a tab marks it selected; engine test covers both on terminal and desktop.
+1. **(done)** **`/cost-lens` opens an empty pane with its tab row.** Entry: slash command. Done when: the command opens a pane titled cost-lens showing the tabs Now, Today, 30 days, All time, Projects, Tips; pressing a tab marks it selected; engine test covers both on terminal and desktop.
 2. **Install cost-lens for the owner.** Entry: every new Claude Code session. Done when: `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` names this folder, `chezmoi re-add` has run, and a new session lists `/cost-lens`. Depends on 1.
 3. **All time tab shows total cost and cost split.** Entry: All time tab. Done when: the pane runs the analyzer through `$.process.run`, shows a loading line, then total cost, request count, cache hit rate and the split (input, output, cache write, cache read) as numbers and a bar; core pricing and cost math tested with node:test; analyzer tested against fixture logs in a temporary folder; engine test with the process call answered by the test.
 4. **Incremental index.** Entry: Refresh button. Done when: a second run reads only changed logs; measured first and second run times on the owner's machine are recorded in a decision record; tests cover changed, unchanged and deleted files.
@@ -28,7 +28,8 @@ None.
 
 ## Next steps
 
-- Task 1: `/cost-lens` opens an empty pane with its tab row.
+- Task 2: install cost-lens for the owner, so every later task can be seen in a real session.
+- Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
 ## Learned
 
