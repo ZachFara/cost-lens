@@ -96,6 +96,8 @@ declare module 'claude-code' {
       lastRequest: Shaped<LastRequest | null>
       isBandHidden: boolean
       minute: number
+      /** When the model advisor last suggested a cheaper model (ms since the epoch). */
+      lastAdviceAt: number
     }
   }
 }
