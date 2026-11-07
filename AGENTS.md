@@ -30,6 +30,7 @@ Only these paths may exist in the tree (`tools/check-layout.ts` rejects anything
 
 ```
 .claude-plugin/plugin.json      plugin manifest
+.claude-plugin/marketplace.json makes the repository a one-plugin marketplace
 .githooks/                      pre-commit (runs npm run check), commit-msg (commitlint)
 .github/workflows/*.yml         CI (runs npm run check, commitlint)
 .github/pull_request_template.md

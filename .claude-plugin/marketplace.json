@@ -1,0 +1,14 @@
+{
+  "name": "cost-lens",
+  "owner": { "name": "Zachariah Farahany" },
+  "metadata": {
+    "description": "cost-lens: a Claude Code mod that shows where tokens and dollars go."
+  },
+  "plugins": [
+    {
+      "name": "cost-lens",
+      "source": "./",
+      "description": "See where Claude Code tokens and dollars go, catch cold-cache rebuilds, and pick cheaper models."
+    }
+  ]
+}
