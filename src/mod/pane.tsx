@@ -10,6 +10,7 @@ import { projectsView } from './projects-view.tsx'
 import { branchesView } from './branches-view.tsx'
 import { prsView } from './prs-view.tsx'
 import { nowView } from './now-view.tsx'
+import { tipsView } from './tips-view.tsx'
 import { loadPullRequests, readPullRequests } from './pull-requests.ts'
 import type { Period } from '../core/summary.ts'
 import type { Actions, Ready, Ui } from './ui.ts'
@@ -38,15 +39,24 @@ const DATA_TABS: ReadonlySet<Tab> = new Set([
   'projects',
   'branches',
   'prs',
+  'tips',
 ])
 
 /** How a data tab draws the analyzer's summary; undefined for the other tabs. */
-function readyViewFor(tab: Tab, ui: Ui, columns: number, prs: PullRequests) {
+/** What some tabs read from the engine beside the summary. */
+interface Extras {
+  prs: PullRequests
+  /** Tokens the session's loaded MCP tool definitions add to every request. */
+  mcpTokens: number | undefined
+}
+
+function readyViewFor(tab: Tab, ui: Ui, columns: number, extras: Extras) {
   const period = PERIOD_OF[tab]
   if (period !== undefined) return (ready: Ready) => periodView(ui, ready, period, columns)
   if (tab === 'projects') return (ready: Ready) => projectsView(ui, ready)
   if (tab === 'branches') return (ready: Ready) => branchesView(ui, ready)
-  if (tab === 'prs') return (ready: Ready) => prsView(ui, ready, prs)
+  if (tab === 'prs') return (ready: Ready) => prsView(ui, ready, extras.prs)
+  if (tab === 'tips') return (ready: Ready) => tipsView(ui, ready, extras.mcpTokens)
   return undefined
 }
 
@@ -76,10 +86,21 @@ function tabRow(ui: Ui, selected: Tab, onSelect: (tab: Tab) => void) {
   )
 }
 
+async function loadedMcpTokens($: EngineInterface): Promise<number | undefined> {
+  try {
+    const { context } = await $.session.usage({ breakdown: 'summary' })
+    const tools = context.breakdown?.mcpTools ?? []
+    return tools.filter((tool) => tool.isLoaded).reduce((sum, tool) => sum + tool.tokens, 0)
+  } catch {
+    return undefined
+  }
+}
+
 async function tabBody($: EngineInterface, ui: Ui, tab: Tab, columns: number) {
   const prs = tab === 'prs' ? await readPullRequests($) : ({ status: 'idle' } as const)
   if (tab === 'now') return nowView($, ui, columns)
-  const readyView = readyViewFor(tab, ui, columns, prs)
+  const mcpTokens = tab === 'tips' ? await loadedMcpTokens($) : undefined
+  const readyView = readyViewFor(tab, ui, columns, { prs, mcpTokens })
   if (readyView === undefined) {
     const label = TABS.find((one) => one.id === tab)?.label ?? tab
     return <ui.Text weight="semibold">{label}</ui.Text>

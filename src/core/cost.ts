@@ -32,7 +32,7 @@ export interface Totals {
 
 const PER_MILLION = 1_000_000
 
-function promptTokens(usage: TokenUsage): number {
+export function promptTokens(usage: TokenUsage): number {
   return usage.input + usage.cacheWrite5m + usage.cacheWrite1h + usage.cacheRead
 }
 

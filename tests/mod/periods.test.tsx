@@ -61,6 +61,18 @@ const SUMMARY = {
       { branch: '', spend: spend(2, 1, '') },
     ],
   },
+  tips: {
+    last30: { cost: 200, coldRebuilds: 3, coldWaste: 12.5, largeContextCost: 150 },
+    last24h: {
+      cost: 100,
+      largeContextCost: 92,
+      skills: [{ name: 'claude-api', cost: 3 }],
+      mcpServers: [
+        { name: 'computer-use', cost: 11 },
+        { name: 'claude_ai_Linear', cost: 1 },
+      ],
+    },
+  },
 }
 
 function spend(requests: number, output: number, lastActive: string) {
@@ -221,5 +233,26 @@ test('Branches lists the current repository by branch and asks the analyzer for 
   expect(await ui.find({ type: 'Text', text: '$30.00' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: '(no branch)' })).toBeDefined()
   expect((await ui.find({ type: 'Text', text: /^2 requests/ }))?.text).toBe('2 requests')
+  await ui.unmount()
+})
+
+test('Tips shows what drives usage today and what was avoidable this month', async ($, on) => {
+  on('process.run', () => ran(JSON.stringify(SUMMARY)))
+  const ui = await $.ui.mount(PANE)
+
+  await ui.press({ key: 'tips' })
+
+  expect(await ui.find({ type: 'Text', text: 'What is contributing to your usage?' })).toBeDefined()
+  expect(
+    await ui.find({ type: 'Text', text: 'Start fresh when you switch tasks · run /clear' }),
+  ).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: ' 92%' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /^Turn off MCP servers/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'claude.ai Linear' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'claude-api' })).toBeDefined()
+  expect((await ui.find({ type: 'Text', text: /expired cache/ }))?.text).toMatch(
+    /^3 times a message re-wrote an expired cache: about \$12\.50 more than a warm cache \(6% of cost\)/,
+  )
+  expect((await ui.find({ type: 'Text', text: /of cost was at over 150k/ }))?.text).toMatch(/^75% /)
   await ui.unmount()
 })

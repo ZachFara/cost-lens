@@ -16,6 +16,26 @@ export interface Summary {
   projects: ProjectSpend[]
   /** The repository the session runs in, by branch, all time; null when none was asked for. */
   currentProject: CurrentProject | null
+  tips: Tips
+}
+
+/** What a skill or MCP server's calls cost: the requests that called it, so shares overlap. */
+export interface UseCost {
+  name: string
+  cost: number
+}
+
+export interface Tips {
+  last30: {
+    cost: number
+    /** Requests that re-wrote an expired cache. */
+    coldRebuilds: number
+    /** What those cost beyond reading a warm cache. */
+    coldWaste: number
+    /** Cost of requests above LARGE_CONTEXT_TOKENS of prompt. */
+    largeContextCost: number
+  }
+  last24h: { cost: number; largeContextCost: number; skills: UseCost[]; mcpServers: UseCost[] }
 }
 
 export interface CurrentProject {
@@ -108,6 +128,26 @@ function isTotals(value: unknown): value is Totals {
   )
 }
 
+function isUseCosts(value: unknown): value is UseCost[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (one) => isObject(one) && typeof one.name === 'string' && typeof one.cost === 'number',
+    )
+  )
+}
+
+function isTips(value: unknown): value is Tips {
+  if (!isObject(value) || !isObject(value.last24h)) return false
+  const day = value.last24h
+  return (
+    hasNumbers(value.last30, ['cost', 'coldRebuilds', 'coldWaste', 'largeContextCost']) &&
+    hasNumbers(day, ['cost', 'largeContextCost']) &&
+    isUseCosts(day.skills) &&
+    isUseCosts(day.mcpServers)
+  )
+}
+
 function isSummary(value: unknown): value is Summary {
   return (
     isObject(value) &&
@@ -116,7 +156,8 @@ function isSummary(value: unknown): value is Summary {
     PERIODS.every((period) => isTotals(value[period])) &&
     isByModel(value.byModel) &&
     isProjects(value.projects) &&
-    isCurrentProject(value.currentProject)
+    isCurrentProject(value.currentProject) &&
+    isTips(value.tips)
   )
 }
 

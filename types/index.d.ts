@@ -48,6 +48,20 @@ export type History =
         byModel: { today: SummaryModel[]; last30: SummaryModel[]; allTime: SummaryModel[] }
         projects: { path: string; last30: SummarySpend }[]
         currentProject: { path: string; branches: { branch: string; spend: SummarySpend }[] } | null
+        tips: {
+          last30: {
+            cost: number
+            coldRebuilds: number
+            coldWaste: number
+            largeContextCost: number
+          }
+          last24h: {
+            cost: number
+            largeContextCost: number
+            skills: { name: string; cost: number }[]
+            mcpServers: { name: string; cost: number }[]
+          }
+        }
       }
       /** A refresh is running; the summary above stays on screen meanwhile. */
       isRefreshing: boolean
