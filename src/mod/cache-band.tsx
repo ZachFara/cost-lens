@@ -23,7 +23,7 @@ export async function recordMainRequest($: EngineInterface, request: LastRequest
 }
 
 /** The last request and the cache lifetime, for the band and the cold-cache warning. */
-async function readCache($: EngineInterface) {
+export async function readCache($: EngineInterface) {
   const [request, history] = await Promise.all([read($, lastRequest), readHistory($)])
   const lifetimeMs =
     history.status === 'ready' ? history.summary.cacheLifetimeMs : DEFAULT_CACHE_LIFETIME_MS
