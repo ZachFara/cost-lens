@@ -23,6 +23,7 @@ Wiring:
 - `.githooks/pre-commit` runs `npm run check`; `.githooks/commit-msg` runs commitlint (`@commitlint/config-conventional`). `npm install` sets `core.hooksPath` through the `prepare` script, so no hook manager is needed.
 - CI (`.github/workflows/ci.yml`) runs `npm ci` then `npm run check` in the `check` job, and commitlint over the pull request's commits in the `commits` job.
 - Versions are pinned exactly in `package.json`, with `package-lock.json` committed.
+- GitHub protects `main`: pull requests required, the `check` and `commits` jobs must pass on an up-to-date branch, the rules apply to admins, linear history, no force pushes or deletion. Pull requests merge by rebase only, so each small conventional commit lands on `main` as written.
 
 TypeScript is pinned to 6.0.x because typescript-eslint 8.72 requires TypeScript below 6.1. TypeScript 7 (the native port) waits until typescript-eslint supports it.
 
