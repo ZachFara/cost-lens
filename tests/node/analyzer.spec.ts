@@ -137,7 +137,7 @@ await test('projects are the last 30 days by working folder, home written as ~',
       assistant('d1', 'mystery-model', usage, { timestamp: daysAgo(1), cwd: '/elsewhere' }),
     ]
     writeFileSync(join(root, 'session.jsonl'), lines.join('\n'))
-    const summary = await summarize(root, NOW, '/home/me')
+    const summary = await summarize(root, NOW, { home: '/home/me' })
     assert.deepEqual(
       summary.projects.map((one) => [one.path, one.last30.requests, one.last30.cost.output]),
       [

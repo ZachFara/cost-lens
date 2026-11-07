@@ -8,7 +8,11 @@ import { addRecord, addToModel, emptyTotals, rankModels } from '../core/cost.ts'
 import { totalCost } from '../core/cost.ts'
 import type { ModelTotals, Totals, UsageRecord } from '../core/cost.ts'
 import { daysBefore, localDay } from '../core/days.ts'
+
+import { branchTracker, currentProject, trackBranch } from './branches.ts'
+import type { BranchTracker } from './branches.ts'
 import { PRICES_FETCHED } from '../core/pricing.ts'
+import { withTilde } from '../core/paths.ts'
 import { addSpend, emptySpend } from '../core/spend.ts'
 import type { Spend } from '../core/spend.ts'
 import type { Period, ProjectSpend, Summary } from '../core/summary.ts'
@@ -61,7 +65,8 @@ export function recordFromLine(line: string): Found | undefined {
   const model = text(message?.model)
   if (!usage || !id || !model || model === '<synthetic>') return undefined
   const record = usageRecord(model, usage)
-  return { id, record, timestamp: text(entry.timestamp), cwd: text(entry.cwd) }
+  const timestamp = text(entry.timestamp)
+  return { id, record, timestamp, cwd: text(entry.cwd), branch: text(entry.gitBranch) }
 }
 
 interface Found {
@@ -71,6 +76,8 @@ interface Found {
   timestamp: string | undefined
   /** The session's working folder; undefined when absent. */
   cwd: string | undefined
+  /** The git branch checked out then; undefined outside a repository. */
+  branch: string | undefined
 }
 
 function assistantEntry(line: string): Json | undefined {
@@ -95,6 +102,7 @@ interface Accumulator {
   periods: Periods
   /** Last-30-days spend by working folder. */
   projects: Map<string, Spend>
+  branches: BranchTracker
 }
 
 const PROJECTS_SHOWN = 15
@@ -115,6 +123,7 @@ const LAST_DAYS = 30
 function addFound(into: Accumulator, found: Found, today: string): void {
   const { periods } = into
   add(periods.allTime, found.record)
+  trackBranch(into.branches, found)
   const at = found.timestamp === undefined ? Number.NaN : Date.parse(found.timestamp)
   if (Number.isNaN(at)) return
   const age = daysBefore(localDay(new Date(at)), today)
@@ -134,12 +143,10 @@ function addProject(projects: Map<string, Spend>, cwd: string, found: Found): vo
 }
 
 function topProjects(projects: Map<string, Spend>, home: string): ProjectSpend[] {
-  const tilde = (path: string) =>
-    path === home || path.startsWith(`${home}/`) ? `~${path.slice(home.length)}` : path
   return [...projects.entries()]
     .sort(([, a], [, b]) => totalCost(b.cost) - totalCost(a.cost))
     .slice(0, PROJECTS_SHOWN)
-    .map(([path, last30]) => ({ path: tilde(path), last30 }))
+    .map(([path, last30]) => ({ path: withTilde(path, home), last30 }))
 }
 
 async function logFiles(root: string): Promise<string[]> {
@@ -167,9 +174,24 @@ async function addFile(
   }
 }
 
+export interface SummarizeOptions {
+  /** The repository the session runs in: its branches are counted. */
+  project?: string | undefined
+  /** The home folder, written as ~ in paths; the user's own by default. */
+  home?: string
+}
+
 /** Reads every session log under `root` (Claude Code keeps them in ~/.claude/projects). */
-export async function summarize(root: string, now: Date, home = homedir()): Promise<Summary> {
-  const into: Accumulator = { periods: emptyPeriods(), projects: new Map() }
+export async function summarize(
+  root: string,
+  now: Date,
+  { project, home = homedir() }: SummarizeOptions = {},
+): Promise<Summary> {
+  const into: Accumulator = {
+    periods: emptyPeriods(),
+    projects: new Map(),
+    branches: branchTracker(project),
+  }
   const { periods } = into
   const today = localDay(now)
   const seen = new Set<string>()
@@ -188,5 +210,6 @@ export async function summarize(root: string, now: Date, home = homedir()): Prom
       allTime: rankModels(periods.allTime.models),
     },
     projects: topProjects(into.projects, home),
+    currentProject: currentProject(into.branches, home),
   }
 }

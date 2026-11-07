@@ -9,7 +9,7 @@ const IDLE: History = { status: 'idle' }
 
 // Change the tag when History's fields change: it declines what an earlier version stored.
 const history = atom({ plugin: 'cost-lens', key: 'history' } as const, IDLE, {
-  shape: 'history-5',
+  shape: 'history-6',
 })
 
 const ANALYZER_TIMEOUT_MS = 5 * 60 * 1000
@@ -26,13 +26,27 @@ function failed(message: string): History {
   return { status: 'error', message }
 }
 
+/** The repository the session runs in, else its folder; undefined if the engine cannot say. */
+async function sessionFolder($: EngineInterface): Promise<string | undefined> {
+  try {
+    return (await $.session.repo())?.root ?? (await $.session.cwd())
+  } catch {
+    return undefined
+  }
+}
+
 /** Runs the analyzer at low CPU priority (nice 10) so a read never competes with the session. */
 async function runAnalyzer($: EngineInterface): Promise<Read> {
   try {
     const cli = `${$.plugin.root}/src/analyzer/cli.ts`
-    const run = await $.process.run(['nice', '-n', '10', 'node', cli], {
-      timeoutMs: ANALYZER_TIMEOUT_MS,
-    })
+    const project = await sessionFolder($)
+    const argv = ['nice', '-n', '10', 'node', cli]
+    const run = await $.process.run(
+      project === undefined ? argv : [...argv, '--project', project],
+      {
+        timeoutMs: ANALYZER_TIMEOUT_MS,
+      },
+    )
     if (run.exitCode !== 0) {
       const reason = run.stderr.trim().split('\n')[0] ?? ''
       return {

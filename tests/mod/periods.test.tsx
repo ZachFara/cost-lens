@@ -54,6 +54,17 @@ const SUMMARY = {
       },
     },
   ],
+  currentProject: {
+    path: '~/code/shop',
+    branches: [
+      { branch: 'feat/checkout', spend: spend(7, 30, '2026-11-07T10:00:00.000Z') },
+      { branch: '', spend: spend(2, 1, '') },
+    ],
+  },
+}
+
+function spend(requests: number, output: number, lastActive: string) {
+  return { requests, cost: { input: 0, output, cacheWrite: 0, cacheRead: 0 }, lastActive }
 }
 
 function model(name: string, requests: number, output: number, isPriced: boolean) {
@@ -188,5 +199,27 @@ test('Projects lists the last 30 days by project, most expensive first', async (
   expect((await ui.find({ type: 'Text', text: /^3 requests/ }))?.text).toBe(
     '3 requests · last active Nov 1',
   )
+  await ui.unmount()
+})
+
+test('Branches lists the current repository by branch and asks the analyzer for it', async ($, on) => {
+  const commands: string[][] = []
+  on('session.repo', () => ({
+    value: { root: '/code/shop', remote: null, internal: false, name: null },
+  }))
+  on('process.run', (_, e) => {
+    commands.push([...e.argv])
+    return ran(JSON.stringify(SUMMARY))
+  })
+  const ui = await $.ui.mount(PANE)
+
+  await ui.press({ key: 'branches' })
+
+  expect(commands[0]?.slice(-2)).toEqual(['--project', '/code/shop'])
+  expect(await ui.find({ type: 'Text', text: 'Branches in ~/code/shop' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'feat/checkout' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: '$30.00' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: '(no branch)' })).toBeDefined()
+  expect((await ui.find({ type: 'Text', text: /^2 requests/ }))?.text).toBe('2 requests')
   await ui.unmount()
 })

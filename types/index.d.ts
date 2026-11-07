@@ -3,7 +3,7 @@
 // back, so the compiler keeps the two identical.
 
 /** The pane's tabs, in the order the tab row shows them. */
-export type Tab = 'now' | 'today' | 'last30' | 'all' | 'projects' | 'tips'
+export type Tab = 'now' | 'today' | 'last30' | 'all' | 'projects' | 'branches' | 'prs' | 'tips'
 
 export interface SummaryTotals {
   requests: number
@@ -47,6 +47,7 @@ export type History =
         allTime: SummaryTotals
         byModel: { today: SummaryModel[]; last30: SummaryModel[]; allTime: SummaryModel[] }
         projects: { path: string; last30: SummarySpend }[]
+        currentProject: { path: string; branches: { branch: string; spend: SummarySpend }[] } | null
       }
       /** A refresh is running; the summary above stays on screen meanwhile. */
       isRefreshing: boolean
