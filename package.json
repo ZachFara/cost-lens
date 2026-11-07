@@ -1,0 +1,39 @@
+{
+  "name": "cost-lens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Claude Code mod: see where tokens and dollars go, catch cold-cache rebuilds, pick cheaper models.",
+  "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run deadcode && npm run deps && npm run layout && npm run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint --max-warnings 0 .",
+    "typecheck": "tsc -p tsconfig.node.json && node tools/engine-types.ts typecheck",
+    "engine-types": "node tools/engine-types.ts sync",
+    "deadcode": "knip",
+    "deps": "depcruise . --config .dependency-cruiser.cjs",
+    "layout": "node tools/check-layout.ts",
+    "test": "node --test \"tests/node/**/*.spec.ts\" && claude plugin validate . && claude plugin test ."
+  },
+  "devDependencies": {
+    "@anthropic-ai/claude-code": "2.1.319",
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.6.6",
+    "dependency-cruiser": "18.7.2",
+    "eslint": "10.14.0",
+    "knip": "6.44.2",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1"
+  },
+  "allowScripts": {
+    "@anthropic-ai/claude-code@2.1.319": true
+  }
+}
