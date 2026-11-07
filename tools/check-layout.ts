@@ -11,6 +11,8 @@ const ALLOWED: readonly RegExp[] = [
   /^(eslint\.config\.js|commitlint\.config\.js|\.dependency-cruiser\.cjs)$/,
   /^(\.prettierrc\.json|\.prettierignore|\.gitignore|\.nvmrc)$/,
   /^\.claude-plugin\/(plugin|marketplace)\.json$/,
+  /^\.claude-plugin\/icon\.png$/,
+  /^docs\/media\/[a-z0-9-]+\.(png|gif)$/,
   /^\.githooks\/(pre-commit|commit-msg)$/,
   /^\.github\/workflows\/[a-z0-9-]+\.yml$/,
   /^\.github\/pull_request_template\.md$/,
