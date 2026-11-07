@@ -7,6 +7,7 @@ import {
   cacheHitRate,
   costOf,
   emptyTotals,
+  plusRecord,
   rankModels,
   totalCost,
 } from '../../src/core/cost.ts'
@@ -62,4 +63,13 @@ await test('models are totalled separately and ranked by cost, unpriced last', (
     ],
   )
   assert.equal(totalCost(ranked[2]?.cost ?? emptyTotals().cost), 0)
+})
+
+await test('plusRecord returns new totals and leaves the old ones alone', () => {
+  const before = emptyTotals()
+  const after = plusRecord(before, FABLE)
+  assert.equal(before.requests, 0)
+  assert.equal(before.cost.output, 0)
+  assert.equal(after.requests, 1)
+  assert.equal(after.cost.output, 50)
 })

@@ -9,6 +9,7 @@ import { periodView } from './period-view.tsx'
 import { projectsView } from './projects-view.tsx'
 import { branchesView } from './branches-view.tsx'
 import { prsView } from './prs-view.tsx'
+import { nowView } from './now-view.tsx'
 import { loadPullRequests, readPullRequests } from './pull-requests.ts'
 import type { Period } from '../core/summary.ts'
 import type { Actions, Ready, Ui } from './ui.ts'
@@ -77,6 +78,7 @@ function tabRow(ui: Ui, selected: Tab, onSelect: (tab: Tab) => void) {
 
 async function tabBody($: EngineInterface, ui: Ui, tab: Tab, columns: number) {
   const prs = tab === 'prs' ? await readPullRequests($) : ({ status: 'idle' } as const)
+  if (tab === 'now') return nowView($, ui, columns)
   const readyView = readyViewFor(tab, ui, columns, prs)
   if (readyView === undefined) {
     const label = TABS.find((one) => one.id === tab)?.label ?? tab

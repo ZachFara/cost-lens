@@ -69,6 +69,8 @@ declare module 'claude-code' {
       tab: Tab
       history: Shaped<History>
       pullRequests: Shaped<PullRequests>
+      /** This session's requests so far, as each response completes. */
+      live: Shaped<SummaryTotals>
     }
   }
 }

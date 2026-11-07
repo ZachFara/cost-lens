@@ -22,6 +22,13 @@ export function formatClock(iso: string): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
+/** A token count in short form: 950, 12.3k, 1.2M. */
+export function formatTokens(count: number): string {
+  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}k`
+  return String(Math.round(count))
+}
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 /** When something last happened: "today 11:42", or "Nov 5" for an earlier day; '' stays ''. */
@@ -55,4 +62,13 @@ export function barWidths(values: readonly number[], width: number): number[] {
     left -= 1
   }
   return widths
+}
+
+/** When a usage window resets: "Resets 12:40" today, else "Resets Nov 12 at 22:59". */
+export function formatResets(iso: string, now: Date): string {
+  const when = formatWhen(iso, now)
+  if (when === '') return ''
+  return when.startsWith('today ')
+    ? `Resets ${when.slice('today '.length)}`
+    : `Resets ${when} at ${formatClock(iso)}`
 }

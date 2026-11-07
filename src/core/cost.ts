@@ -73,6 +73,18 @@ function addTokens(into: TokenUsage, usage: TokenUsage): void {
   into.cacheRead += usage.cacheRead
 }
 
+/** The totals with one more request, as a new value (for state that must not be mutated). */
+export function plusRecord(totals: Totals, record: UsageRecord): Totals {
+  const next: Totals = {
+    ...totals,
+    unpricedModels: [...totals.unpricedModels],
+    tokens: { ...totals.tokens },
+    cost: { ...totals.cost },
+  }
+  addRecord(next, record)
+  return next
+}
+
 /** Adds one request to the totals, in place. */
 export function addRecord(totals: Totals, record: UsageRecord): void {
   totals.requests += 1
