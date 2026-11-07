@@ -78,6 +78,16 @@ export interface LastRequest {
   promptTokens: number
 }
 
+/** Which model fits the session's last judged prompt. */
+export interface Recommendation {
+  tier: 'trivial' | 'routine' | 'complex' | 'hardest'
+  /** The recommended model id. */
+  model: string
+  /** The session's model when the prompt was judged. */
+  current: string
+  at: number
+}
+
 /** The last `gh pr list` in the session's repository. */
 export type PullRequests =
   | { status: 'idle' }
@@ -98,6 +108,7 @@ declare module 'claude-code' {
       minute: number
       /** When the model advisor last suggested a cheaper model (ms since the epoch). */
       lastAdviceAt: number
+      recommendation: Shaped<Recommendation | null>
     }
   }
 }
