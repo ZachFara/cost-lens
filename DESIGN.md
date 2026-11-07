@@ -15,19 +15,19 @@ Claude Code bills every message for the whole context it re-sends, so cost grows
 
 The person at a Claude Code terminal session. Every feature is reached from one of these entry points:
 
-| Entry point                      | What it does                                                                                                                                                                                                            |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/cost-lens` slash command       | Opens the cost-lens pane beside the chat.                                                                                                                                                                               |
-| Pane with tabs                   | **Now** (this session), **Today**, **30 days**, **All time**, **Projects**, **Tips**. A tab row of buttons switches the view; a Refresh button re-reads the logs.                                                       |
-| Band above the prompt            | One line: model, context size, cache status (`warm, 41m left` or `cold, next message re-writes 84k tokens ~$1.68`), session cost so far.                                                                                |
-| Prompt submit (cold-cache guard) | When the cache has expired and the context is large, asks before sending: send anyway, or cancel and put the text back in the prompt box so the person can `/compact` or `/clear` first. Slash commands are never held. |
-| Prompt submit (model advisor)    | After a prompt is sent on an Opus or Fable model, a Haiku classification runs; when it judges the prompt routine, a toast suggests `/model sonnet`, at most once per 10 minutes. It never blocks or delays the prompt.  |
+| Entry point                        | What it does                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/cost-lens` slash command         | Opens the cost-lens pane beside the chat.                                                                                                                                                                                                                                                                            |
+| Pane with tabs                     | **Now** (this session), **Today**, **30 days**, **All time**, **Projects**, **Tips**. A tab row of buttons switches the view; a Refresh button re-reads the logs.                                                                                                                                                    |
+| Band above the prompt              | One line: model, context size, cache status (`warm, 41m left` or `cold, next message re-writes 84k tokens ~$1.68`), session cost so far.                                                                                                                                                                             |
+| Prompt submit (cold-cache warning) | When the cache has expired and the context is large, shows a warning toast as the prompt goes out: how many tokens it re-writes and roughly what that costs, with `/compact` and `/clear` as the alternatives next time. It never holds, delays or drops the prompt. The band shows the same warning before sending. |
+| Prompt submit (model advisor)      | After a prompt is sent on an Opus or Fable model, a Haiku classification runs; when it judges the prompt routine, a toast suggests `/model sonnet`, at most once per 10 minutes. It never blocks or delays the prompt.                                                                                               |
 
 ## Components
 
 ### Core (pure TypeScript, no I/O)
 
-- Price table: dollars per million tokens for input, output and cache read per model id prefix; cache writes priced at 1.25x input (5-minute entries) and 2x input (1-hour entries). Source: the claude-api skill bundled with Claude Code 2.1.319 (cached 2026-10-06). Unknown models are reported as unpriced, never guessed.
+- Price table: dollars per million tokens for base input, 5-minute cache writes, 1-hour cache writes, cache reads and output, per model id, copied from Anthropic's pricing page (decision 0006). Haiku 5.5 has a second row for prompts over 100,000 tokens. Two modifiers the logs record per request: `speed: "fast"` uses the fast-mode rates (Opus 5.5: $8 / $40), and `inference_geo: "us"` multiplies every category by 1.1. Unknown models are reported as unpriced, never guessed.
 - Cost math: a usage record (input, output, cache-write 5m, cache-write 1h, cache-read tokens, model) to a cost split by category.
 - Aggregation: records into totals by period, model, project and branch.
 - Cold-rebuild detection: within one session file, a request whose gap since the previous request exceeds the previous entry's time-to-live, that writes at least 5,000 cache tokens and reads fewer than it writes. Its wasted cost is what the writes cost minus what reading the same tokens would have cost.
@@ -43,7 +43,7 @@ The person at a Claude Code terminal session. Every feature is reached from one 
 ### Mod (Claude Code hooks module)
 
 - `hooks/register.tsx` is the only entry the engine loads; it wires hooks from `src/mod/`.
-- Live tracking: a `turn.step` hook reads each request's usage and model; the main loop's last request time and context size drive the band and the guard.
+- Live tracking: a `turn.step` hook reads each request's usage and model; the main loop's last request time and context size drive the band and the cold-cache warning.
 - `$.session.usage()` supplies the session's exact cost and context window; `breakdown: 'summary'` (a local estimate, no API calls) supplies the context categories for the Now tab.
 - Pane, band and toasts use the engine's element tables (`$.ui.resolve`). State a drawing reads lives in `$.state`, declared in `types/index.d.ts`.
 
