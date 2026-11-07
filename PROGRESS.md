@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) 6 (per model), 7 (Projects), 7b (Branches), 7c (PRs), 8 (Now), 9 (cache line), 10 (cold-cache warning), 11 (Tips), 12 (model advisor) and 13 (live prices) are done: every task in the plan is complete.
+Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) 6 (per model), 7 (Projects), 7b (Branches), 7c (PRs), 8 (Now), 9 (cache line), 10 (cold-cache warning), 11 (Tips), 12 (model advisor) and 13 (live prices) are done. New owner requests 14 to 16 are next.
 
 ## Tasks
 
@@ -25,13 +25,17 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 12. **(done)** **Model advisor.** Entry: prompt submit on Opus or Fable. Done when: after the prompt enters, a Haiku classification judges it; routine prompts get one toast suggesting `/model sonnet`, at most every 10 minutes; the prompt is never delayed.
 13. **(done)** **Live price table.** Entry: Refresh button. Done when: the analyzer fetches Anthropic's pricing page as markdown (decision 0006) at most once a day, parses the model table into the core price table, caches it, and falls back to the built-in snapshot when offline or when the page cannot be parsed; the pane says which prices it used and when they were fetched; parsing tested on a saved copy of the page.
 
+14. **Marketplace file.** Entry: `/plugin install cost-lens --marketplace ZachFara/cost-lens`. Done when: `.claude-plugin/marketplace.json` lists the plugin, the README has the install lines and requirements, and a fresh install from GitHub in a throwaway home loads the mod. (Owner request, 2026-11-07.)
+15. **Context grid in the Now tab.** Entry: Now tab. Done when: the context window is drawn as a grid of colored squares, filled by category as `/context` draws it (`$.session.usage({ breakdown: 'summary', columns })`'s grid), with a legend; it fits the pane's width. (Owner request, 2026-11-07.)
+16. **Model recommendation.** Entry: prompt submit and the Now tab. Done when: each substantive prompt is judged into a tier (Haiku: trivial lookups and formatting; Sonnet: routine coding; Opus: complex reasoning or multi-file work; Fable: the hardest, long-running work); the Now tab shows the recommendation for the last prompt beside the current model; a toast suggests switching when the recommendation differs from the current model, in either direction, at most every ten minutes. Replaces task 12's Sonnet-only advice. (Owner request, 2026-11-07.)
+
 ## Open Questions
 
 None.
 
 ## Next steps
 
-- Nothing scheduled. Candidates: skill shares closer to `/usage` (count a skill's text in later requests); let the mod's own estimates (cache line, advisor, Now split) use the live prices too (today they use the built-in snapshot); a marketplace file so others can install cost-lens.
+- Tasks 14 to 16. Other candidates (not scheduled): skill shares closer to `/usage` (count a skill's text in later requests); let the mod's own estimates (cache line, advisor, Now split) use the live prices too (today they use the built-in snapshot).
 - Possible follow-up (not scheduled): skill shares count only the request that invoked a skill, so they read lower than `/usage`, which appears to count the skill's text in later requests too.
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
