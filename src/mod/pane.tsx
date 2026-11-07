@@ -31,7 +31,12 @@ export function registerPane(on: On): void {
   })
 
   on('command.run', { command: 'cost-lens' }, async ($) => {
-    const opened = await $.ui.open({ id: PANE_ID, title: 'cost-lens' })
+    // Transparent: the terminal's own theme shows through, as it does behind the chat.
+    const opened = await $.ui.open({
+      id: PANE_ID,
+      title: 'cost-lens',
+      backgroundColor: 'transparent',
+    })
     return {
       text: opened.isPlaced
         ? 'cost-lens pane opened.'

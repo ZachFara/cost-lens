@@ -54,6 +54,10 @@ test('opening All time reads the logs and shows the total, split and hit rate', 
     'Cache writes: $35.00 (35%)',
   )
 
+  const swatches = await ui.findAll({ type: 'Text', text: '■' })
+  const colors = swatches.map((swatch) => swatch.props.color)
+  expect(colors).toEqual(['suggestion', 'warning', 'error', 'success'])
+
   await ui.press({ key: 'now' })
   await ui.press({ key: 'all' })
   expect(commands).toHaveLength(1)

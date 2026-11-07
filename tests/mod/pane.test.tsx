@@ -24,7 +24,7 @@ test('/cost-lens registers and opens the cost-lens pane', async ($, on) => {
     return { value: { command: e.name } }
   })
   on('ui.open', (_, e) => {
-    opened.push(`${e.id} ${String(e.title)}`)
+    opened.push(`${e.id} ${String(e.title)} ${String(e.backgroundColor)}`)
     return { value: { isPlaced: true } }
   })
   on('session.start', (_, e) => ({ cwd: e.cwd }))
@@ -38,7 +38,7 @@ test('/cost-lens registers and opens the cost-lens pane', async ($, on) => {
   })
 
   expect(registered).toEqual(['cost-lens'])
-  expect(opened).toEqual(['cost-lens cost-lens'])
+  expect(opened).toEqual(['cost-lens cost-lens transparent'])
   expect(result.text).toBe('cost-lens pane opened.')
 })
 
