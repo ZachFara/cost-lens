@@ -11,11 +11,11 @@ Costs are estimated from token counts, so the price table decides every dollar f
 - The price table in `src/core/` is a snapshot of that page's "Model pricing" table, with the fetch date and URL in a comment. Each model has base input, 5-minute cache write, 1-hour cache write, cache read and output prices, copied as published rather than derived from multipliers.
 - Claude Haiku 5.5 has two rows: prompts up to 100,000 tokens and prompts over 100,000 tokens.
 - Modifiers from the same page apply per request, as the logs record them: `speed: "fast"` uses fast-mode prices, and `inference_geo: "us"` multiplies every category by 1.1.
-- A later task (PROGRESS.md, task 13) fetches the markdown page at most once a day and parses it, falling back to the snapshot.
+- With `--live-prices` (the mod always passes it; tests and CI never do), the analyzer fetches the markdown page at most once a local day, parses its "Model pricing" table (`src/core/price-page.ts`), caches it in `~/Library/Caches/cost-lens/prices.json`, and prices with it; fast-mode rates, in a separate table, stay from the snapshot. When the page cannot be fetched or parsed (fewer than five models), the last cached prices stand, else the snapshot.
 - Community price lists (such as LiteLLM's model price JSON) are not used: the vendor's own page is authoritative and machine-readable.
 
 ## Consequences
 
 - Prices match what Anthropic bills on the first-party API. Amazon Bedrock and Google Vertex AI prices differ and are not modelled.
-- Until task 13 lands, a price change needs a code change. The pane says which snapshot date it uses.
+- A price change on the page reaches the pane within a day with no code change. The pane names the date of the prices it used.
 - If Anthropic changes the page's layout, the parser falls back to the snapshot rather than showing wrong numbers.
