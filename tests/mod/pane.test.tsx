@@ -54,7 +54,6 @@ for (const surface of ['terminal', 'desktop'] as const) {
 
     expect((await ui.find({ key: 'today' }))?.props.variant).toBe('primary')
     expect((await ui.find({ key: 'now' }))?.props.variant).toBe('secondary')
-    expect((await ui.find({ type: 'Text', text: 'Today' }))?.text).toBe('Today')
     await ui.unmount()
   })
 }

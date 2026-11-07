@@ -8,8 +8,19 @@ import { test } from 'node:test'
 import { recordFromLine, summarize } from '../../src/analyzer/logs.ts'
 import { parseSummary } from '../../src/core/summary.ts'
 
-function assistant(id: string, model: string, usage: Record<string, unknown>): string {
-  return JSON.stringify({ type: 'assistant', message: { id, model, usage } })
+const NOW = new Date(2026, 10, 7, 12, 0)
+
+function daysAgo(days: number, hour = 12): string {
+  return new Date(2026, 10, 7 - days, hour, 0).toISOString()
+}
+
+function assistant(
+  id: string,
+  model: string,
+  usage: Record<string, unknown>,
+  timestamp: string = daysAgo(0),
+): string {
+  return JSON.stringify({ type: 'assistant', timestamp, message: { id, model, usage } })
 }
 
 const ONE_MILLION_EACH = {
@@ -58,8 +69,8 @@ await test('a log line becomes a usage record; other lines are skipped', () => {
 
 await test('summarize counts each message once, skips synthetic and non-log files', async () => {
   await withLogs(async (root) => {
-    const summary = await summarize(root, new Date('2026-11-07T12:00:00Z'))
-    assert.equal(summary.generatedAt, '2026-11-07T12:00:00.000Z')
+    const summary = await summarize(root, NOW)
+    assert.equal(summary.generatedAt, NOW.toISOString())
     assert.equal(summary.allTime.requests, 2)
     assert.equal(summary.allTime.unpricedRequests, 0)
     assert.equal(summary.allTime.tokens.input, 1_000_000)
@@ -85,4 +96,25 @@ await test('the CLI prints a summary the mod can parse', async () => {
   })
   assert.equal(parseSummary('{"allTime": {}}'), undefined)
   assert.equal(parseSummary('nope'), undefined)
+})
+
+await test('requests count toward Today and 30 days by their local calendar day', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'cost-lens-days-'))
+  try {
+    const usage = { output_tokens: 1_000_000 }
+    const lines = [
+      assistant('today-early', 'claude-sonnet-5-5', usage, daysAgo(0, 0)),
+      assistant('yesterday-late', 'claude-sonnet-5-5', usage, daysAgo(1, 23)),
+      assistant('day-29', 'claude-sonnet-5-5', usage, daysAgo(29)),
+      assistant('day-30', 'claude-sonnet-5-5', usage, daysAgo(30)),
+      assistant('no-time', 'claude-sonnet-5-5', usage, 'not a time'),
+    ]
+    writeFileSync(join(root, 'session.jsonl'), lines.join('\n'))
+    const summary = await summarize(root, NOW)
+    assert.equal(summary.today.requests, 1)
+    assert.equal(summary.last30.requests, 3)
+    assert.equal(summary.allTime.requests, 5)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
 })

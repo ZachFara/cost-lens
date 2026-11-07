@@ -25,7 +25,13 @@ export type History =
   | { status: 'loading' }
   | {
       status: 'ready'
-      summary: { generatedAt: string; pricesFetched: string; allTime: SummaryTotals }
+      summary: {
+        generatedAt: string
+        pricesFetched: string
+        today: SummaryTotals
+        last30: SummaryTotals
+        allTime: SummaryTotals
+      }
       /** A refresh is running; the summary above stays on screen meanwhile. */
       isRefreshing: boolean
       /** Why the last refresh failed, or null; the summary is the last good one. */

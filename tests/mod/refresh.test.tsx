@@ -17,17 +17,23 @@ const PANE = {
 
 const FIVE_MINUTES = 5 * 60 * 1000
 
+function totals(output: number) {
+  return {
+    requests: 1,
+    unpricedRequests: 0,
+    unpricedModels: [],
+    tokens: { input: 1, output: 1, cacheWrite5m: 0, cacheWrite1h: 0, cacheRead: 0 },
+    cost: { input: 0, output, cacheWrite: 0, cacheRead: 0 },
+  }
+}
+
 function summary(output: number) {
   return JSON.stringify({
     generatedAt: '2026-11-07T12:00:00.000Z',
     pricesFetched: '2026-11-07',
-    allTime: {
-      requests: 1,
-      unpricedRequests: 0,
-      unpricedModels: [],
-      tokens: { input: 1, output: 1, cacheWrite5m: 0, cacheWrite1h: 0, cacheRead: 0 },
-      cost: { input: 0, output, cacheWrite: 0, cacheRead: 0 },
-    },
+    today: totals(output),
+    last30: totals(output),
+    allTime: totals(output),
   })
 }
 

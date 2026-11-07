@@ -9,7 +9,7 @@ const IDLE: History = { status: 'idle' }
 
 // Change the tag when History's fields change: it declines what an earlier version stored.
 const history = atom({ plugin: 'cost-lens', key: 'history' } as const, IDLE, {
-  shape: 'history-2',
+  shape: 'history-3',
 })
 
 const ANALYZER_TIMEOUT_MS = 5 * 60 * 1000

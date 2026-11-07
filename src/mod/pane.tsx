@@ -1,10 +1,13 @@
 import { atom, read, update } from 'claude-code'
-import type { On } from 'claude-code'
+import type { EngineInterface, On } from 'claude-code'
 
 import type { Tab } from '../../types'
 
-import { allTimeView } from './all-time.tsx'
+import { historyView } from './history-view.tsx'
 import { loadHistory, readHistory, refreshHistory, startBackgroundRefresh } from './history.ts'
+import { periodView } from './period-view.tsx'
+import type { Period } from './period-view.tsx'
+import type { Actions, Ui } from './ui.ts'
 
 const PANE_ID = 'cost-lens'
 
@@ -17,7 +20,52 @@ const TABS: readonly { id: Tab; label: string }[] = [
   { id: 'tips', label: 'Tips' },
 ]
 
+/** The tabs that show a period of the analyzer's summary. */
+const PERIOD_OF: Partial<Record<Tab, Period>> = { today: 'today', last30: 'last30', all: 'allTime' }
+
 const selectedTab = atom({ plugin: 'cost-lens', key: 'tab' } as const, 'now')
+
+function select($: EngineInterface, tab: Tab): void {
+  void update($, selectedTab, () => tab)
+  if (PERIOD_OF[tab] !== undefined) void loadHistory($)
+}
+
+function tabRow(ui: Ui, selected: Tab, onSelect: (tab: Tab) => void) {
+  const { Box, Button } = ui
+  return (
+    <Box flexDirection="row" flexWrap="wrap" columnGap={1}>
+      {TABS.map((one) => (
+        <Button
+          key={one.id}
+          label={one.label}
+          variant={one.id === selected ? 'primary' : 'secondary'}
+          onPress={() => {
+            onSelect(one.id)
+          }}
+        />
+      ))}
+    </Box>
+  )
+}
+
+async function tabBody($: EngineInterface, ui: Ui, tab: Tab, columns: number) {
+  const period = PERIOD_OF[tab]
+  if (period === undefined) {
+    const label = TABS.find((one) => one.id === tab)?.label ?? tab
+    return <ui.Text weight="semibold">{label}</ui.Text>
+  }
+  const actions: Actions = {
+    load: () => {
+      void loadHistory($)
+    },
+    refresh: () => {
+      void refreshHistory($)
+    },
+  }
+  return historyView(ui, await readHistory($), actions, (ready) =>
+    periodView(ui, ready, period, columns),
+  )
+}
 
 /** `/cost-lens` opens the pane; the pane draws its tab row and the selected tab. */
 export function registerPane(on: On): void {
@@ -46,40 +94,14 @@ export function registerPane(on: On): void {
 
   on('ui.render', { component: 'Pane', requestId: PANE_ID }, async ($, e) => {
     const ui = $.ui.resolve(e)
-    const { Box, Button, Text } = ui
     const tab = await read($, selectedTab)
-    const current = TABS.find((one) => one.id === tab) ?? TABS[0]
-    const body =
-      tab === 'all' ? (
-        allTimeView(ui, await readHistory($), e.props.bodyColumns, {
-          load: () => {
-            void loadHistory($)
-          },
-          refresh: () => {
-            void refreshHistory($)
-          },
-        })
-      ) : (
-        <Text weight="semibold">{current?.label}</Text>
-      )
-
     return (
-      <Box flexDirection="column" gap={1}>
-        <Box flexDirection="row" flexWrap="wrap" columnGap={1}>
-          {TABS.map((one) => (
-            <Button
-              key={one.id}
-              label={one.label}
-              variant={one.id === tab ? 'primary' : 'secondary'}
-              onPress={() => {
-                void update($, selectedTab, () => one.id)
-                if (one.id === 'all') void loadHistory($)
-              }}
-            />
-          ))}
-        </Box>
-        {body}
-      </Box>
+      <ui.Box flexDirection="column" gap={1}>
+        {tabRow(ui, tab, (next) => {
+          select($, next)
+        })}
+        {await tabBody($, ui, tab, e.props.bodyColumns)}
+      </ui.Box>
     )
   })
 }
