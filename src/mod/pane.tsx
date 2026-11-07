@@ -6,7 +6,7 @@ import type { Tab } from '../../types'
 import { historyView } from './history-view.tsx'
 import { loadHistory, readHistory, refreshHistory, startBackgroundRefresh } from './history.ts'
 import { periodView } from './period-view.tsx'
-import type { Period } from './period-view.tsx'
+import type { Period } from '../core/summary.ts'
 import type { Actions, Ui } from './ui.ts'
 
 const PANE_ID = 'cost-lens'

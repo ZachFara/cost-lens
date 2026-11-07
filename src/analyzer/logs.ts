@@ -3,11 +3,11 @@ import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createInterface } from 'node:readline'
 
-import { addRecord, emptyTotals } from '../core/cost.ts'
-import type { UsageRecord } from '../core/cost.ts'
+import { addRecord, addToModel, emptyTotals, rankModels } from '../core/cost.ts'
+import type { ModelTotals, Totals, UsageRecord } from '../core/cost.ts'
 import { daysBefore, localDay } from '../core/days.ts'
 import { PRICES_FETCHED } from '../core/pricing.ts'
-import type { Summary } from '../core/summary.ts'
+import type { Period, Summary } from '../core/summary.ts'
 
 type Json = Record<string, unknown>
 
@@ -76,18 +76,33 @@ function assistantEntry(line: string): Json | undefined {
   return entry?.type === 'assistant' ? entry : undefined
 }
 
-type Periods = Pick<Summary, 'today' | 'last30' | 'allTime'>
+interface Bucket {
+  totals: Totals
+  models: Map<string, ModelTotals>
+}
+
+type Periods = Record<Period, Bucket>
+
+function emptyPeriods(): Periods {
+  const bucket = (): Bucket => ({ totals: emptyTotals(), models: new Map() })
+  return { today: bucket(), last30: bucket(), allTime: bucket() }
+}
+
+function add(bucket: Bucket, record: UsageRecord): void {
+  addRecord(bucket.totals, record)
+  addToModel(bucket.models, record)
+}
 
 const LAST_DAYS = 30
 
 /** Every request counts toward All time; dated ones also toward Today and the last 30 days. */
 function addToPeriods(periods: Periods, found: Found, today: string): void {
-  addRecord(periods.allTime, found.record)
+  add(periods.allTime, found.record)
   const at = found.timestamp === undefined ? Number.NaN : Date.parse(found.timestamp)
   if (Number.isNaN(at)) return
   const age = daysBefore(localDay(new Date(at)), today)
-  if (age === 0) addRecord(periods.today, found.record)
-  if (age >= 0 && age < LAST_DAYS) addRecord(periods.last30, found.record)
+  if (age === 0) add(periods.today, found.record)
+  if (age >= 0 && age < LAST_DAYS) add(periods.last30, found.record)
 }
 
 async function logFiles(root: string): Promise<string[]> {
@@ -117,11 +132,22 @@ async function addFile(
 
 /** Reads every session log under `root` (Claude Code keeps them in ~/.claude/projects). */
 export async function summarize(root: string, now: Date): Promise<Summary> {
-  const periods: Periods = { today: emptyTotals(), last30: emptyTotals(), allTime: emptyTotals() }
+  const periods = emptyPeriods()
   const today = localDay(now)
   const seen = new Set<string>()
   for (const name of await logFiles(root)) {
     await addFile(join(root, name), seen, periods, today)
   }
-  return { generatedAt: now.toISOString(), pricesFetched: PRICES_FETCHED, ...periods }
+  return {
+    generatedAt: now.toISOString(),
+    pricesFetched: PRICES_FETCHED,
+    today: periods.today.totals,
+    last30: periods.last30.totals,
+    allTime: periods.allTime.totals,
+    byModel: {
+      today: rankModels(periods.today.models),
+      last30: rankModels(periods.last30.models),
+      allTime: rankModels(periods.allTime.models),
+    },
+  }
 }

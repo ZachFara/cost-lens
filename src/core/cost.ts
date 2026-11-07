@@ -98,3 +98,41 @@ export function cacheHitRate(tokens: TokenUsage): number {
   const prompt = promptTokens(tokens)
   return prompt === 0 ? 0 : tokens.cacheRead / prompt
 }
+
+/** One model's share of a period. */
+export interface ModelTotals {
+  model: string
+  requests: number
+  /** False for a model with no published price: its cost is 0 and not in the total. */
+  isPriced: boolean
+  tokens: TokenUsage
+  cost: CostSplit
+}
+
+/** Adds one request to its model's totals, in place. */
+export function addToModel(byModel: Map<string, ModelTotals>, record: UsageRecord): void {
+  let totals = byModel.get(record.model)
+  if (totals === undefined) {
+    const { tokens, cost } = emptyTotals()
+    totals = { model: record.model, requests: 0, isPriced: true, tokens, cost }
+    byModel.set(record.model, totals)
+  }
+  totals.requests += 1
+  addTokens(totals.tokens, record.usage)
+  const cost = costOf(record)
+  if (cost === undefined) {
+    totals.isPriced = false
+    return
+  }
+  totals.cost.input += cost.input
+  totals.cost.output += cost.output
+  totals.cost.cacheWrite += cost.cacheWrite
+  totals.cost.cacheRead += cost.cacheRead
+}
+
+/** Models from most to least expensive; unpriced models (cost 0) by requests after them. */
+export function rankModels(byModel: Map<string, ModelTotals>): ModelTotals[] {
+  return [...byModel.values()].sort(
+    (a, b) => totalCost(b.cost) - totalCost(a.cost) || b.requests - a.requests,
+  )
+}

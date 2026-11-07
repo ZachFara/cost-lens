@@ -1,12 +1,11 @@
 import type { RenderElement } from 'claude-code'
 
 import { cacheHitRate, totalCost } from '../core/cost.ts'
-import type { Totals } from '../core/cost.ts'
+import type { ModelTotals, Totals } from '../core/cost.ts'
 import { barWidths, formatCount, formatShare, formatUsd } from '../core/format.ts'
+import type { Period } from '../core/summary.ts'
 
 import type { Ready, Ui } from './ui.ts'
-
-export type Period = 'today' | 'last30' | 'allTime'
 
 const EMPTY: Record<Period, string> = {
   today: 'No Claude Code use today yet.',
@@ -51,6 +50,35 @@ function splitView(ui: Ui, totals: Totals, columns: number): RenderElement {
   )
 }
 
+const MODELS_SHOWN = 8
+
+function modelsView(ui: Ui, models: readonly ModelTotals[]) {
+  const { Box, Text } = ui
+  return (
+    <Box flexDirection="column" gap={1}>
+      <Text weight="semibold">By model</Text>
+      {models.slice(0, MODELS_SHOWN).map((one) => {
+        const price = one.isPriced ? formatUsd(totalCost(one.cost)) : 'no published price'
+        const details =
+          `${formatCount(one.requests)} requests · ` +
+          `cache hit rate ${formatShare(cacheHitRate(one.tokens))}`
+        return (
+          <Box flexDirection="column">
+            <Box flexDirection="row" justifyContent="space-between" columnGap={1}>
+              <Text>{one.model}</Text>
+              <Text color={one.isPriced ? 'success' : 'warning'}>{price}</Text>
+            </Box>
+            <Text dimColor>{details}</Text>
+          </Box>
+        )
+      })}
+      {models.length > MODELS_SHOWN ? (
+        <Text dimColor>{`and ${String(models.length - MODELS_SHOWN)} more`}</Text>
+      ) : null}
+    </Box>
+  )
+}
+
 /** Today, 30 days or All time: the total, request count, hit rate and cost split. */
 export function periodView(ui: Ui, state: Ready, period: Period, columns: number) {
   const { Box, Text } = ui
@@ -71,6 +99,7 @@ export function periodView(ui: Ui, state: Ready, period: Period, columns: number
       </Box>
       {splitView(ui, totals, columns)}
       {totals.unpricedRequests > 0 ? <Text color="warning">{unpriced}</Text> : null}
+      {modelsView(ui, state.summary.byModel[period])}
     </Box>
   )
 }

@@ -34,6 +34,7 @@ function summary(output: number) {
     today: totals(output),
     last30: totals(output),
     allTime: totals(output),
+    byModel: { today: [], last30: [], allTime: [] },
   })
 }
 
