@@ -17,8 +17,12 @@ const PANE = {
 
 const inAnHour = new Date(Date.now() + 60 * 60 * 1000).toISOString()
 
-function category(name: string, tokens: number, kind: 'used' | 'free') {
-  return { name, tokens, color: 'text', isDeferred: false, kind }
+function category(name: string, tokens: number, kind: 'used' | 'free', color: string) {
+  return { name, tokens, color, isDeferred: false, kind }
+}
+
+function square(categoryName: string, color: string, isFilled: boolean, squareFullness = 1) {
+  return { color, isFilled, categoryName, tokens: 0, percentage: 0, squareFullness }
 }
 
 const USAGE = {
@@ -29,16 +33,23 @@ const USAGE = {
     percent: 8,
     breakdown: {
       categories: [
-        category('Messages', 60_000, 'used'),
-        category('System tools', 20_000, 'used'),
-        category('Free space', 900_000, 'free'),
+        category('Messages', 60_000, 'used', 'claude'),
+        category('System tools', 20_000, 'used', 'inactive'),
+        category('Free space', 900_000, 'free', 'promptBorder'),
       ],
       totalTokens: 84_000,
       maxTokens: 1_000_000,
       rawMaxTokens: 1_000_000,
       autocompactSource: 'model-default' as const,
       percentage: 8,
-      gridRows: [],
+      gridRows: [
+        [
+          square('System tools', 'inactive', true),
+          square('Messages', 'claude', true),
+          square('Messages', 'claude', true, 0.4),
+        ],
+        [square('Free space', 'promptBorder', false), square('Free space', 'promptBorder', false)],
+      ],
       model: 'claude-opus-5-5',
       memoryFiles: [],
       mcpTools: [],
@@ -73,9 +84,18 @@ test('Now shows plan usage, this session and what fills the context', async ($, 
   expect((await ui.find({ type: 'Text', text: /^Context / }))?.text).toBe(
     'Context 84.0k of 1.0M (8%) · 0 requests',
   )
-  expect(await ui.find({ type: 'Text', text: 'Messages' })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: '60.0k' })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: 'Free space' })).toBeUndefined()
+  expect(await ui.find({ type: 'Text', text: 'Context window · 84.0k of 1.0M' })).toBeDefined()
+  const squares = await ui.findAll({ type: 'Text', text: /^[■□·] $/ })
+  expect(squares.map((one) => [one.text, one.props.color ?? 'dim'])).toEqual([
+    ['■ ', 'inactive'],
+    ['■ ', 'claude'],
+    ['□ ', 'claude'],
+    ['· ', 'dim'],
+    ['· ', 'dim'],
+  ])
+  const legend = await ui.findAll({ type: 'Text', text: /^(Messages|System tools|Free space)$/ })
+  expect(legend.map((one) => one.text)).toEqual(['Messages', 'System tools', 'Free space'])
+  expect(await ui.find({ type: 'Text', text: '60.0k (6%)' })).toBeDefined()
   await ui.unmount()
 })
 
