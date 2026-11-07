@@ -75,6 +75,7 @@ To add a new kind of path, propose it in PROGRESS.md under Open Questions first.
 - The owner's sessions load this working copy live (`CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json`), and interactive sessions hot-reload it. Whatever is checked out, including a half-finished branch, is what runs in their sessions. Keep the mod loadable at every commit and switch back to `main` when a session ends.
 - `types/index.d.ts` (the `$.state` contract) must be self-contained: no imports. Types it shares with `src/core/` are written out in both places; code that assigns one to the other in both directions keeps them identical.
 - The engine scans each file for the state it reads: `read($, atom)` must name an atom defined in the same file. Export a small reader function (like `readHistory`) instead of the atom.
+- Where a pane sits is the engine's choice: docked beside the chat only in the fullscreen layout (`/tui fullscreen`, saved per user), above the prompt otherwise. `command.run`'s `presentation.isFullscreen` says which. A pane's `backgroundColor` is set when it opens, so a change shows after reopening.
 - Engine tests are `*.test.ts(x)` under `tests/mod/`; Node tests are `*.spec.ts` under `tests/node/`, so `claude plugin test` never picks up a Node test.
 
 ## Workflow
