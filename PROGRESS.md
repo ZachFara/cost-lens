@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 1 (repository setup) is in review on `chore/setup`. No feature code yet. Phase 2 starts when the owner approves.
+Phase 1 (repository setup) is merged. Phase 2 has started: task 1 is next.
 
 ## Tasks
 
@@ -17,26 +17,23 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 7. **Projects tab.** Entry: Projects tab. Done when: the 30-day cost by project and git branch is listed, top 15, with last active time.
 8. **Now tab: live session.** Entry: Now tab. Done when: a `turn.step` hook records each request's usage; the tab shows model, context used of window, session cost from `$.session.usage()`, this session's cost split and the context categories from `breakdown: 'summary'`.
 9. **Cache band above the prompt.** Entry: the band. Done when: it shows `warm, Nm left` or `cold, next message re-writes Nk tokens ~$X`, refreshes on a timer, uses the time-to-live the analyzer reports (default one hour), and can be hidden.
-10. **Cold-cache guard.** Entry: prompt submit. Done when: a prompt sent while the cache is cold and the context is at least 40k tokens asks first; cancel drops the prompt and puts its text back in the prompt box; slash commands and non-composer prompts pass untouched; a failing guard lets the prompt through.
+10. **Cold-cache warning.** Entry: prompt submit. Done when: a prompt sent while the cache is cold and the context is at least 40k tokens raises a warning toast with the tokens it re-writes and the estimated cost; the prompt is never held, delayed or changed; slash commands and non-composer prompts raise nothing; a failing hook still lets the prompt through.
 11. **Cold rebuilds and Tips tab.** Entry: Tips tab. Done when: the analyzer reports cold rebuilds and their wasted cost and the share of cost above 150k context; the Tips tab turns them into plain advice; detection tested on fixture logs.
 12. **Model advisor.** Entry: prompt submit on Opus or Fable. Done when: after the prompt enters, a Haiku classification judges it; routine prompts get one toast suggesting `/model sonnet`, at most every 10 minutes; the prompt is never delayed.
+13. **Live price table.** Entry: Refresh button. Done when: the analyzer fetches Anthropic's pricing page as markdown (decision 0006) at most once a day, parses the model table into the core price table, caches it, and falls back to the built-in snapshot when offline or when the page cannot be parsed; the pane says which prices it used and when they were fetched; parsing tested on a saved copy of the page.
 
 ## Open Questions
 
-1. **License.** The repository is public with no license, so others may read the code but not reuse it, and Claude's plugin directory requires one. Which license, if any (MIT is common for plugins)?
-2. **Narrowed lint rule (decision 0003).** `no-misused-promises` runs without its argument check in engine-API code, because with it ESLint never finishes on `on(event, hook)` calls. Approve, or prefer another approach?
-3. **Missing cache-read prices.** The bundled price source does not state cache-read prices for claude-haiku-5-5 or claude-sonnet-5. Plan: assume 0.1x input for Haiku 5.5 and $0.20 for Sonnet 5, labelled as assumptions in the price table. OK?
-4. **Model advisor sends prompt text to Haiku.** It goes to Anthropic through Claude Code's own model access. OK for the owner's use?
-5. **Cold-cache guard asks every time.** Should it ask, or only warn (band turns red, toast) and let the prompt go?
+None.
 
 ## Next steps
 
-- Owner reviews the Phase 1 PR and answers the open questions.
-- Then task 1.
+- Task 1: `/cost-lens` opens an empty pane with its tab row.
 
 ## Learned
 
 - Claude Code session logs repeat an assistant entry once per content block with the same `message.id` and usage; de-duplicate by `message.id`.
 - This machine's sessions write 1-hour cache entries (`usage.cache_creation.ephemeral_1h_input_tokens`).
 - Decided in review: the repository is public; personal spend figures and organization details stay out of it; the engine's generated API types are not committed (decision 0004).
+- Answered in review (2026-11-07): MIT license; the narrowed lint rule is approved; prices come from Anthropic's pricing page (decision 0006), with a live price table as task 13; the model advisor may send prompt text to Haiku; the cold-cache check only warns and never stops a prompt.
 - `claude plugin validate .` reports more than 4096 files because `node_modules/` sits inside the plugin folder. Watch whether hot reload is slow once the mod is installed (task 2).
