@@ -1,5 +1,6 @@
 {
   "name": "cost-lens",
   "version": "0.1.0",
+  "license": "MIT",
   "description": "See where Claude Code tokens and dollars go, catch cold-cache rebuilds, and pick cheaper models."
 }

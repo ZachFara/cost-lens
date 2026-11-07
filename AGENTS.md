@@ -44,7 +44,7 @@ tests/mod/*.test.ts(x)          engine tests, run by `claude plugin test .`
 tools/*.ts                      repo tooling (layout check)
 types/index.d.ts                the mod's $.state contract
 vendor/                         gitignored; the engine's API types (npm run engine-types)
-root config files and AGENTS.md, CLAUDE.md, DESIGN.md, PROGRESS.md, README.md
+root config files, LICENSE and AGENTS.md, CLAUDE.md, DESIGN.md, PROGRESS.md, README.md
 .scratch/                       gitignored; throwaway work only
 ```
 
