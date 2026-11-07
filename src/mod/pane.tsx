@@ -3,6 +3,9 @@ import type { On } from 'claude-code'
 
 import type { Tab } from '../../types'
 
+import { allTimeView } from './all-time.tsx'
+import { loadHistory, readHistory } from './history.ts'
+
 const PANE_ID = 'cost-lens'
 
 const TABS: readonly { id: Tab; label: string }[] = [
@@ -36,9 +39,18 @@ export function registerPane(on: On): void {
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE_ID }, async ($, e) => {
-    const { Box, Button, Text } = $.ui.resolve(e)
+    const ui = $.ui.resolve(e)
+    const { Box, Button, Text } = ui
     const tab = await read($, selectedTab)
     const current = TABS.find((one) => one.id === tab) ?? TABS[0]
+    const body =
+      tab === 'all' ? (
+        allTimeView(ui, await readHistory($), e.props.bodyColumns, () => {
+          void loadHistory($)
+        })
+      ) : (
+        <Text weight="semibold">{current?.label}</Text>
+      )
 
     return (
       <Box flexDirection="column" gap={1}>
@@ -50,11 +62,12 @@ export function registerPane(on: On): void {
               variant={one.id === tab ? 'primary' : 'secondary'}
               onPress={() => {
                 void update($, selectedTab, () => one.id)
+                if (one.id === 'all') void loadHistory($)
               }}
             />
           ))}
         </Box>
-        <Text weight="semibold">{current?.label}</Text>
+        {body}
       </Box>
     )
   })
