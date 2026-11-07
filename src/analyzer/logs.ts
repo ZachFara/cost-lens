@@ -20,7 +20,7 @@ import {
   tipsTracker,
 } from './tips.ts'
 import type { FileState, TipsTracker } from './tips.ts'
-import { PRICES_FETCHED } from '../core/pricing.ts'
+import { pricesFetched } from '../core/pricing.ts'
 import { withTilde } from '../core/paths.ts'
 import { addSpend, emptySpend } from '../core/spend.ts'
 import type { Spend } from '../core/spend.ts'
@@ -247,7 +247,7 @@ export async function summarize(
   }
   return {
     generatedAt: now.toISOString(),
-    pricesFetched: PRICES_FETCHED,
+    pricesFetched: pricesFetched(),
     today: periods.today.totals,
     last30: periods.last30.totals,
     allTime: periods.allTime.totals,
