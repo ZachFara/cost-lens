@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2 in progress. Tasks 1 to 4 are done; task 4b (pane look) is done; task 5 is next.
+Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look) and 5 (Today, 30 days) are done; task 6 is next.
 
 ## Tasks
 
@@ -13,9 +13,11 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 3. **(done)** **All time tab shows total cost and cost split.** Entry: All time tab. Done when: the pane runs the analyzer through `$.process.run`, shows a loading line, then total cost, request count, cache hit rate and the split (input, output, cache write, cache read) as numbers and a bar; core pricing and cost math tested with node:test; analyzer tested against fixture logs in a temporary folder; engine test with the process call answered by the test.
 4. **(done)** **Refresh, in the background too.** Entry: Refresh button. Done when: Refresh re-reads the logs while the last numbers stay on screen; every five minutes the numbers refresh on their own while the pane is shown and already loaded; reads run at low CPU priority (`nice -n 10`), one at a time; a failed refresh keeps the last numbers and says why. (Replaces the incremental index, owner's decision: a full read takes about 3 seconds.)
    4b. **(done)** **The pane matches the terminal.** Entry: the pane. Done when: the pane draws no background of its own (the terminal theme shows through, like the chat), and the four cost categories use clearly different colors.
-5. **Today and 30 days tabs.** Entry: those tabs. Done when: periods use local dates; tests cover the day boundary.
+5. **(done)** **Today and 30 days tabs.** Entry: those tabs. Done when: periods use local dates; tests cover the day boundary.
 6. **Per-model breakdown in period tabs.** Entry: period tabs. Done when: each period lists models by cost with tokens and cache hit rate; unpriced models are labelled, not guessed.
 7. **Projects tab.** Entry: Projects tab. Done when: the 30-day cost by project and git branch is listed, top 15, with last active time.
+   7b. **Branches tab (current project).** Entry: Branches tab. Done when: for the git repository the session runs in, the tab lists each branch Claude Code worked on with its cost, requests and last active time, most expensive first; sessions outside a repository say so. (Owner request, 2026-11-07.)
+   7c. **PRs tab (current project).** Entry: PRs tab. Done when: the tab lists the repository's pull requests (from `gh`), each with the cost of the work on its head branch, state and title; without `gh` or a GitHub remote it says why. (Owner request, 2026-11-07.)
 8. **Now tab: live session.** Entry: Now tab. Done when: a `turn.step` hook records each request's usage; the tab shows model, context used of window, session cost from `$.session.usage()`, this session's cost split and the context categories from `breakdown: 'summary'`.
 9. **Cache band above the prompt.** Entry: the band. Done when: it shows `warm, Nm left` or `cold, next message re-writes Nk tokens ~$X`, refreshes on a timer, uses the time-to-live the analyzer reports (default one hour), and can be hidden.
 10. **Cold-cache warning.** Entry: prompt submit. Done when: a prompt sent while the cache is cold and the context is at least 40k tokens raises a warning toast with the tokens it re-writes and the estimated cost; the prompt is never held, delayed or changed; slash commands and non-composer prompts raise nothing; a failing hook still lets the prompt through.
@@ -29,7 +31,7 @@ None.
 
 ## Next steps
 
-- Task 5: Today and 30 days tabs.
+- Task 6: per-model breakdown in the period tabs.
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
 ## Learned
