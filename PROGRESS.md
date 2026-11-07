@@ -23,10 +23,11 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 
 ## Open Questions
 
-1. **GitHub visibility and branch protection.** Branch protection and required checks are not available on private repositories on GitHub's free plan. Public, or private with a paid plan? (Asked in the Phase 1 summary.)
-2. **Missing cache-read prices.** The bundled price source does not state cache-read prices for claude-haiku-5-5 or claude-sonnet-5. Plan: assume 0.1x input for Haiku 5.5 and $0.20 for Sonnet 5, labelled as assumptions in the price table. OK?
-3. **Model advisor sends prompt text to Haiku.** It goes to Anthropic through Claude Code's own model access. OK for the owner's use?
-4. **Cold-cache guard asks every time.** Should it ask, or only warn (band turns red, toast) and let the prompt go?
+1. **License.** The repository is public with no license, so others may read the code but not reuse it, and Claude's plugin directory requires one. Which license, if any (MIT is common for plugins)?
+2. **Narrowed lint rule (decision 0003).** `no-misused-promises` runs without its argument check in engine-API code, because with it ESLint never finishes on `on(event, hook)` calls. Approve, or prefer another approach?
+3. **Missing cache-read prices.** The bundled price source does not state cache-read prices for claude-haiku-5-5 or claude-sonnet-5. Plan: assume 0.1x input for Haiku 5.5 and $0.20 for Sonnet 5, labelled as assumptions in the price table. OK?
+4. **Model advisor sends prompt text to Haiku.** It goes to Anthropic through Claude Code's own model access. OK for the owner's use?
+5. **Cold-cache guard asks every time.** Should it ask, or only warn (band turns red, toast) and let the prompt go?
 
 ## Next steps
 
@@ -37,3 +38,5 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 
 - Claude Code session logs repeat an assistant entry once per content block with the same `message.id` and usage; de-duplicate by `message.id`.
 - This machine's sessions write 1-hour cache entries (`usage.cache_creation.ephemeral_1h_input_tokens`).
+- Decided in review: the repository is public; personal spend figures and organization details stay out of it; the engine's generated API types are not committed (decision 0004).
+- `claude plugin validate .` reports more than 4096 files because `node_modules/` sits inside the plugin folder. Watch whether hot reload is slow once the mod is installed (task 2).
