@@ -68,6 +68,10 @@ To add a new kind of path, propose it in PROGRESS.md under Open Questions first.
 - ESLint's `no-misused-promises` argument check is off for engine-API code only (decision 0003): with it, linting any `on(event, hook)` call never finishes. If ESLint seems to hang, a type-aware rule meeting the engine types is the first suspect; bisect with `--rule`.
 - `claude plugin test .` fails when there are no engine tests; `tests/mod/register.test.tsx` is the smoke test that keeps it meaningful.
 - `node_modules/` sits inside the plugin folder; the engine ignores files the hooks module does not import, but `claude plugin validate` reports more than 4096 files.
+- In an engine test, `$.state` persists for the whole test: write one test per surface (loop over surfaces outside `test`) when a test changes state.
+- In an engine test, `$.command.run` takes the full input: `{ command, args: '', origin: { kind: 'composer' }, presentation: { isFullscreen: true, columns: 160 } }`.
+- Element props change between engine releases; `@typescript-eslint/no-deprecated` flags old ones (for example `Text bold`, now `weight`).
+- Check the mod in the real engine without a screen: `claude -p "/cost-lens" --plugin-dir "$PWD"` loads the folder, runs the command and prints its text (a pane reports `no-surface`).
 - Engine tests are `*.test.ts(x)` under `tests/mod/`; Node tests are `*.spec.ts` under `tests/node/`, so `claude plugin test` never picks up a Node test.
 
 ## Workflow
