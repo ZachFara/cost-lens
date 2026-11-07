@@ -20,5 +20,12 @@
     "jsxFactory": "h",
     "jsxFragmentFactory": "Fragment"
   },
-  "include": ["vendor/claude-code", "hooks", "src/mod", "src/core", "types", "tests/mod"]
+  "include": [
+    "vendor/claude-code",
+    "plugin/hooks",
+    "plugin/src/mod",
+    "plugin/src/core",
+    "plugin/types",
+    "plugin/tests"
+  ]
 }

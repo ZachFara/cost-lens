@@ -4,9 +4,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { summarize } from '../../src/analyzer/logs.ts'
-import type { UsageRecord } from '../../src/core/cost.ts'
-import { cacheLifetimeMs, coldRebuildWaste, isLargeContext } from '../../src/core/tips.ts'
+import { summarize } from '../../plugin/src/analyzer/logs.ts'
+import type { UsageRecord } from '../../plugin/src/core/cost.ts'
+import { cacheLifetimeMs, coldRebuildWaste, isLargeContext } from '../../plugin/src/core/tips.ts'
 
 const HOUR = 60 * 60 * 1000
 

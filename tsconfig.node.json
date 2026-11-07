@@ -18,5 +18,5 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["src/core", "src/analyzer", "tools", "tests/node"]
+  "include": ["plugin/src/core", "plugin/src/analyzer", "tools", "tests/node"]
 }

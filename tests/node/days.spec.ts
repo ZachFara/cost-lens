@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { daysBefore, localDay } from '../../src/core/days.ts'
+import { daysBefore, localDay } from '../../plugin/src/core/days.ts'
 
 await test('a moment maps to its local calendar day', () => {
   assert.equal(localDay(new Date(2026, 10, 7, 0, 0)), '2026-11-07')

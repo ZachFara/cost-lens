@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { parsePricingPage } from '../../src/core/price-page.ts'
-import { pricesFetched, ratesFor, usePrices } from '../../src/core/pricing.ts'
+import { parsePricingPage } from '../../plugin/src/core/price-page.ts'
+import { pricesFetched, ratesFor, usePrices } from '../../plugin/src/core/pricing.ts'
 
 // Rows copied from https://platform.claude.com/docs/en/about-claude/pricing.md (2026-11-07).
 const PAGE = `

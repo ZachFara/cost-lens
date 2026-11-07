@@ -10,17 +10,20 @@ function readJson(path: string): unknown {
 }
 
 await test('the plugin manifest and package agree on name and version', () => {
-  const manifest = readJson('.claude-plugin/plugin.json') as { name: string; version: string }
+  const manifest = readJson('plugin/.claude-plugin/plugin.json') as {
+    name: string
+    version: string
+  }
   const pkg = readJson('package.json') as { name: string; version: string }
   assert.equal(manifest.name, pkg.name)
   assert.equal(manifest.version, pkg.version)
 })
 
 await test('the layout check accepts the layout and rejects stray files', () => {
-  assert.deepEqual(disallowedPaths(['src/core/pricing.ts', 'hooks/register.tsx']), [])
-  assert.deepEqual(disallowedPaths(['scratch.ts', 'src/util/helpers.ts']), [
+  assert.deepEqual(disallowedPaths(['plugin/src/core/pricing.ts', 'plugin/hooks/register.tsx']), [])
+  assert.deepEqual(disallowedPaths(['scratch.ts', 'src/core/pricing.ts']), [
     'scratch.ts',
-    'src/util/helpers.ts',
+    'src/core/pricing.ts',
   ])
 })
 
@@ -30,7 +33,7 @@ await test('engine types are recognized by the Claude Code version in their head
 })
 
 await test('the license is declared the same way everywhere', () => {
-  const manifest = readJson('.claude-plugin/plugin.json') as { license: string }
+  const manifest = readJson('plugin/.claude-plugin/plugin.json') as { license: string }
   const pkg = readJson('package.json') as { license: string }
   const text = readFileSync(new URL('../../LICENSE', import.meta.url), 'utf8')
   assert.equal(manifest.license, 'MIT')

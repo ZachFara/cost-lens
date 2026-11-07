@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { cacheMsLeft, contextCost } from '../../src/core/cache.ts'
-import { formatDuration } from '../../src/core/format.ts'
+import { cacheMsLeft, contextCost } from '../../plugin/src/core/cache.ts'
+import { formatDuration } from '../../plugin/src/core/format.ts'
 
 const HOUR = 60 * 60 * 1000
 

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { costPullRequests, parsePullRequests } from '../../src/core/pull-requests.ts'
+import { costPullRequests, parsePullRequests } from '../../plugin/src/core/pull-requests.ts'
 
 const spend = (output: number) => ({
   requests: 3,

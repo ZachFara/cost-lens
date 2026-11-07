@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { branchTracker, currentProject, trackBranch } from '../../src/analyzer/branches.ts'
-import type { UsageRecord } from '../../src/core/cost.ts'
+import { branchTracker, currentProject, trackBranch } from '../../plugin/src/analyzer/branches.ts'
+import type { UsageRecord } from '../../plugin/src/core/cost.ts'
 
 const MILLION_OUT: UsageRecord = {
   model: 'claude-sonnet-5-5',

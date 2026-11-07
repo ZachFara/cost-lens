@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { livePrices } from '../../src/analyzer/prices.ts'
+import { livePrices } from '../../plugin/src/analyzer/prices.ts'
 
 const ROW = (name: string) =>
   `| Claude ${name} | $1 / MTok | $1.25 / MTok | $2 / MTok | $0.10 / MTok | $5 / MTok |`

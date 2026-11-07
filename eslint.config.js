@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint'
 
 // Decision 0004: the engine's API types are not committed. Locally they are required;
 // in CI, where they cannot exist, code that uses the engine API is not linted.
-const ENGINE_CODE = ['hooks/**', 'src/mod/**', 'tests/mod/**']
+const ENGINE_CODE = ['plugin/hooks/**', 'plugin/src/mod/**', 'plugin/tests/**']
 const hasEngineTypes = existsSync(new URL('vendor/claude-code/index.d.ts', import.meta.url))
 if (!hasEngineTypes && process.env.CI !== 'true') {
   throw new Error('vendor/claude-code/index.d.ts is missing. Run: npm run engine-types')
@@ -16,6 +16,7 @@ export default tseslint.config(
     ignores: [
       'vendor/',
       '.claude-plugin/types/',
+      'plugin/.claude-plugin/types/',
       '.scratch/',
       'node_modules/',
       ...(hasEngineTypes ? [] : ENGINE_CODE),
@@ -44,7 +45,7 @@ export default tseslint.config(
   {
     // Decision 0003: the argument check of this rule never finishes on the engine's
     // on(event, hook) overloads. Scoped to code that calls the engine API.
-    files: ['hooks/**', 'src/mod/**', 'tests/mod/**'],
+    files: ENGINE_CODE,
     rules: {
       '@typescript-eslint/no-misused-promises': [
         'error',

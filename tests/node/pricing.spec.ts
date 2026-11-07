@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { ratesFor } from '../../src/core/pricing.ts'
+import { ratesFor } from '../../plugin/src/core/pricing.ts'
 
 await test('published models get their published rates', () => {
   assert.deepEqual(ratesFor({ model: 'claude-fable-5-1', promptTokens: 1000 }), {

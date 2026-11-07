@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { TIERS, familyOf, priceComparison } from '../../src/core/models.ts'
+import { TIERS, familyOf, priceComparison } from '../../plugin/src/core/models.ts'
 
 await test('model ids and aliases map to families; Mythos counts as Fable', () => {
   assert.equal(familyOf('claude-opus-5-5'), 'opus')
