@@ -1,6 +1,8 @@
 # cost-lens
 
-A Claude Code mod that shows where your Claude Code tokens and dollars go, warns before a message rebuilds a cold prompt cache, and suggests a cheaper model for routine prompts.
+A Claude Code mod that shows where your Claude Code tokens and dollars go, warns before a message rebuilds a cold prompt cache, and can recommend the model that fits each prompt.
+
+![cost-lens docked beside a Claude Code session: plan usage, this session's cost and split, and the context window as a grid](docs/media/now.png)
 
 Status: repository setup. See `PROGRESS.md` for what is built and what is next, and `DESIGN.md` for the plan.
 
@@ -22,7 +24,7 @@ claude plugin install cost-lens --marketplace ZachFara/cost-lens
 
 In the desktop app, where `/plugin` does not run: click + next to the prompt box, then Plugins, Add marketplace with `ZachFara/cost-lens`, then Add plugin.
 
-Then type `/cost-lens` to open the pane. Click a tab, or press `ctrl+x tab` to give the pane the keyboard and then `1` to `9` to switch tabs. In Claude Code's fullscreen layout (`/tui fullscreen`) it docks beside the chat; otherwise it opens above the prompt.
+Then type `/cost-lens` to open the pane. Click a tab, or give the pane the keyboard with `ctrl+x tab` (twice while the cache line shows above the prompt: the first press goes to that line) and press `1` to `9`. In Claude Code's fullscreen layout (`/tui fullscreen`) it docks beside the chat; otherwise it opens above the prompt.
 
 ## What it shows
 
@@ -32,6 +34,16 @@ Then type `/cost-lens` to open the pane. Click a tab, or press `ctrl+x tab` to g
 - **Projects**, **Branches**, **PRs**: where the last 30 days went, and what each branch and pull request of the current repository cost.
 - **Tips**: what drives your usage in the last 24 hours, and the cost of expired-cache rebuilds and large context in the last 30 days.
 - A line above the prompt with the prompt cache's state, a warning when a message re-writes an expired cache, and, with LLM features on, a model recommendation for each prompt (Haiku, Sonnet, Opus or Fable, by how hard the task looks), shown in the Model tab and, optionally, as a notification.
+
+## Screenshots
+
+A tour of the tabs (project names on the Projects tab are blurred here):
+
+![Tab tour: Now, All time, Today, 30 days, Projects, Branches, PRs, Tips, Model](docs/media/tour.gif)
+
+| All time                                                                    | Tips                                                                     | Model                                                               |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| ![All time: total, cost split and per-model costs](docs/media/all-time.png) | ![Tips: what drives usage, by skill and MCP server](docs/media/tips.png) | ![Model: the model that fits the last prompt](docs/media/model.png) |
 
 ## Settings
 
