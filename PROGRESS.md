@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) and 6 (per model) are done; task 7 is next.
+Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) 6 (per model) and 7 (Projects) are done; task 7b is next.
 
 ## Tasks
 
@@ -15,7 +15,7 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
    4b. **(done)** **The pane matches the terminal.** Entry: the pane. Done when: the pane draws no background of its own (the terminal theme shows through, like the chat), and the four cost categories use clearly different colors.
 5. **(done)** **Today and 30 days tabs.** Entry: those tabs. Done when: periods use local dates; tests cover the day boundary.
 6. **(done)** **Per-model breakdown in period tabs.** Entry: period tabs. Done when: each period lists models by cost with tokens and cache hit rate; unpriced models are labelled, not guessed.
-7. **Projects tab.** Entry: Projects tab. Done when: the 30-day cost by project and git branch is listed, top 15, with last active time.
+7. **(done)** **Projects tab.** Entry: Projects tab. Done when: the 30-day cost by project and git branch is listed, top 15, with last active time.
    7b. **Branches tab (current project).** Entry: Branches tab. Done when: for the git repository the session runs in, the tab lists each branch Claude Code worked on with its cost, requests and last active time, most expensive first; sessions outside a repository say so. (Owner request, 2026-11-07.)
    7c. **PRs tab (current project).** Entry: PRs tab. Done when: the tab lists the repository's pull requests (from `gh`), each with the cost of the work on its head branch, state and title; without `gh` or a GitHub remote it says why. (Owner request, 2026-11-07.)
 8. **Now tab: live session.** Entry: Now tab. Done when: a `turn.step` hook records each request's usage; the tab shows model, context used of window, session cost from `$.session.usage()`, this session's cost split and the context categories from `breakdown: 'summary'`. Also at the top: the plan's usage limits from `$.session.usage().rateLimits` (current session, current week for all models, and any per-model week), each with a bar, percent used and reset time, as `/usage` shows them. (Owner request, 2026-11-07.)
@@ -31,7 +31,7 @@ None.
 
 ## Next steps
 
-- Task 7: Projects tab, then 7b Branches and 7c PRs.
+- Task 7b: Branches tab for the current project, then 7c PRs.
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
 ## Learned
