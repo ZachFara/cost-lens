@@ -72,6 +72,7 @@ To add a new kind of path, propose it in PROGRESS.md under Open Questions first.
 - In an engine test, `$.command.run` takes the full input: `{ command, args: '', origin: { kind: 'composer' }, presentation: { isFullscreen: true, columns: 160 } }`.
 - Element props change between engine releases; `@typescript-eslint/no-deprecated` flags old ones (for example `Text bold`, now `weight`).
 - Check the mod in the real engine without a screen: `claude -p "/cost-lens" --plugin-dir "$PWD"` loads the folder, runs the command and prints its text (a pane reports `no-surface`).
+- The owner's sessions load this working copy live (`CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json`), and interactive sessions hot-reload it. Whatever is checked out, including a half-finished branch, is what runs in their sessions. Keep the mod loadable at every commit and switch back to `main` when a session ends.
 - Engine tests are `*.test.ts(x)` under `tests/mod/`; Node tests are `*.spec.ts` under `tests/node/`, so `claude plugin test` never picks up a Node test.
 
 ## Workflow

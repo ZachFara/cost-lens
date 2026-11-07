@@ -2,14 +2,14 @@
 
 ## Status
 
-Phase 2 in progress. Task 1 is done (in review on `feat/pane-tabs`); task 2 is next.
+Phase 2 in progress. Tasks 1 and 2 are done; task 3 is next.
 
 ## Tasks
 
 Small tasks, one session each, in dependency order. Each starts at a user-facing entry point (see AGENTS.md, CODE).
 
 1. **(done)** **`/cost-lens` opens an empty pane with its tab row.** Entry: slash command. Done when: the command opens a pane titled cost-lens showing the tabs Now, Today, 30 days, All time, Projects, Tips; pressing a tab marks it selected; engine test covers both on terminal and desktop.
-2. **Install cost-lens for the owner.** Entry: every new Claude Code session. Done when: `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` names this folder, `chezmoi re-add` has run, and a new session lists `/cost-lens`. Depends on 1.
+2. **(done)** **Install cost-lens for the owner.** Entry: every new Claude Code session. Done when: `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` names this folder, `chezmoi re-add` has run, and a new session lists `/cost-lens`. Depends on 1.
 3. **All time tab shows total cost and cost split.** Entry: All time tab. Done when: the pane runs the analyzer through `$.process.run`, shows a loading line, then total cost, request count, cache hit rate and the split (input, output, cache write, cache read) as numbers and a bar; core pricing and cost math tested with node:test; analyzer tested against fixture logs in a temporary folder; engine test with the process call answered by the test.
 4. **Incremental index.** Entry: Refresh button. Done when: a second run reads only changed logs; measured first and second run times on the owner's machine are recorded in a decision record; tests cover changed, unchanged and deleted files.
 5. **Today and 30 days tabs.** Entry: those tabs. Done when: periods use local dates; tests cover the day boundary.
@@ -28,7 +28,7 @@ None.
 
 ## Next steps
 
-- Task 2: install cost-lens for the owner, so every later task can be seen in a real session.
+- Task 3: the All time tab shows total cost and cost split (first analyzer code).
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
 ## Learned
@@ -36,5 +36,6 @@ None.
 - Claude Code session logs repeat an assistant entry once per content block with the same `message.id` and usage; de-duplicate by `message.id`.
 - This machine's sessions write 1-hour cache entries (`usage.cache_creation.ephemeral_1h_input_tokens`).
 - Decided in review: the repository is public; personal spend figures and organization details stay out of it; the engine's generated API types are not committed (decision 0004).
+- Installed 2026-11-07: `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` (saved with `chezmoi re-add`); a fresh `claude -p "/cost-lens"` with no flags loads the mod.
 - Answered in review (2026-11-07): MIT license; the narrowed lint rule is approved; prices come from Anthropic's pricing page (decision 0006), with a live price table as task 13; the model advisor may send prompt text to Haiku; the cold-cache check only warns and never stops a prompt.
-- `claude plugin validate .` reports more than 4096 files because `node_modules/` sits inside the plugin folder. Watch whether hot reload is slow once the mod is installed (task 2).
+- `claude plugin validate .` reports more than 4096 files because `node_modules/` sits inside the plugin folder. Installed in task 2; not yet seen in an interactive session whether watching that folder slows hot reload. If it does, raise it here.
