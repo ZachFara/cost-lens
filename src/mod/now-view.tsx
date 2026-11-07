@@ -3,10 +3,6 @@ import type { EngineInterface, SessionRateLimit } from 'claude-code'
 import { formatResets, formatShare, formatTokens, formatUsd } from '../core/format.ts'
 import { barWidths } from '../core/format.ts'
 
-import { TIERS, familyOf } from '../core/models.ts'
-import type { Recommendation } from '../../types'
-
-import { readRecommendation } from './advisor.ts'
 import { contextGrid } from './context-grid.tsx'
 import { readLive } from './live.ts'
 import { splitView } from './period-view.tsx'
@@ -58,27 +54,15 @@ function limitsView(ui: Ui, limits: readonly SessionRateLimit[], columns: number
   )
 }
 
-/** Which model fits the last prompt, beside the model in use. */
-function recommendationLine(ui: Ui, recommendation: Recommendation | null, model: string) {
-  const fit = TIERS.find((one) => one.model === recommendation?.model)
-  if (recommendation === null || fit === undefined) return null
-  const isOn = familyOf(model) === fit.family
-  const text = isOn
-    ? `Last prompt looks ${fit.tier}: ${fit.name} fits, and you're on it.`
-    : `Last prompt looks ${fit.tier}: ${fit.name} fits · /model ${fit.alias}`
-  return <ui.Text color={isOn ? 'success' : 'warning'}>{text}</ui.Text>
-}
-
 /** What the Now tab reads from the engine; undefined when the engine cannot answer. */
 async function sessionFacts($: EngineInterface, columns: number) {
   try {
-    const [usage, model, live, recommendation] = await Promise.all([
+    const [usage, model, live] = await Promise.all([
       $.session.usage({ breakdown: 'summary', columns }),
       $.session.model(),
       readLive($),
-      readRecommendation($),
     ])
-    return { usage, model, live, recommendation }
+    return { usage, model, live }
   } catch {
     return undefined
   }
@@ -89,7 +73,7 @@ export async function nowView($: EngineInterface, ui: Ui, columns: number) {
   const { Box, Text } = ui
   const facts = await sessionFacts($, columns)
   if (facts === undefined) return <Text dimColor>Session details are not available here.</Text>
-  const { usage, model, live, recommendation } = facts
+  const { usage, model, live } = facts
   const { context } = usage
   const contextLine =
     context.tokens === undefined
@@ -106,7 +90,6 @@ export async function nowView($: EngineInterface, ui: Ui, columns: number) {
           <Text color="success">{usage.cost ? formatUsd(usage.cost.usd) : ''}</Text>
         </Box>
         <Text dimColor>{`${contextLine} · ${String(live.requests)} requests`}</Text>
-        {recommendationLine(ui, recommendation, model)}
       </Box>
       {live.requests > 0 ? splitView(ui, live, columns) : null}
       {context.breakdown === undefined ? null : contextGrid(ui, context.breakdown)}

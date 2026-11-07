@@ -2,7 +2,23 @@
   "name": "cost-lens",
   "version": "0.1.0",
   "license": "MIT",
-  "author": { "name": "Zachariah Farahany" },
+  "author": {
+    "name": "Zachariah Farahany"
+  },
   "types": "./types/index.d.ts",
-  "description": "See where Claude Code tokens and dollars go, catch cold-cache rebuilds, and pick cheaper models."
+  "description": "See where Claude Code tokens and dollars go, catch cold-cache rebuilds, and pick cheaper models.",
+  "userConfig": {
+    "llmFeatures": {
+      "type": "boolean",
+      "title": "Allow LLM features",
+      "description": "Let a small Claude model (Haiku) read the text of each prompt you type, to recommend the model that fits it. Off: cost-lens sends none of your data to a model.",
+      "default": false
+    },
+    "recommendationAlerts": {
+      "type": "boolean",
+      "title": "Model recommendation notifications",
+      "description": "Show a notification when the model that fits a prompt differs from the one in use, at most every 10 minutes. Needs LLM features.",
+      "default": true
+    }
+  }
 }

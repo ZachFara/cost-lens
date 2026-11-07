@@ -23,23 +23,29 @@ function harness(on: On, model: string, answer: () => string) {
   return { toasts, classified, clock }
 }
 
+const LLM_ON = { options: { llmFeatures: true } }
+
 function typed(text: string) {
   return { text, wait: false, origin: { kind: 'composer' } } as const
 }
 
-test('a routine prompt on Opus suggests Sonnet, and the prompt goes out as typed', async ($, on) => {
-  const { toasts } = harness(on, 'claude-opus-5-5', () => ROUTINE)
+test(
+  'a routine prompt on Opus suggests Sonnet, and the prompt goes out as typed',
+  LLM_ON,
+  async ($, on) => {
+    const { toasts } = harness(on, 'claude-opus-5-5', () => ROUTINE)
 
-  const result = await $.prompt.submit(typed(LONG))
+    const result = await $.prompt.submit(typed(LONG))
 
-  expect(result).toEqual({ text: LONG })
-  expect(toasts).toEqual([
-    'cost-lens: this looks routine (everyday coding, a bug fix, tests or a small feature). ' +
-      'Sonnet 5.5 fits, at 2x less per token. /model sonnet',
-  ])
-})
+    expect(result).toEqual({ text: LONG })
+    expect(toasts).toEqual([
+      'cost-lens: this looks routine (everyday coding, a bug fix, tests or a small feature). ' +
+        'Sonnet 5.5 fits, at 2x less per token. /model sonnet',
+    ])
+  },
+)
 
-test('a complex prompt on Sonnet suggests Opus', async ($, on) => {
+test('a complex prompt on Sonnet suggests Opus', LLM_ON, async ($, on) => {
   const { toasts } = harness(on, 'claude-sonnet-5-5', () => COMPLEX)
 
   await $.prompt.submit(typed(LONG))
@@ -50,7 +56,7 @@ test('a complex prompt on Sonnet suggests Opus', async ($, on) => {
   ])
 })
 
-test('no toast when the current model already fits', async ($, on) => {
+test('no toast when the current model already fits', LLM_ON, async ($, on) => {
   const { toasts, classified } = harness(on, 'claude-sonnet-5-5', () => ROUTINE)
 
   await $.prompt.submit(typed(LONG))
@@ -59,7 +65,7 @@ test('no toast when the current model already fits', async ($, on) => {
   expect(toasts).toEqual([])
 })
 
-test('one suggestion per ten minutes', async ($, on) => {
+test('one suggestion per ten minutes', LLM_ON, async ($, on) => {
   const { toasts, clock } = harness(on, 'claude-fable-5-1', () => ROUTINE)
 
   await $.prompt.submit(typed(LONG))
@@ -73,18 +79,45 @@ test('one suggestion per ten minutes', async ($, on) => {
   expect(toasts).toHaveLength(2)
 })
 
-test('a short follow-up is not judged, and a failed classification changes nothing', async ($, on) => {
-  let calls = 0
-  const { toasts, classified } = harness(on, 'claude-opus-5-5', () => {
-    calls += 1
-    throw new Error('rate limited')
-  })
+test(
+  'a short follow-up is not judged, and a failed classification changes nothing',
+  LLM_ON,
+  async ($, on) => {
+    let calls = 0
+    const { toasts, classified } = harness(on, 'claude-opus-5-5', () => {
+      calls += 1
+      throw new Error('rate limited')
+    })
 
-  await $.prompt.submit(typed('continue'))
-  expect(classified).toHaveLength(0)
+    await $.prompt.submit(typed('continue'))
+    expect(classified).toHaveLength(0)
+
+    const result = await $.prompt.submit(typed(LONG))
+    expect(calls).toBe(1)
+    expect(result).toEqual({ text: LONG })
+    expect(toasts).toEqual([])
+  },
+)
+
+test('with LLM features off (the default) nothing is sent to a model', async ($, on) => {
+  const { toasts, classified } = harness(on, 'claude-opus-5-5', () => ROUTINE)
 
   const result = await $.prompt.submit(typed(LONG))
-  expect(calls).toBe(1)
+
   expect(result).toEqual({ text: LONG })
+  expect(classified).toEqual([])
   expect(toasts).toEqual([])
 })
+
+test(
+  'with notifications off the prompt is judged but no toast shows',
+  { options: { llmFeatures: true, recommendationAlerts: false } },
+  async ($, on) => {
+    const { toasts, classified } = harness(on, 'claude-opus-5-5', () => ROUTINE)
+
+    await $.prompt.submit(typed(LONG))
+
+    expect(classified).toHaveLength(1)
+    expect(toasts).toEqual([])
+  },
+)

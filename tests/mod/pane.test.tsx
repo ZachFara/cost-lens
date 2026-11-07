@@ -14,7 +14,17 @@ const PANE = {
   },
 } as const
 
-const LABELS = ['Now', 'Today', '30 days', 'All time', 'Projects', 'Branches', 'PRs', 'Tips']
+const LABELS = [
+  'Now',
+  'Model',
+  'Today',
+  '30 days',
+  'All time',
+  'Projects',
+  'Branches',
+  'PRs',
+  'Tips',
+]
 
 test('/cost-lens registers and opens the cost-lens pane', async ($, on) => {
   const registered: string[] = []
