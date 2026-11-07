@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) 6 (per model), 7 (Projects), 7b (Branches) and 7c (PRs) are done; task 8 is next.
+Phase 2 in progress. Tasks 1 to 4 are done; tasks 4b (pane look), 5 (Today, 30 days) 6 (per model), 7 (Projects), 7b (Branches), 7c (PRs) and 8 (Now) are done; task 9 is next.
 
 ## Tasks
 
@@ -18,7 +18,7 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 7. **(done)** **Projects tab.** Entry: Projects tab. Done when: the 30-day cost by project and git branch is listed, top 15, with last active time.
    7b. **(done)** **Branches tab (current project).** Entry: Branches tab. Done when: for the git repository the session runs in, the tab lists each branch Claude Code worked on with its cost, requests and last active time, most expensive first; sessions outside a repository say so. (Owner request, 2026-11-07.)
    7c. **(done)** **PRs tab (current project).** Entry: PRs tab. Done when: the tab lists the repository's pull requests (from `gh`), each with the cost of the work on its head branch, state and title; without `gh` or a GitHub remote it says why. (Owner request, 2026-11-07.)
-8. **Now tab: live session.** Entry: Now tab. Done when: a `turn.step` hook records each request's usage; the tab shows model, context used of window, session cost from `$.session.usage()`, this session's cost split and the context categories from `breakdown: 'summary'`. Also at the top: the plan's usage limits from `$.session.usage().rateLimits` (current session, current week for all models, and any per-model week), each with a bar, percent used and reset time, as `/usage` shows them. (Owner request, 2026-11-07.)
+8. **(done)** **Now tab: live session.** Entry: Now tab. Done when: a `turn.step` hook records each request's usage; the tab shows model, context used of window, session cost from `$.session.usage()`, this session's cost split and the context categories from `breakdown: 'summary'`. Also at the top: the plan's usage limits from `$.session.usage().rateLimits` (current session, current week for all models, and any per-model week), each with a bar, percent used and reset time, as `/usage` shows them. (Owner request, 2026-11-07.)
 9. **Cache band above the prompt.** Entry: the band. Done when: it shows `warm, Nm left` or `cold, next message re-writes Nk tokens ~$X`, refreshes on a timer, uses the time-to-live the analyzer reports (default one hour), and can be hidden.
 10. **Cold-cache warning.** Entry: prompt submit. Done when: a prompt sent while the cache is cold and the context is at least 40k tokens raises a warning toast with the tokens it re-writes and the estimated cost; the prompt is never held, delayed or changed; slash commands and non-composer prompts raise nothing; a failing hook still lets the prompt through.
 11. **Cold rebuilds and Tips tab.** Entry: Tips tab. Done when: the analyzer reports cold rebuilds and their wasted cost and the share of cost above 150k context; the Tips tab turns them into plain advice; detection tested on fixture logs. Also, as `/usage` shows it, for the last 24 hours: what is contributing to usage (share at large context, so `/clear` when switching tasks; MCP servers' tool definitions per request; computer use), and the share of usage by skill and by MCP server, each labelled approximate. (Owner request, 2026-11-07.)
@@ -31,7 +31,7 @@ None.
 
 ## Next steps
 
-- Task 8: Now tab (live session and plan usage limits).
+- Task 9: cache band above the prompt; then 10, 11, 12, 13.
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
 ## Learned
@@ -40,6 +40,7 @@ None.
 - This machine's sessions write 1-hour cache entries (`usage.cache_creation.ephemeral_1h_input_tokens`).
 - Decided in review: the repository is public; personal spend figures and organization details stay out of it; the engine's generated API types are not committed (decision 0004).
 - Folders reach the logs both as `~/Development/...` and as `~/Ark/Development/...` (a link); the analyzer resolves links before matching a project.
+- The engine reports a request's cache writes without their lifetime (`turn.step` usage); the Now tab prices them as one-hour writes, which this machine's sessions use, and takes the session total from `$.session.usage()` (exact, as `/cost`).
 - Installed 2026-11-07: `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` (saved with `chezmoi re-add`); a fresh `claude -p "/cost-lens"` with no flags loads the mod.
 - The analyzer reads the owner's full logs in about 3 seconds (2026-11-07), and its totals land within about 5% of the VS Code usage extension's, by category as well as overall.
 - Answered in review (2026-11-07): MIT license; the narrowed lint rule is approved; prices come from Anthropic's pricing page (decision 0006), with a live price table as task 13; the model advisor may send prompt text to Haiku; the cold-cache check only warns and never stops a prompt.
