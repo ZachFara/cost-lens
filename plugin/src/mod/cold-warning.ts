@@ -1,18 +1,18 @@
-import type { EngineInterface } from 'claude-code'
-
 import { cacheMsLeft, contextCost } from '../core/cache.ts'
 import { formatTokens, formatUsd } from '../core/format.ts'
-
-import { readCache } from './cache-band.tsx'
+import type { LastRequest } from '../../types'
 
 /** Below this many tokens of context a cold cache costs too little to mention. */
 const WARN_FROM_TOKENS = 40_000
 
 /** The warning for a prompt about to go out over an expired cache, or undefined. */
-export async function coldCacheWarning($: EngineInterface): Promise<string | undefined> {
-  const { request, lifetimeMs } = await readCache($)
+export function coldCacheWarning(
+  request: LastRequest | null,
+  lifetimeMs: number,
+  now: number,
+): string | undefined {
   if (request === null || request.promptTokens < WARN_FROM_TOKENS) return undefined
-  if (cacheMsLeft(await $.clock.now(), request.at, lifetimeMs) > 0) return undefined
+  if (cacheMsLeft(now, request.at, lifetimeMs) > 0) return undefined
   const cost = contextCost(request.model, request.promptTokens, lifetimeMs)
   const price =
     cost === undefined ? '' : ` ≈ ${formatUsd(cost.cold)} instead of ${formatUsd(cost.warm)}`

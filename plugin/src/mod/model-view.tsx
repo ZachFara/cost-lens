@@ -1,10 +1,7 @@
-import type { EngineInterface } from 'claude-code'
-
 import { formatClock } from '../core/format.ts'
 import { TIERS, familyOf, priceComparison } from '../core/models.ts'
 import type { Recommendation } from '../../types'
 
-import { readRecommendations } from './advisor.ts'
 import type { Settings } from './settings.ts'
 import type { Ui } from './ui.ts'
 
@@ -74,7 +71,12 @@ function tiersView(ui: Ui) {
 }
 
 /** Model: which model fits the last prompts, with the settings that govern it. */
-export async function modelView($: EngineInterface, ui: Ui, settings: Settings) {
+export function modelView(
+  ui: Ui,
+  settings: Settings,
+  recent: readonly Recommendation[],
+  current: string,
+) {
   const { Box, Text } = ui
   if (!settings.llmFeatures) {
     return (
@@ -86,7 +88,6 @@ export async function modelView($: EngineInterface, ui: Ui, settings: Settings) 
       </Box>
     )
   }
-  const [recent, current] = await Promise.all([readRecommendations($), $.session.model()])
   const latest = recent[0]
   return (
     <Box flexDirection="column" gap={1}>

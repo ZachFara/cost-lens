@@ -18,7 +18,7 @@
     "engine-types": "node tools/engine-types.ts sync",
     "deadcode": "knip",
     "deps": "depcruise . --config .dependency-cruiser.cjs",
-    "layout": "node tools/check-layout.ts",
+    "layout": "node tools/check-layout.ts && node tools/check-mod-calls.ts",
     "test": "node --test \"tests/node/**/*.spec.ts\" && claude plugin validate . && claude plugin validate plugin && claude plugin test plugin"
   },
   "devDependencies": {
