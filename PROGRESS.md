@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 2 in progress. Tasks 1 and 2 are done; task 3 is next.
+Phase 2 in progress. Tasks 1 to 3 are done; task 4 is next, pending Open Question 1.
 
 ## Tasks
 
@@ -10,7 +10,7 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 
 1. **(done)** **`/cost-lens` opens an empty pane with its tab row.** Entry: slash command. Done when: the command opens a pane titled cost-lens showing the tabs Now, Today, 30 days, All time, Projects, Tips; pressing a tab marks it selected; engine test covers both on terminal and desktop.
 2. **(done)** **Install cost-lens for the owner.** Entry: every new Claude Code session. Done when: `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` names this folder, `chezmoi re-add` has run, and a new session lists `/cost-lens`. Depends on 1.
-3. **All time tab shows total cost and cost split.** Entry: All time tab. Done when: the pane runs the analyzer through `$.process.run`, shows a loading line, then total cost, request count, cache hit rate and the split (input, output, cache write, cache read) as numbers and a bar; core pricing and cost math tested with node:test; analyzer tested against fixture logs in a temporary folder; engine test with the process call answered by the test.
+3. **(done)** **All time tab shows total cost and cost split.** Entry: All time tab. Done when: the pane runs the analyzer through `$.process.run`, shows a loading line, then total cost, request count, cache hit rate and the split (input, output, cache write, cache read) as numbers and a bar; core pricing and cost math tested with node:test; analyzer tested against fixture logs in a temporary folder; engine test with the process call answered by the test.
 4. **Incremental index.** Entry: Refresh button. Done when: a second run reads only changed logs; measured first and second run times on the owner's machine are recorded in a decision record; tests cover changed, unchanged and deleted files.
 5. **Today and 30 days tabs.** Entry: those tabs. Done when: periods use local dates; tests cover the day boundary.
 6. **Per-model breakdown in period tabs.** Entry: period tabs. Done when: each period lists models by cost with tokens and cache hit rate; unpriced models are labelled, not guessed.
@@ -24,11 +24,11 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 
 ## Open Questions
 
-None.
+1. **Is task 4 (incremental index) still worth it?** Reading every log on the owner's machine (about 17,000 API responses, 1.1 GB) takes about 3 seconds, because only lines containing `"usage"` are parsed. Proposal: replace task 4 with "Refresh button re-reads the logs" and drop the index, unless reads grow past about 10 seconds. Waiting for a decision.
 
 ## Next steps
 
-- Task 3: the All time tab shows total cost and cost split (first analyzer code).
+- Task 4, once Open Question 1 is answered.
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
 ## Learned
@@ -37,5 +37,6 @@ None.
 - This machine's sessions write 1-hour cache entries (`usage.cache_creation.ephemeral_1h_input_tokens`).
 - Decided in review: the repository is public; personal spend figures and organization details stay out of it; the engine's generated API types are not committed (decision 0004).
 - Installed 2026-11-07: `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json` (saved with `chezmoi re-add`); a fresh `claude -p "/cost-lens"` with no flags loads the mod.
+- The analyzer reads the owner's full logs in about 3 seconds (2026-11-07), and its totals land within about 5% of the VS Code usage extension's, by category as well as overall.
 - Answered in review (2026-11-07): MIT license; the narrowed lint rule is approved; prices come from Anthropic's pricing page (decision 0006), with a live price table as task 13; the model advisor may send prompt text to Haiku; the cold-cache check only warns and never stops a prompt.
 - `claude plugin validate .` reports more than 4096 files because `node_modules/` sits inside the plugin folder. Installed in task 2; not yet seen in an interactive session whether watching that folder slows hot reload. If it does, raise it here.
