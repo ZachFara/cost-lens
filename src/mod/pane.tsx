@@ -6,8 +6,9 @@ import type { Tab } from '../../types'
 import { historyView } from './history-view.tsx'
 import { loadHistory, readHistory, refreshHistory, startBackgroundRefresh } from './history.ts'
 import { periodView } from './period-view.tsx'
+import { projectsView } from './projects-view.tsx'
 import type { Period } from '../core/summary.ts'
-import type { Actions, Ui } from './ui.ts'
+import type { Actions, Ready, Ui } from './ui.ts'
 
 const PANE_ID = 'cost-lens'
 
@@ -23,11 +24,22 @@ const TABS: readonly { id: Tab; label: string }[] = [
 /** The tabs that show a period of the analyzer's summary. */
 const PERIOD_OF: Partial<Record<Tab, Period>> = { today: 'today', last30: 'last30', all: 'allTime' }
 
+/** The tabs that draw the analyzer's summary; opening one starts the first read. */
+const DATA_TABS: ReadonlySet<Tab> = new Set(['today', 'last30', 'all', 'projects'])
+
+/** How a data tab draws the analyzer's summary; undefined for the other tabs. */
+function readyViewFor(tab: Tab, ui: Ui, columns: number) {
+  const period = PERIOD_OF[tab]
+  if (period !== undefined) return (ready: Ready) => periodView(ui, ready, period, columns)
+  if (tab === 'projects') return (ready: Ready) => projectsView(ui, ready)
+  return undefined
+}
+
 const selectedTab = atom({ plugin: 'cost-lens', key: 'tab' } as const, 'now')
 
 function select($: EngineInterface, tab: Tab): void {
   void update($, selectedTab, () => tab)
-  if (PERIOD_OF[tab] !== undefined) void loadHistory($)
+  if (DATA_TABS.has(tab)) void loadHistory($)
 }
 
 function tabRow(ui: Ui, selected: Tab, onSelect: (tab: Tab) => void) {
@@ -49,8 +61,8 @@ function tabRow(ui: Ui, selected: Tab, onSelect: (tab: Tab) => void) {
 }
 
 async function tabBody($: EngineInterface, ui: Ui, tab: Tab, columns: number) {
-  const period = PERIOD_OF[tab]
-  if (period === undefined) {
+  const readyView = readyViewFor(tab, ui, columns)
+  if (readyView === undefined) {
     const label = TABS.find((one) => one.id === tab)?.label ?? tab
     return <ui.Text weight="semibold">{label}</ui.Text>
   }
@@ -62,9 +74,7 @@ async function tabBody($: EngineInterface, ui: Ui, tab: Tab, columns: number) {
       void refreshHistory($)
     },
   }
-  return historyView(ui, await readHistory($), actions, (ready) =>
-    periodView(ui, ready, period, columns),
-  )
+  return historyView(ui, await readHistory($), actions, readyView)
 }
 
 /** `/cost-lens` opens the pane; the pane draws its tab row and the selected tab. */
