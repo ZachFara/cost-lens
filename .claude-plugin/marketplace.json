@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "cost-lens",
-      "source": "./",
+      "source": "./plugin",
       "description": "See where Claude Code tokens and dollars go, catch cold-cache rebuilds, and pick cheaper models."
     }
   ]

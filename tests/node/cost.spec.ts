@@ -10,9 +10,9 @@ import {
   plusRecord,
   rankModels,
   totalCost,
-} from '../../src/core/cost.ts'
-import type { ModelTotals } from '../../src/core/cost.ts'
-import type { UsageRecord } from '../../src/core/cost.ts'
+} from '../../plugin/src/core/cost.ts'
+import type { ModelTotals } from '../../plugin/src/core/cost.ts'
+import type { UsageRecord } from '../../plugin/src/core/cost.ts'
 
 const FABLE: UsageRecord = {
   model: 'claude-fable-5-1',

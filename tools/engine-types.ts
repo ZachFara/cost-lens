@@ -10,7 +10,7 @@ import { execFileSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
 
 export const VENDORED = 'vendor/claude-code/index.d.ts'
-const ENGINE_WRITTEN = '.claude-plugin/types/claude-code/index.d.ts'
+const ENGINE_WRITTEN = 'plugin/.claude-plugin/types/claude-code/index.d.ts'
 const HEADER = /^\/\/ Written by Claude Code (\S+)\./
 
 export function versionOf(declarations: string): string | undefined {
@@ -38,7 +38,7 @@ function sync(source: string): void {
   if (!existsSync(source)) {
     throw new Error(
       `${source} does not exist. Open this folder once in an interactive session ` +
-        '(claude --plugin-dir .) so the engine writes it, or pass another path.',
+        '(claude --plugin-dir plugin) so the engine writes it, or pass another path.',
     )
   }
   assertPinned(source)

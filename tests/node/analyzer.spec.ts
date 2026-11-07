@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { recordFromLine, summarize } from '../../src/analyzer/logs.ts'
-import { parseSummary } from '../../src/core/summary.ts'
+import { recordFromLine, summarize } from '../../plugin/src/analyzer/logs.ts'
+import { parseSummary } from '../../plugin/src/core/summary.ts'
 
 const NOW = new Date(2026, 10, 7, 12, 0)
 
@@ -90,7 +90,7 @@ await test('a missing logs folder gives an empty summary', async () => {
 
 await test('the CLI prints a summary the mod can parse', async () => {
   await withLogs((root) => {
-    const cli = ['src/analyzer/cli.ts', root]
+    const cli = ['plugin/src/analyzer/cli.ts', root]
     const output = execFileSync(process.execPath, cli, { encoding: 'utf8' })
     assert.equal(parseSummary(output)?.allTime.requests, 2)
   })

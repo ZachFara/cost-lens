@@ -10,7 +10,7 @@ import {
   formatTokens,
   formatUsd,
   formatWhen,
-} from '../../src/core/format.ts'
+} from '../../plugin/src/core/format.ts'
 
 await test('money, counts and shares read the way people write them', () => {
   assert.equal(formatUsd(1234.5), '$1,234.50')

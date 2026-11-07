@@ -1,4 +1,5 @@
 vendor/
 .claude-plugin/types/
+plugin/.claude-plugin/types/
 .scratch/
 package-lock.json

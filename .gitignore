@@ -1,6 +1,8 @@
 node_modules/
 .scratch/
 .claude-plugin/types/
+plugin/.claude-plugin/types/
+plugin/tsconfig.json
 vendor/
 .DS_Store
 *.log
