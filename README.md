@@ -4,8 +4,6 @@ A Claude Code mod that shows where your Claude Code tokens and dollars go, warns
 
 ![cost-lens docked beside a Claude Code session: plan usage, this session's cost and split, and the context window as a grid](docs/media/now.png)
 
-Status: repository setup. See `PROGRESS.md` for what is built and what is next, and `DESIGN.md` for the plan.
-
 ## Install
 
 Requires Claude Code 2.1.319 or later, Node.js 22.18 or later on your `PATH`, and, for the PRs tab, the GitHub CLI (`gh`). Built and tested on macOS.
