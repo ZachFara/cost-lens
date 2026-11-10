@@ -31,7 +31,7 @@ Then type `/cost-lens` to open the pane. Click a tab, or give the pane the keybo
 - **Today**, **30 days**, **All time**: total cost, cache hit rate, cost by category and by model.
 - **Projects**, **Branches**, **PRs**: where the last 30 days went, and what each branch and pull request of the current repository cost.
 - **Tips**: what drives your usage in the last 24 hours, and the cost of expired-cache rebuilds and large context in the last 30 days.
-- A line above the prompt with the prompt cache's state, a warning when a message re-writes an expired cache, and, with LLM features on, a model recommendation for each prompt (Haiku, Sonnet, Opus or Fable, by how hard the task looks), shown in the Model tab and, optionally, as a notification.
+- A line above the prompt with the prompt cache's state, a warning when a message re-writes an expired cache, and, with LLM features on, a model recommendation for each prompt (Haiku, Sonnet, Opus or Fable, by how hard the task looks; each the newest version Anthropic's pricing page lists), shown in the Model tab and, optionally, as a notification.
 
 ## Screenshots
 
