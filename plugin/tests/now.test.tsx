@@ -16,7 +16,9 @@ const PANE = {
   },
 } as const
 
-const inAnHour = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+// Noon, local time: an hour either side stays on the same day, wherever the tests run.
+const NOW = new Date(2026, 10, 7, 12, 0).getTime()
+const inAnHour = new Date(NOW + 60 * 60 * 1000).toISOString()
 
 function category(name: string, tokens: number, kind: 'used' | 'free', color: string) {
   return { name, tokens, color, isDeferred: false, kind }
@@ -70,7 +72,7 @@ const USAGE = {
 test('Now shows plan usage, this session and what fills the context', async ($, on) => {
   on('session.usage', () => ({ value: USAGE }))
   on('session.model', () => ({ value: 'claude-opus-5-5' }))
-  mock.clock(on, { now: Date.now() })
+  mock.clock(on, { now: NOW })
   const ui = await $.ui.mount(PANE)
 
   expect(await ui.find({ type: 'Text', text: 'Current session' })).toBeDefined()
@@ -128,7 +130,7 @@ for (const [bodyColumns, asked] of [
 }
 
 const HOUR = 60 * 60 * 1000
-const anHourAgo = new Date(Date.now() - HOUR).toISOString()
+const anHourAgo = new Date(NOW - HOUR).toISOString()
 
 interface Window {
   kind: string
@@ -159,7 +161,7 @@ test('a plan window past its reset shows an empty bar, without a reset time', as
     ]),
   }))
   on('session.model', () => ({ value: 'claude-opus-5-5' }))
-  mock.clock(on, { now: Date.now() })
+  mock.clock(on, { now: NOW })
   const ui = await mountNow($)
 
   expect(await planRows(ui)).toEqual([
@@ -173,7 +175,7 @@ test('a plan window past its reset shows an empty bar, without a reset time', as
 test('the session window shows empty when the engine stops reporting it', async ($, on) => {
   on('session.usage', () => ({ value: usageWith([{ kind: 'seven_day', percentUsed: 38 }]) }))
   on('session.model', () => ({ value: 'claude-opus-5-5' }))
-  mock.clock(on, { now: Date.now() })
+  mock.clock(on, { now: NOW })
   const ui = await mountNow($)
 
   expect(await planRows(ui)).toEqual([
@@ -186,7 +188,7 @@ test('the session window shows empty when the engine stops reporting it', async 
 test('a gateway spend limit alone adds no plan windows', async ($, on) => {
   on('session.usage', () => ({ value: usageWith([{ kind: 'spend_limit', percentUsed: 12 }]) }))
   on('session.model', () => ({ value: 'claude-opus-5-5' }))
-  mock.clock(on, { now: Date.now() })
+  mock.clock(on, { now: NOW })
   const ui = await mountNow($)
 
   expect(await planRows(ui)).toEqual([])
@@ -203,7 +205,7 @@ test('a per-model week past its reset shows empty', async ($, on) => {
     ]),
   }))
   on('session.model', () => ({ value: 'claude-opus-5-5' }))
-  mock.clock(on, { now: Date.now() })
+  mock.clock(on, { now: NOW })
   const ui = await mountNow($)
 
   expect(await planRows(ui)).toEqual([
