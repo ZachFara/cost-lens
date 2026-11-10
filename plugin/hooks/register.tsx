@@ -182,12 +182,15 @@ function paneHandlers($: EngineInterface, tab: Tab): PaneHandlers {
 
 async function nowFacts($: EngineInterface, columns: number): Promise<NowFacts | undefined> {
   try {
-    const [usage, model, live] = await Promise.all([
+    // Reading the minute redraws the tab each minute, so a window empties once it resets.
+    const [usage, model, live, now] = await Promise.all([
       $.session.usage({ breakdown: 'summary', columns: gridColumns(columns) }),
       $.session.model(),
       read($, liveState),
+      $.clock.now(),
+      read($, minute),
     ])
-    return { usage, model, live }
+    return { usage, model, live, now }
   } catch {
     return undefined
   }

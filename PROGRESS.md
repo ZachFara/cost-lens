@@ -34,6 +34,8 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 18. **(done)** **Launch prep.** Tab hotkeys 1 to 9 (PR #24); the full-size context grid in docked panes (PR #25); listing icon, screenshots and tab tour GIF with project names irreversibly blurred, README Screenshots section, `claude plugin validate --profile directory .` passing (PR #26). (Owner request, 2026-11-07.)
 19. **(mostly done)** **Publish.** Released `cost-lens--v0.1.0` (GitHub release). Opened hamzafer/claude-code-mods#173 and whyashthakker/awesome-claude-code-mods#29 (waiting on their maintainers). Submitted to Anthropic's plugin directory on 2026-11-07 (path `plugin`, branch `main`, auto-publish off, scheduled checks; held for policy review for the 5 holds `plugin/README.md` answers); the first version is published from the portal (claude.ai/directory/manage) once approved. Show HN was refused: Hacker News restricts Show HN for new accounts; post later from an account with history. Reddit skipped at the owner's request.
 
+20. **(done)** **Plan windows after a reset (MIT-583).** Entry: Now tab. Done when: on a subscription, Current session and Current week always show, at 0% with an empty bar when Claude Code does not report them; any window past its reset time shows 0% until the next reading; an open Now tab redraws each minute so a reset shows without reopening. (Owner report, 2026-11-10.)
+
 ## Open Questions
 
 None.
@@ -41,11 +43,13 @@ None.
 ## Next steps
 
 - Task 19 (publish), with the owner. Other candidates: skill shares closer to `/usage` (count a skill's text in later requests); let the mod's own estimates (cache line, advisor, Now split) use the live prices too (today they use the built-in snapshot).
+- Possible follow-up (not scheduled): a per-model week (for example Current week (Fable)) that Claude Code stops reporting still disappears from the Now tab. Keeping it needs an atom and a `session.measure` hook in `plugin/hooks/register.tsx`, which is at the 300-line lint limit; that needs room made first (MIT-583).
 - Possible follow-up (not scheduled): skill shares count only the request that invoked a skill, so they read lower than `/usage`, which appears to count the skill's text in later requests too.
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
 ## Learned
 
+- `$.session.usage().rateLimits` holds only the windows the last API response reported: after the five-hour window resets, Claude Code can stop reporting it, so the Now tab always shows the session and week windows and shows a missing or reset one at 0% (MIT-583).
 - Claude Code session logs repeat an assistant entry once per content block with the same `message.id` and usage; de-duplicate by `message.id`.
 - This machine's sessions write 1-hour cache entries (`usage.cache_creation.ephemeral_1h_input_tokens`).
 - Decided in review: the repository is public; personal spend figures and organization details stay out of it; the engine's generated API types are not committed (decision 0004).
