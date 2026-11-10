@@ -14,6 +14,26 @@ export interface NowFacts {
   usage: SessionUsage
   model: string
   live: SummaryTotals
+  /** The time now, in milliseconds. */
+  now: number
+}
+
+/** The windows every subscription has, which `/usage` always shows. */
+const PLAN_KINDS = ['five_hour', 'seven_day']
+
+/**
+ * The plan windows to draw. The engine reports the windows the last response did, so
+ * after the session window resets it can drop it, or keep its old reading. On a
+ * subscription the session and week windows always show; one past its reset shows empty.
+ */
+function planWindows(known: readonly SessionRateLimit[], now: number): SessionRateLimit[] {
+  const isPlan = known.some((window) => /^(five_hour|seven_day)/.test(window.kind))
+  const others = known.map((window) => window.kind).filter((kind) => !PLAN_KINDS.includes(kind))
+  return [...(isPlan ? PLAN_KINDS : []), ...others].map((kind) => {
+    const window = known.find((one) => one.kind === kind)
+    const hasReset = window?.resetsAt !== undefined && Date.parse(window.resetsAt) <= now
+    return window === undefined || hasReset ? { kind, percentUsed: 0 } : window
+  })
 }
 
 /** The windows `/usage` shows, by the names the API reports them under. */
@@ -31,12 +51,12 @@ function limitColor(percent: number): 'success' | 'warning' | 'error' {
   return percent >= 50 ? 'warning' : 'success'
 }
 
-function limitsView(ui: Ui, limits: readonly SessionRateLimit[], columns: number) {
+function limitsView(ui: Ui, limits: readonly SessionRateLimit[], at: number, columns: number) {
   const { Box, Text } = ui
   if (limits.length === 0) {
     return <Text dimColor>Plan usage appears after this session's first reply.</Text>
   }
-  const now = new Date()
+  const now = new Date(at)
   const width = Math.max(10, columns - 2)
   return (
     <Box flexDirection="column" gap={1}>
@@ -78,7 +98,7 @@ const FULL_GRID_ASK = 80
 export function nowView(ui: Ui, facts: NowFacts | undefined, columns: number) {
   const { Box, Text } = ui
   if (facts === undefined) return <Text dimColor>Session details are not available here.</Text>
-  const { usage, model, live } = facts
+  const { usage, model, live, now } = facts
   const { context } = usage
   const contextLine =
     context.tokens === undefined
@@ -87,7 +107,7 @@ export function nowView(ui: Ui, facts: NowFacts | undefined, columns: number) {
   return (
     <Box flexDirection="column" gap={1}>
       <Text weight="semibold">Plan usage</Text>
-      {limitsView(ui, usage.rateLimits, columns)}
+      {limitsView(ui, planWindows(usage.rateLimits, now), now, columns)}
       <Box flexDirection="column">
         <Text weight="semibold">This session</Text>
         <Box flexDirection="row" justifyContent="space-between" columnGap={1}>

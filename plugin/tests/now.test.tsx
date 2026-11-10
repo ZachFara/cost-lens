@@ -1,4 +1,5 @@
-import { expect, test } from 'claude-code/testing'
+import { expect, mock, test } from 'claude-code/testing'
+import type { Engine } from 'claude-code/testing'
 
 const PANE = {
   plugin: 'cost-lens',
@@ -69,6 +70,7 @@ const USAGE = {
 test('Now shows plan usage, this session and what fills the context', async ($, on) => {
   on('session.usage', () => ({ value: USAGE }))
   on('session.model', () => ({ value: 'claude-opus-5-5' }))
+  mock.clock(on, { now: Date.now() })
   const ui = await $.ui.mount(PANE)
 
   expect(await ui.find({ type: 'Text', text: 'Current session' })).toBeDefined()
@@ -124,3 +126,112 @@ for (const [bodyColumns, asked] of [
     await ui.unmount()
   })
 }
+
+const HOUR = 60 * 60 * 1000
+const anHourAgo = new Date(Date.now() - HOUR).toISOString()
+
+interface Window {
+  kind: string
+  percentUsed: number
+  resetsAt?: string
+}
+
+function usageWith(rateLimits: Window[]) {
+  return { ...USAGE, rateLimits }
+}
+
+/** The plan rows the tab draws, as label and percent pairs. */
+async function planRows(ui: Awaited<ReturnType<typeof mountNow>>) {
+  const labels = await ui.findAll({ type: 'Text', text: /^Current (session|week)/ })
+  const percents = await ui.findAll({ type: 'Text', text: /^[\d.]+% used$/ })
+  return labels.map((label, index) => [label.text, percents[index]?.text])
+}
+
+async function mountNow($: Engine, bodyColumns = 50) {
+  return $.ui.mount({ ...PANE, props: { ...PANE.props, bodyColumns } })
+}
+
+test('a plan window past its reset shows an empty bar, without a reset time', async ($, on) => {
+  on('session.usage', () => ({
+    value: usageWith([
+      { kind: 'five_hour', percentUsed: 97, resetsAt: anHourAgo },
+      { kind: 'seven_day', percentUsed: 38, resetsAt: inAnHour },
+    ]),
+  }))
+  on('session.model', () => ({ value: 'claude-opus-5-5' }))
+  mock.clock(on, { now: Date.now() })
+  const ui = await mountNow($)
+
+  expect(await planRows(ui)).toEqual([
+    ['Current session', '0% used'],
+    ['Current week (all models)', '38% used'],
+  ])
+  expect((await ui.findAll({ type: 'Text', text: /^Resets / })).length).toBe(1)
+  await ui.unmount()
+})
+
+test('the session window shows empty when the engine stops reporting it', async ($, on) => {
+  on('session.usage', () => ({ value: usageWith([{ kind: 'seven_day', percentUsed: 38 }]) }))
+  on('session.model', () => ({ value: 'claude-opus-5-5' }))
+  mock.clock(on, { now: Date.now() })
+  const ui = await mountNow($)
+
+  expect(await planRows(ui)).toEqual([
+    ['Current session', '0% used'],
+    ['Current week (all models)', '38% used'],
+  ])
+  await ui.unmount()
+})
+
+test('a gateway spend limit alone adds no plan windows', async ($, on) => {
+  on('session.usage', () => ({ value: usageWith([{ kind: 'spend_limit', percentUsed: 12 }]) }))
+  on('session.model', () => ({ value: 'claude-opus-5-5' }))
+  mock.clock(on, { now: Date.now() })
+  const ui = await mountNow($)
+
+  expect(await planRows(ui)).toEqual([])
+  expect(await ui.find({ type: 'Text', text: 'Spend limit' })).toBeDefined()
+  await ui.unmount()
+})
+
+test('a per-model week past its reset shows empty', async ($, on) => {
+  on('session.usage', () => ({
+    value: usageWith([
+      { kind: 'five_hour', percentUsed: 10, resetsAt: inAnHour },
+      { kind: 'seven_day', percentUsed: 20 },
+      { kind: 'seven_day_fable', percentUsed: 60, resetsAt: anHourAgo },
+    ]),
+  }))
+  on('session.model', () => ({ value: 'claude-opus-5-5' }))
+  mock.clock(on, { now: Date.now() })
+  const ui = await mountNow($)
+
+  expect(await planRows(ui)).toEqual([
+    ['Current session', '10% used'],
+    ['Current week (all models)', '20% used'],
+    ['Current week (Fable)', '0% used'],
+  ])
+  await ui.unmount()
+})
+
+test('an open Now tab empties a window once its reset time passes', async ($, on) => {
+  const clock = mock.clock(on)
+  const resetsAt = new Date(clock.now() + 90 * 1000).toISOString()
+  on('session.usage', () => ({
+    value: usageWith([
+      { kind: 'five_hour', percentUsed: 14, resetsAt },
+      { kind: 'seven_day', percentUsed: 25 },
+    ]),
+  }))
+  on('session.model', () => ({ value: 'claude-opus-5-5' }))
+  on('command.register', (_, e) => ({ value: { command: e.name } }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+  const ui = await mountNow($)
+  expect((await planRows(ui))[0]).toEqual(['Current session', '14% used'])
+
+  await clock.advance(2 * 60 * 1000)
+
+  expect((await planRows(ui))[0]).toEqual(['Current session', '0% used'])
+  await ui.unmount()
+})
