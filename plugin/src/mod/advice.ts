@@ -1,5 +1,6 @@
-import { TIERS, familyOf, priceComparison } from '../core/models.ts'
+import { familyOf, priceComparison, tiersFor } from '../core/models.ts'
 import type { TierModel } from '../core/models.ts'
+import type { History } from '../../types'
 
 /** Shorter prompts ("continue", "yes") carry on earlier work; they are not judged. */
 export const MIN_PROMPT_CHARS = 40
@@ -8,12 +9,16 @@ const ADVICE_EVERY_MS = 10 * 60 * 1000
 /** How many recent recommendations the Model tab keeps. */
 export const KEPT = 5
 
-/** The labels the small model chooses from. */
-export const TIER_LABELS = TIERS.map((one) => one.label)
+export { TIER_LABELS } from '../core/models.ts'
 
-/** The tier the classifier named, or undefined when it named none. */
-export function tierOf(answer: string | undefined): TierModel | undefined {
-  return TIERS.find((one) => one.label === answer)
+/** Each tier's model: the newest the last summary's pricing page lists, else the snapshot's. */
+export function currentTiers(history: History): TierModel[] {
+  return tiersFor(history.status === 'ready' ? history.summary.models : [])
+}
+
+/** The tier the classifier named, with its current model, or undefined when it named none. */
+export function tierOf(answer: string | undefined, history: History) {
+  return currentTiers(history).find((one) => one.label === answer)
 }
 
 /** Whether to suggest `fit` to someone on `current` now, given the last suggestion's time. */

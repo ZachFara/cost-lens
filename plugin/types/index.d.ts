@@ -43,6 +43,7 @@ export type History =
       summary: {
         generatedAt: string
         pricesFetched: string
+        models: string[]
         today: SummaryTotals
         last30: SummaryTotals
         allTime: SummaryTotals

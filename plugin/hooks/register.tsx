@@ -52,7 +52,7 @@ const NO_REQUEST: LastRequest | null = null
 // Change a tag when its value's fields change: it declines what an earlier version stored.
 const selectedTab = atom({ plugin: 'cost-lens', key: 'tab' } as const, 'now')
 const historyState = atom({ plugin: 'cost-lens', key: 'history' } as const, IDLE_HISTORY, {
-  shape: 'history-8',
+  shape: 'history-9',
 })
 const prsState = atom({ plugin: 'cost-lens', key: 'pullRequests' } as const, IDLE_PRS, {
   shape: 'pull-requests-1',
@@ -239,10 +239,10 @@ async function cacheState($: EngineInterface) {
 async function adviseModel($: EngineInterface, text: string, settings: Settings) {
   if (!settings.llmFeatures || text.trim().length < MIN_PROMPT_CHARS) return
   try {
-    const fit = tierOf(await $.model.classify(text, TIER_LABELS, { model: 'haiku' }))
+    const answer = await $.model.classify(text, TIER_LABELS, { model: 'haiku' })
+    const fit = tierOf(answer, await read($, historyState))
     if (fit === undefined) return
-    const current = await $.session.model()
-    const now = await $.clock.now()
+    const [current, now] = await Promise.all([$.session.model(), $.clock.now()])
     const entry: Recommendation = { tier: fit.tier, model: fit.model, current, at: now }
     await update($, recommendations, (list) => [entry, ...list].slice(0, KEPT))
     if (!settings.recommendationAlerts) return

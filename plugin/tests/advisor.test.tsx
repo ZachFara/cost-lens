@@ -121,3 +121,45 @@ test(
     expect(toasts).toEqual([])
   },
 )
+
+const HARDEST = 'hardest: long multi-step work, research, or an ambitious change'
+
+test('a hard prompt on Opus suggests the newest Fable', LLM_ON, async ($, on) => {
+  const { toasts } = harness(on, 'claude-opus-5-5', () => HARDEST)
+
+  await $.prompt.submit(typed(LONG))
+
+  expect(toasts).toEqual([
+    'cost-lens: this looks hardest (long multi-step work, research, or an ambitious change). ' +
+      'Fable 5.2 may do it better, at 2x the price per token. /model fable',
+  ])
+})
+
+test(
+  'once the analyzer has read the pricing page, its newest model is the one suggested',
+  LLM_ON,
+  async ($, on) => {
+    const { toasts } = harness(on, 'claude-opus-5-5', () => HARDEST)
+    on('state.get', { key: 'history' }, () => ({
+      value: {
+        value: {
+          shape: 'history-9',
+          value: {
+            status: 'ready',
+            isRefreshing: false,
+            refreshError: null,
+            summary: { models: ['claude-fable-5-2', 'claude-fable-5-3'] },
+          },
+        },
+        version: 1,
+      },
+    }))
+
+    await $.prompt.submit(typed(LONG))
+
+    expect(toasts).toEqual([
+      'cost-lens: this looks hardest (long multi-step work, research, or an ambitious change). ' +
+        'Fable 5.3 may do it better. /model fable',
+    ])
+  },
+)

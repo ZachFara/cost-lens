@@ -5,6 +5,8 @@ import type { Spend } from './spend.ts'
 export interface Summary {
   generatedAt: string
   pricesFetched: string
+  /** The models Anthropic's pricing page lists (the built-in snapshot's when offline). */
+  models: string[]
   /** Requests made on the analyzer's local calendar day. */
   today: Totals
   /** Today and the 29 calendar days before it. */
@@ -67,6 +69,14 @@ function hasNumbers(value: unknown, keys: readonly string[]): boolean {
   return isObject(value) && keys.every((key) => typeof value[key] === 'number')
 }
 
+function hasStrings(value: Json, keys: readonly string[]): boolean {
+  return keys.every((key) => typeof value[key] === 'string')
+}
+
+function isStrings(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((one) => typeof one === 'string')
+}
+
 const TOKEN_KEYS = ['input', 'output', 'cacheWrite5m', 'cacheWrite1h', 'cacheRead'] as const
 const COST_KEYS = ['input', 'output', 'cacheWrite', 'cacheRead'] as const
 
@@ -123,8 +133,7 @@ function isTotals(value: unknown): value is Totals {
   return (
     hasNumbers(value, ['requests', 'unpricedRequests']) &&
     isObject(value) &&
-    Array.isArray(value.unpricedModels) &&
-    value.unpricedModels.every((model) => typeof model === 'string') &&
+    isStrings(value.unpricedModels) &&
     hasNumbers(value.tokens, TOKEN_KEYS) &&
     hasNumbers(value.cost, COST_KEYS)
   )
@@ -153,8 +162,8 @@ function isTips(value: unknown): value is Tips {
 function isSummary(value: unknown): value is Summary {
   return (
     isObject(value) &&
-    typeof value.generatedAt === 'string' &&
-    typeof value.pricesFetched === 'string' &&
+    hasStrings(value, ['generatedAt', 'pricesFetched']) &&
+    isStrings(value.models) &&
     PERIODS.every((period) => isTotals(value[period])) &&
     isByModel(value.byModel) &&
     isProjects(value.projects) &&
