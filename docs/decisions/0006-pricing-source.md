@@ -12,6 +12,7 @@ Costs are estimated from token counts, so the price table decides every dollar f
 - Claude Haiku 5.5 has two rows: prompts up to 100,000 tokens and prompts over 100,000 tokens.
 - Modifiers from the same page apply per request, as the logs record them: `speed: "fast"` uses fast-mode prices, and `inference_geo: "us"` multiplies every category by 1.1.
 - With `--live-prices` (the mod always passes it; tests and CI never do), the analyzer fetches the markdown page at most once a local day, parses its "Model pricing" table (`src/core/price-page.ts`), caches it in `~/Library/Caches/cost-lens/prices.json`, and prices with it; fast-mode rates, in a separate table, stay from the snapshot. When the page cannot be fetched or parsed (fewer than five models), the last cached prices stand, else the snapshot.
+- The same table says which models Anthropic offers: the analyzer's summary carries its model ids, and each model-recommendation tier recommends the newest version of its family listed there (`src/core/models.ts`), so a new release such as Claude Fable 5.2 is recommended without a code change. Before the first summary of a session, and offline, the snapshot's newest stands. (Added 2026-11-10.)
 - Community price lists (such as LiteLLM's model price JSON) are not used: the vendor's own page is authoritative and machine-readable.
 
 ## Consequences

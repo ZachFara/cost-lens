@@ -36,6 +36,8 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 
 20. **(done)** **Plan windows after a reset (MIT-583).** Entry: Now tab. Done when: on a subscription, Current session and Current week always show, at 0% with an empty bar when Claude Code does not report them; any window past its reset time shows 0% until the next reading; an open Now tab redraws each minute so a reset shows without reopening. (Owner report, 2026-11-10.)
 
+21. **(done)** **Recommend the newest model of each family.** Entry: the Model tab and the model recommendation toast. Done when: each tier recommends the newest model of its family that Anthropic's pricing page lists (carried in the analyzer's summary), falling back to the built-in snapshot, which now includes Claude Fable 5.2; the Model tab and toast name it (Fable 5.2 today, not 5.1). (Owner report, 2026-11-10.)
+
 ## Open Questions
 
 None.
@@ -48,6 +50,8 @@ None.
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
 ## Learned
+
+- The recommended models used to be written into `src/core/models.ts`, so a new release (Claude Fable 5.2) went unnoticed while the prices already came from the page. The tiers now follow the page's model list (decision 0006); the mod sees that list only once the analyzer has run in the session, and uses the snapshot's newest until then.
 
 - `$.session.usage().rateLimits` holds only the windows the last API response reported: after the five-hour window resets, Claude Code can stop reporting it, so the Now tab always shows the session and week windows and shows a missing or reset one at 0% (MIT-583).
 - Claude Code session logs repeat an assistant entry once per content block with the same `message.id` and usage; de-duplicate by `message.id`.
