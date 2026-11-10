@@ -2,7 +2,7 @@
  * US dollars per million tokens, copied from Anthropic's pricing page
  * (https://platform.claude.com/docs/en/about-claude/pricing.md). Decision 0006.
  */
-const PRICES_FETCHED = '2026-11-07'
+const PRICES_FETCHED = '2026-11-10'
 
 export interface Rates {
   input: number
@@ -47,9 +47,12 @@ const OPUS_4_LEGACY = rates([15, 18.75, 30, 1.5, 75])
 const SONNET_4X = rates([3, 3.75, 6, 0.3, 15])
 
 const SNAPSHOT: readonly ModelPrice[] = [
+  { id: 'claude-fable-5-2', rates: rates([8, 10, 16, 0.2, 40]) },
+  { id: 'claude-mythos-5-2', rates: rates([8, 10, 16, 0.2, 40]) },
   { id: 'claude-fable-5-1', rates: rates([10, 12.5, 20, 0.25, 50]) },
   { id: 'claude-mythos-5-1', rates: rates([10, 12.5, 20, 0.25, 50]) },
   { id: 'claude-fable-5', rates: rates([10, 12.5, 20, 1, 50]) },
+  { id: 'claude-mythos-5', rates: rates([10, 12.5, 20, 1, 50]) },
   { id: 'claude-opus-5-5', rates: rates([4, 5, 8, 0.2, 20]), fast: { input: 8, output: 40 } },
   { id: 'claude-opus-5', rates: OPUS_4X, fast: { input: 10, output: 50 } },
   { id: 'claude-opus-4-8', rates: OPUS_4X, fast: { input: 10, output: 50 } },
@@ -88,6 +91,16 @@ export function usePrices(models: readonly ModelPrice[], fetched: string): void 
     return fast === undefined ? one : { ...one, fast }
   })
   tableFetched = fetched
+}
+
+/** The ids of the models the price table in use lists: today's page, else the snapshot. */
+export function offeredModels(): string[] {
+  return table.map((one) => one.id)
+}
+
+/** The ids of the built-in snapshot's models. */
+export function snapshotModels(): string[] {
+  return SNAPSHOT.map((one) => one.id)
 }
 
 /** The date of the prices in use: the snapshot's, or the day they were fetched. */

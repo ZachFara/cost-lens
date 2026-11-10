@@ -26,6 +26,7 @@ const empty = {
 const SUMMARY = {
   generatedAt: '2026-11-07T12:00:00.000Z',
   pricesFetched: '2026-11-07',
+  models: [],
   today: empty,
   last30: empty,
   allTime: empty,

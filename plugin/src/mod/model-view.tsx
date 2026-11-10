@@ -1,5 +1,6 @@
 import { formatClock } from '../core/format.ts'
-import { TIERS, familyOf, priceComparison } from '../core/models.ts'
+import { familyOf, priceComparison } from '../core/models.ts'
+import type { TierModel } from '../core/models.ts'
 import type { Recommendation } from '../../types'
 
 import type { Settings } from './settings.ts'
@@ -19,9 +20,9 @@ function settingsLine(ui: Ui, settings: Settings) {
   )
 }
 
-function latestCard(ui: Ui, latest: Recommendation, current: string) {
+function latestCard(ui: Ui, tiers: readonly TierModel[], latest: Recommendation, current: string) {
   const { Box, Text } = ui
-  const fit = TIERS.find((one) => one.model === latest.model)
+  const fit = tiers.find((one) => one.tier === latest.tier)
   if (fit === undefined) return null
   const isOn = familyOf(current) === fit.family
   const comparison = priceComparison(current, fit.model)
@@ -37,14 +38,14 @@ function latestCard(ui: Ui, latest: Recommendation, current: string) {
   )
 }
 
-function historyView(ui: Ui, recent: readonly Recommendation[]) {
+function historyView(ui: Ui, tiers: readonly TierModel[], recent: readonly Recommendation[]) {
   const { Box, Text } = ui
   if (recent.length < 2) return null
   return (
     <Box flexDirection="column">
       <Text weight="semibold">Recent prompts</Text>
       {recent.map((one) => {
-        const fit = TIERS.find((tier) => tier.model === one.model)
+        const fit = tiers.find((tier) => tier.model === one.model)
         return (
           <Text dimColor>
             {`${formatClock(new Date(one.at).toISOString())}  ${one.tier} → ${fit?.name ?? one.model} (on ${one.current})`}
@@ -55,12 +56,12 @@ function historyView(ui: Ui, recent: readonly Recommendation[]) {
   )
 }
 
-function tiersView(ui: Ui) {
+function tiersView(ui: Ui, tiers: readonly TierModel[]) {
   const { Box, Text } = ui
   return (
     <Box flexDirection="column">
       <Text weight="semibold">How prompts are judged</Text>
-      {TIERS.map((one) => (
+      {tiers.map((one) => (
         <Box flexDirection="row" justifyContent="space-between" columnGap={1}>
           <Text>{one.label}</Text>
           <Text dimColor>{one.name}</Text>
@@ -70,20 +71,25 @@ function tiersView(ui: Ui) {
   )
 }
 
+export interface ModelFacts {
+  settings: Settings
+  /** Each tier with the model it recommends today. */
+  tiers: readonly TierModel[]
+  /** Recent recommendations, newest first. */
+  recent: readonly Recommendation[]
+  /** The session's model ('' while LLM features are off). */
+  current: string
+}
+
 /** Model: which model fits the last prompts, with the settings that govern it. */
-export function modelView(
-  ui: Ui,
-  settings: Settings,
-  recent: readonly Recommendation[],
-  current: string,
-) {
+export function modelView(ui: Ui, { settings, tiers, recent, current }: ModelFacts) {
   const { Box, Text } = ui
   if (!settings.llmFeatures) {
     return (
       <Box flexDirection="column" gap={1}>
         <Text weight="semibold">Model recommendations are off</Text>
         <Text>{OFF_TEXT}</Text>
-        {tiersView(ui)}
+        {tiersView(ui, tiers)}
         {settingsLine(ui, settings)}
       </Box>
     )
@@ -96,10 +102,10 @@ export function modelView(
           Send a prompt of 40 characters or more and the model that fits it appears here.
         </Text>
       ) : (
-        latestCard(ui, latest, current)
+        latestCard(ui, tiers, latest, current)
       )}
-      {historyView(ui, recent)}
-      {tiersView(ui)}
+      {historyView(ui, tiers, recent)}
+      {tiersView(ui, tiers)}
       {settingsLine(ui, settings)}
     </Box>
   )

@@ -37,6 +37,7 @@ test('with LLM features off the Model tab says what turning them on sends', asyn
     'Turn on "Allow LLM features" in /config',
   )
   expect(await ui.find({ type: 'Text', text: 'How prompts are judged' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'Fable 5.2' })).toBeDefined()
   expect(
     await ui.find({
       type: 'Text',

@@ -28,6 +28,7 @@ function totals(requests: number, output: number) {
 const SUMMARY = {
   generatedAt: '2026-11-07T12:00:00.000Z',
   pricesFetched: '2026-11-07',
+  models: [],
   today: totals(0, 0),
   last30: totals(12, 5),
   allTime: totals(1234, 25),

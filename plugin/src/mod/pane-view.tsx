@@ -1,5 +1,6 @@
 import type { History, PullRequests, Recommendation, Tab } from '../../types'
 
+import { currentTiers } from './advice.ts'
 import { branchesView } from './branches-view.tsx'
 import { historyView } from './history-view.tsx'
 import { modelView } from './model-view.tsx'
@@ -68,7 +69,12 @@ function readyViewFor(ui: Ui, data: PaneData) {
 function tabBody(ui: Ui, data: PaneData, handlers: PaneHandlers) {
   if (data.tab === 'now') return nowView(ui, data.facts, data.columns)
   if (data.tab === 'model') {
-    return modelView(ui, data.settings, data.recommendations, data.currentModel)
+    return modelView(ui, {
+      settings: data.settings,
+      tiers: currentTiers(data.history),
+      recent: data.recommendations,
+      current: data.currentModel,
+    })
   }
   const readyView = readyViewFor(ui, data)
   if (readyView === undefined) {

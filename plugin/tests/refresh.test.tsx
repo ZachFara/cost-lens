@@ -31,6 +31,7 @@ function summary(output: number) {
   return JSON.stringify({
     generatedAt: '2026-11-07T12:00:00.000Z',
     pricesFetched: '2026-11-07',
+    models: [],
     today: totals(output),
     last30: totals(output),
     allTime: totals(output),
