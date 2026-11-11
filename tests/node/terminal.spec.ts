@@ -10,7 +10,7 @@ import { localDay } from '../../plugin/src/core/days.ts'
 import type { Summary } from '../../plugin/src/core/summary.ts'
 import { afterRead, frame, keysIn, pressKey, tabLines } from '../../plugin/src/terminal/screen.ts'
 import type { Tab, View } from '../../plugin/src/terminal/screen.ts'
-import { cells, paint, span, spread, wrap } from '../../plugin/src/terminal/text.ts'
+import { cells, paint, printable, span, spread, wrap } from '../../plugin/src/terminal/text.ts'
 import type { Line } from '../../plugin/src/terminal/text.ts'
 
 const NOW = new Date(2026, 10, 7, 12, 0)
@@ -78,6 +78,13 @@ await test('text wraps at spaces, spreads to the width and is cut to fit', () =>
   assert.equal(paint([span('abcdef')], 4, false), 'abc…')
   assert.equal(paint([span('ok', 'success'), span('!')], 10, true), '\u001b[32mok\u001b[0m!')
   assert.equal(cells('👍🏽 done'), 6)
+})
+
+await test('control characters in text from outside cannot reach the terminal', () => {
+  const title = 'Fix\u001b[2J\u001b]0;owned\u0007 it\u202e\u009b'
+  const shown = paint([span(title)], 100, true)
+  assert.equal(shown, 'Fix\ufffd[2J\ufffd]0;owned\ufffd it\ufffd\ufffd')
+  assert.equal(printable('caf\u00e9 ok'), 'caf\u00e9 ok')
 })
 
 await test('the data tabs show what the summary holds', async () => {
