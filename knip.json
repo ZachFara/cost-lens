@@ -3,6 +3,7 @@
   "entry": [
     "plugin/hooks/register.tsx",
     "plugin/src/analyzer/cli.ts",
+    "plugin/src/terminal/cli.ts",
     "tools/*.ts",
     "tests/**/*.spec.ts",
     "plugin/tests/*.test.{ts,tsx}"

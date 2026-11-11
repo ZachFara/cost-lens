@@ -19,7 +19,7 @@ const ALLOWED: readonly RegExp[] = [
   /^plugin\/README\.md$/,
   /^plugin\/\.claude-plugin\/(plugin\.json|icon\.png)$/,
   /^plugin\/hooks\/(hooks\.json|register\.tsx)$/,
-  /^plugin\/src\/(core|analyzer)\/[a-z0-9-]+\.ts$/,
+  /^plugin\/src\/(core|analyzer|terminal)\/[a-z0-9-]+\.ts$/,
   /^plugin\/src\/mod\/[a-z0-9-]+\.tsx?$/,
   /^plugin\/tests\/[a-z0-9-]+\.test\.tsx?$/,
   /^plugin\/types\/index\.d\.ts$/,

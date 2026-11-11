@@ -20,7 +20,14 @@ await test('the plugin manifest and package agree on name and version', () => {
 })
 
 await test('the layout check accepts the layout and rejects stray files', () => {
-  assert.deepEqual(disallowedPaths(['plugin/src/core/pricing.ts', 'plugin/hooks/register.tsx']), [])
+  assert.deepEqual(
+    disallowedPaths([
+      'plugin/src/core/pricing.ts',
+      'plugin/src/terminal/cli.ts',
+      'plugin/hooks/register.tsx',
+    ]),
+    [],
+  )
   assert.deepEqual(disallowedPaths(['scratch.ts', 'src/core/pricing.ts']), [
     'scratch.ts',
     'src/core/pricing.ts',
