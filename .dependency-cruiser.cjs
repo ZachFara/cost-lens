@@ -70,7 +70,7 @@ module.exports = {
   ],
   options: {
     doNotFollow: { path: 'node_modules' },
-    exclude: { path: '^(node_modules|vendor|\\.scratch|plugin/\\.claude-plugin/types)/' },
+    exclude: { path: '^(node_modules|vendor|dist|\\.scratch|plugin/\\.claude-plugin/types)/' },
     tsConfig: { fileName: 'tsconfig.node.json' },
     tsPreCompilationDeps: true,
     enhancedResolveOptions: {

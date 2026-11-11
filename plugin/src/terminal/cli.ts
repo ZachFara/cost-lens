@@ -1,6 +1,8 @@
+#!/usr/bin/env node
 /**
  * cost-lens in a plain terminal, outside Claude Code:
- *   node <plugin>/src/terminal/cli.ts [logs folder]
+ *   cost-lens [logs folder]                     (the npm package)
+ *   node <plugin>/src/terminal/cli.ts [logs folder]   (the plugin, or a working copy)
  *
  * In a terminal it runs full screen, like top, until q. With its output piped or
  * redirected (`... | less`), it prints every tab once as plain text and exits.

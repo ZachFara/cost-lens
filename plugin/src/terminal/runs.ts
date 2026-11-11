@@ -4,6 +4,7 @@
  * Their output is untrusted data.
  */
 import { execFile } from 'node:child_process'
+import { extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { parsePullRequests } from '../core/pull-requests.ts'
@@ -12,7 +13,10 @@ import type { Summary } from '../core/summary.ts'
 
 import type { PullRequests } from './views.ts'
 
-const ANALYZER = fileURLToPath(new URL('../analyzer/cli.ts', import.meta.url))
+// The analyzer beside this file: cli.ts in the plugin, cli.js in the npm package's build.
+const ANALYZER = fileURLToPath(
+  new URL(`../analyzer/cli${extname(fileURLToPath(import.meta.url))}`, import.meta.url),
+)
 const ANALYZER_TIMEOUT_MS = 5 * 60 * 1000
 const GH_TIMEOUT_MS = 30 * 1000
 const GIT_TIMEOUT_MS = 10 * 1000
