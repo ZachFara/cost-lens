@@ -26,6 +26,16 @@ Then type `/cost-lens` to open the pane. Click a tab, or give the pane the keybo
 
 To update to a newer release, run `claude plugin update cost-lens@cost-lens` in a shell (or use `/plugin` in a session), then restart Claude Code.
 
+## In a plain terminal
+
+cost-lens also runs on its own in any terminal tab, outside Claude Code, full screen like `top`. Add this alias to your shell's startup file (`~/.zshrc` or `~/.bashrc`); it runs the newest version you have installed:
+
+```sh
+alias cost-lens='node "$(ls -d ~/.claude/plugins/cache/cost-lens/cost-lens/*/ | sort -V | tail -n 1)src/terminal/cli.ts"'
+```
+
+Then run `cost-lens` in a project folder. It shows Today, 30 days, All time, Projects, and that folder's Branches and PRs, plus Tips. Press `1` to `7` or `←`/`→` to switch tabs, `↑`/`↓` or space to scroll, `r` to refresh (it also refreshes every five minutes), and `q` to quit. Piped (`cost-lens | less`), it prints every tab once. Now and Model need a Claude Code session, so they show only in the pane.
+
 ## What it shows
 
 - **Model**: the model that fits your last prompts (needs LLM features, below), recent recommendations and how prompts are judged.
@@ -64,7 +74,7 @@ Point Claude Code at this folder in `~/.claude/settings.json`:
 { "env": { "CLAUDE_CODE_PLUGIN_DIRS": "~/path/to/cost-lens/plugin" } }
 ```
 
-Every new session then loads the mod; type `/cost-lens` to open the pane.
+Every new session then loads the mod; type `/cost-lens` to open the pane. The terminal view runs from the same folder: `node ~/path/to/cost-lens/plugin/src/terminal/cli.ts`.
 
 ## Develop
 

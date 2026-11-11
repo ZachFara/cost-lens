@@ -39,6 +39,8 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 21. **(done)** **Recommend the newest model of each family.** Entry: the Model tab and the model recommendation toast. Done when: each tier recommends the newest model of its family that Anthropic's pricing page lists (carried in the analyzer's summary), falling back to the built-in snapshot, which now includes Claude Fable 5.2; the Model tab and toast name it (Fable 5.2 today, not 5.1). (Owner report, 2026-11-10.)
 22. **(done)** **Release 0.1.1.** Entry: `claude plugin update cost-lens@cost-lens`. Done when: `version` is 0.1.1 in `plugin.json` and `package.json`, the tag `cost-lens--v0.1.1` and its GitHub release exist, a fresh install names 0.1.1, AGENTS.md has the release steps, and the README says how to update. Publishing 0.1.1 in Anthropic's plugin directory is the owner's step in the portal. (Owner request, 2026-11-11.)
 
+23. **(done)** **cost-lens in a plain terminal (MIT-677).** Entry: `node <plugin>/src/terminal/cli.ts` in any terminal tab, outside Claude Code (the README gives a `cost-lens` alias). Done when: it runs full screen like top with the data tabs (Today, 30 days, All time, Projects, Branches, PRs, Tips), keys 1 to 7 and ←/→ switch tabs, ↑/↓, space and page keys scroll, r refreshes and it refreshes every five minutes, q quits and gives the terminal back; piped, it prints every tab once; it fits narrow terminals; decision 0008. (Owner request, 2026-11-11.)
+
 ## Open Questions
 
 None.
@@ -48,9 +50,13 @@ None.
 - Task 19 (publish), with the owner. Other candidates: skill shares closer to `/usage` (count a skill's text in later requests); let the mod's own estimates (cache line, advisor, Now split) use the live prices too (today they use the built-in snapshot).
 - Possible follow-up (not scheduled): a per-model week (for example Current week (Fable)) that Claude Code stops reporting still disappears from the Now tab. Keeping it needs an atom and a `session.measure` hook in `plugin/hooks/register.tsx`, which is at the 300-line lint limit; that needs room made first (MIT-583).
 - Possible follow-up (not scheduled): skill shares count only the request that invoked a skill, so they read lower than `/usage`, which appears to count the skill's text in later requests too.
+- Possible follow-up (not scheduled): a Now tab for the terminal view, from the logs alone: the most recent sessions with their model, context size and whether their prompt cache is still warm (plan limits and the context grid need a Claude Code session).
+- Ship the terminal view to existing users: it reaches them only with the next version bump (AGENTS.md, Releasing a new version).
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
 ## Learned
+
+- Claude Code cannot show a mod's pane outside a session, and Node runs TypeScript but not JSX, so the terminal view (decision 0008) draws its own text views from core rather than reusing the pane's. Node's `.ts` type stripping also refuses files under `node_modules`, so it cannot ship as an npm package run from there; installed users run it from the plugin cache.
 
 - Merging to `main` reaches only new installs: existing installs keep the cached copy of their `version` until it changes, and auto-update is off by default for this marketplace (2026-11-11). Releases follow AGENTS.md, "Releasing a new version".
 

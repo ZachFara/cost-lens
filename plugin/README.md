@@ -8,6 +8,7 @@ Requires Claude Code 2.1.319 or later, Node.js 22.18 or later on your `PATH`, an
 
 - `nice -n 10 node <this plugin>/src/analyzer/cli.ts --live-prices [--project <repository folder>]`: the plugin's own log reader, at low CPU priority. It runs when you open a data tab, when you press Refresh, and every five minutes while the pane is shown. It reads Claude Code's session logs and prints a JSON summary for the pane.
 - `gh pr list --state all --limit 100 --json number,title,state,headRefName`, in the session's repository, when you open the PRs tab or press Refresh there. It runs with your own GitHub CLI login; cost-lens never reads or stores that credential.
+- The plugin also holds a terminal view, `<this plugin>/src/terminal/cli.ts`, that you can start yourself with `node` in any terminal, outside Claude Code. No hook starts it. It runs the same log reader and `gh pr list` (in the folder it starts in), plus `git rev-parse --show-toplevel` to find that folder's repository, reads and sends nothing else, and draws only in that terminal.
 
 ## What it reads
 
