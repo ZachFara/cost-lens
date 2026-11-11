@@ -10,6 +10,7 @@ cost-lens is a Claude Code mod that shows where Claude Code tokens and dollars g
 
 - **Core** (`plugin/src/core/`): pure TypeScript. Prices, cost math, aggregation, cold-rebuild detection, formatting. No I/O, no imports outside `plugin/src/core/`.
 - **Analyzer** (`plugin/src/analyzer/`): a Node CLI (`node plugin/src/analyzer/cli.ts`) that reads `~/.claude/projects/**/*.jsonl`, keeps an incremental index in `~/Library/Caches/cost-lens/`, and prints one JSON summary.
+- **Terminal view** (`plugin/src/terminal/`): a Node program (`node plugin/src/terminal/cli.ts`) that shows the data tabs full screen in any terminal, outside Claude Code. It runs the analyzer as a program and draws its own text views from core; it does not reuse the mod's JSX views (decision 0008).
 - **Mod** (`plugin/hooks/register.tsx` + `plugin/src/mod/`): the Claude Code hooks module. Runs in the engine's sandbox: no Node, no DOM, no npm packages. Reaches the outside only through `$`. Starts the analyzer with `$.process.run`.
 - The plugin is the `plugin/` folder (`plugin/.claude-plugin/plugin.json`, `plugin/hooks/hooks.json`); everything else in the repository is development tooling and docs, outside what the directory installs (decision 0007).
 
@@ -19,6 +20,7 @@ Module boundaries (enforced by dependency-cruiser in `npm run check`):
 | ---------------------- | --------------------------------------- |
 | `plugin/src/core/`     | `plugin/src/core/` only                 |
 | `plugin/src/analyzer/` | `plugin/src/core/`, Node built-ins      |
+| `plugin/src/terminal/` | `plugin/src/core/`, Node built-ins      |
 | `plugin/src/mod/`      | `plugin/src/core/`, `claude-code` types |
 | `plugin/hooks/`        | `plugin/src/mod/`, `claude-code` types  |
 | `tools/`               | Node built-ins                          |
@@ -42,6 +44,7 @@ plugin/hooks/hooks.json                names the hooks module
 plugin/hooks/register.tsx              the hooks module (entry the engine loads)
 plugin/src/core/*.ts                   pure shared logic
 plugin/src/analyzer/*.ts               Node CLI
+plugin/src/terminal/*.ts               terminal view (Node program)
 plugin/src/mod/*.ts(x)                 mod logic used by plugin/hooks/register.tsx
 tests/node/*.spec.ts            node:test tests (core, analyzer, tools)
 plugin/tests/*.test.ts(x)          engine tests, run by `claude plugin test plugin`
@@ -60,6 +63,7 @@ To add a new kind of path, propose it in PROGRESS.md under Open Questions first.
 - Everything: `npm run check`. It runs, in order: `prettier --check`, ESLint (strict type-checked rules plus complexity limits, zero warnings), `tsc` on both tsconfigs, knip (dead code), dependency-cruiser (module boundaries), the layout check, then the tests (`node --test`, `claude plugin validate .`, `claude plugin test plugin`). The pre-commit hook and CI run exactly this command.
 - Fix formatting: `npm run format`.
 - Run the analyzer by hand: `node plugin/src/analyzer/cli.ts`.
+- Run the terminal view: `node plugin/src/terminal/cli.ts` (full screen; piped, it prints every tab). To see it without a screen, run it in a detached tmux session and read it with `tmux capture-pane -p`.
 - Try the mod in a session: `claude --plugin-dir ~/Development/active/cost-lens/plugin`.
 
 ## Releasing a new version
@@ -98,6 +102,7 @@ Existing users get the release with `claude plugin update cost-lens@cost-lens` (
 - Settings are `userConfig` in `.claude-plugin/plugin.json`, read once in `plugin/hooks/register.tsx` (`plugin/src/mod/settings.ts`). Features that send the person's data to a model stay behind `llmFeatures`, which is off by default.
 - All hooks, all shared state (atoms) and every call on `$` live in `plugin/hooks/register.tsx`; `plugin/src/mod` holds pure views and helpers that take plain data (`tools/check-mod-calls.ts` enforces it). Anthropic's plugin directory reads engine calls only in that shape: `$.noun.method(...)` called plainly, and `$` or `on` passed whole only to functions of the same file.
 - `plugin/README.md` is what the directory's reviewers read: keep its lists of what the mod runs, reads and sends, and of its hooks, current with every change.
+- A change to what a data tab shows lands twice: in the pane's view (`plugin/src/mod/*-view.tsx`) and in the terminal view (`plugin/src/terminal/views.ts`, `tips-lines.ts`). Keep their wording the same.
 - Engine tests are `*.test.ts(x)` under `plugin/tests/`; Node tests are `*.spec.ts` under `tests/node/`, so `claude plugin test` never picks up a Node test.
 
 ## Workflow

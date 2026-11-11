@@ -13,7 +13,7 @@ Claude Code bills every message for the whole context it re-sends, so cost grows
 
 ## Users and entry points
 
-The person at a Claude Code terminal session. Every feature is reached from one of these entry points:
+The person at a Claude Code terminal session, and the same person in any terminal tab outside Claude Code (the terminal view). Every feature is reached from one of these entry points:
 
 | Entry point                        | What it does                                                                                                                                                                                                                                                                                                         |
 | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -22,6 +22,7 @@ The person at a Claude Code terminal session. Every feature is reached from one 
 | Band above the prompt              | One line: model, context size, cache status (`warm, 41m left` or `cold, next message re-writes 84k tokens ~$1.68`), session cost so far.                                                                                                                                                                             |
 | Prompt submit (cold-cache warning) | When the cache has expired and the context is large, shows a warning toast as the prompt goes out: how many tokens it re-writes and roughly what that costs, with `/compact` and `/clear` as the alternatives next time. It never holds, delays or drops the prompt. The band shows the same warning before sending. |
 | Prompt submit (model advisor)      | After a prompt is sent on an Opus or Fable model, a Haiku classification runs; when it judges the prompt routine, a toast suggests `/model sonnet`, at most once per 10 minutes. It never blocks or delays the prompt.                                                                                               |
+| `cost-lens` in a terminal tab      | Outside Claude Code, `node <plugin>/src/terminal/cli.ts` runs full screen like top: the data tabs (Today, 30 days, All time, Projects, Branches, PRs, Tips), switched with 1 to 7 or the arrow keys, refreshed every five minutes and with r, until q. Piped, it prints every tab once (decision 0008).              |
 
 ## Components
 
@@ -40,6 +41,11 @@ The person at a Claude Code terminal session. Every feature is reached from one 
 - Prints one JSON document to stdout: periods (today, 30 days, all time) with totals, cost split, cache hit rate, cold rebuilds and the share of cost above 150k context; breakdowns by model, project and branch; and the time-to-live the most recent request used.
 - Runs with `node`, which runs TypeScript directly (Node 26). The mod starts it with `$.process.run`.
 
+### Terminal view (Node program)
+
+- `plugin/src/terminal/cli.ts`, started by the person in any terminal. It runs the analyzer as the mod does and draws the data tabs as lines of styled text in the terminal's own colors, on the alternate screen; it restores the terminal when it quits (decision 0008).
+- Branches and PRs are those of the repository it was started in. Now and Model need a Claude Code session and are not shown.
+
 ### Mod (Claude Code hooks module)
 
 - `plugin/hooks/register.tsx` is the only entry the engine loads; it wires hooks from `plugin/src/mod/`.
@@ -49,14 +55,15 @@ The person at a Claude Code terminal session. Every feature is reached from one 
 
 ## Module boundaries
 
-| Module                 | May import                              | Must not import                                  |
-| ---------------------- | --------------------------------------- | ------------------------------------------------ |
-| `plugin/src/core/`     | `plugin/src/core/` only                 | anything else, Node built-ins, packages          |
-| `plugin/src/analyzer/` | `plugin/src/core/`, Node built-ins      | `plugin/src/mod/`, `plugin/hooks/`, packages     |
-| `plugin/src/mod/`      | `plugin/src/core/`, `claude-code` types | `plugin/src/analyzer/`, Node built-ins, packages |
-| `plugin/hooks/`        | `plugin/src/mod/`, `claude-code` types  | `plugin/src/analyzer/`, Node built-ins, packages |
-| `tools/`               | Node built-ins                          | `plugin/src/`, `plugin/hooks/`                   |
-| `tests/`               | anything                                |                                                  |
+| Module                 | May import                              | Must not import                                                          |
+| ---------------------- | --------------------------------------- | ------------------------------------------------------------------------ |
+| `plugin/src/core/`     | `plugin/src/core/` only                 | anything else, Node built-ins, packages                                  |
+| `plugin/src/analyzer/` | `plugin/src/core/`, Node built-ins      | `plugin/src/mod/`, `plugin/hooks/`, packages                             |
+| `plugin/src/terminal/` | `plugin/src/core/`, Node built-ins      | `plugin/src/mod/`, the analyzer's code, packages                         |
+| `plugin/src/mod/`      | `plugin/src/core/`, `claude-code` types | `plugin/src/analyzer/`, `plugin/src/terminal/`, Node built-ins, packages |
+| `plugin/hooks/`        | `plugin/src/mod/`, `claude-code` types  | `plugin/src/analyzer/`, Node built-ins, packages                         |
+| `tools/`               | Node built-ins                          | `plugin/src/`, `plugin/hooks/`                                           |
+| `tests/`               | anything                                |                                                                          |
 
 The mod runs in the engine's sandbox (no DOM, no Node, no npm packages); the analyzer runs under Node. Shared logic lives in `plugin/src/core/` so both can use it.
 
