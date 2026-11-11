@@ -28,13 +28,16 @@ To update to a newer release, run `claude plugin update cost-lens@cost-lens` in 
 
 ## In a plain terminal
 
-cost-lens also runs on its own in any terminal tab, outside Claude Code, full screen like `top`. Add this alias to your shell's startup file (`~/.zshrc` or `~/.bashrc`); it runs the newest version you have installed:
+cost-lens also runs on its own in any terminal tab, outside Claude Code, full screen like `top`. It needs Node.js 22.18 or later, and works whether or not the plugin is installed:
 
 ```sh
-alias cost-lens='node "$(ls -d ~/.claude/plugins/cache/cost-lens/cost-lens/*/ | sort -V | tail -n 1)src/terminal/cli.ts"'
+npm install -g cost-lens
+cost-lens
 ```
 
-Then run `cost-lens` in a project folder. It shows Today, 30 days, All time, Projects, and that folder's Branches and PRs, plus Tips. Press `1` to `7` or `←`/`→` to switch tabs, `↑`/`↓` or space to scroll, `r` to refresh (it also refreshes every five minutes), and `q` to quit. Piped (`cost-lens | less`), it prints every tab once. Now and Model need a Claude Code session, so they show only in the pane.
+Or run it once without installing: `npx cost-lens`. Update it with `npm install -g cost-lens@latest`.
+
+Run it in a project folder. It shows Today, 30 days, All time, Projects, and that folder's Branches and PRs, plus Tips. Press `1` to `7` or `←`/`→` to switch tabs, `↑`/`↓` or space to scroll, `r` to refresh (it also refreshes every five minutes), and `q` to quit. Piped (`cost-lens | less`), it prints every tab once. Now and Model need a Claude Code session, so they show only in the pane.
 
 ## What it shows
 

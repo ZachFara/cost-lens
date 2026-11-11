@@ -43,7 +43,7 @@ The person at a Claude Code terminal session, and the same person in any termina
 
 ### Terminal view (Node program)
 
-- `plugin/src/terminal/cli.ts`, started by the person in any terminal. It runs the analyzer as the mod does and draws the data tabs as lines of styled text in the terminal's own colors, on the alternate screen; it restores the terminal when it quits (decision 0008).
+- `plugin/src/terminal/cli.ts`, started by the person in any terminal: as the `cost-lens` command of the npm package (compiled to JavaScript by `npm run build`), or with `node` from the plugin folder. It runs the analyzer as the mod does and draws the data tabs as lines of styled text in the terminal's own colors, on the alternate screen; it restores the terminal when it quits (decision 0008).
 - Branches and PRs are those of the repository it was started in. Now and Model need a Claude Code session and are not shown.
 
 ### Mod (Claude Code hooks module)

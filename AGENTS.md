@@ -10,7 +10,7 @@ cost-lens is a Claude Code mod that shows where Claude Code tokens and dollars g
 
 - **Core** (`plugin/src/core/`): pure TypeScript. Prices, cost math, aggregation, cold-rebuild detection, formatting. No I/O, no imports outside `plugin/src/core/`.
 - **Analyzer** (`plugin/src/analyzer/`): a Node CLI (`node plugin/src/analyzer/cli.ts`) that reads `~/.claude/projects/**/*.jsonl`, keeps an incremental index in `~/Library/Caches/cost-lens/`, and prints one JSON summary.
-- **Terminal view** (`plugin/src/terminal/`): a Node program (`node plugin/src/terminal/cli.ts`) that shows the data tabs full screen in any terminal, outside Claude Code. It runs the analyzer as a program and draws its own text views from core; it does not reuse the mod's JSX views (decision 0008).
+- **Terminal view** (`plugin/src/terminal/`): a Node program (`node plugin/src/terminal/cli.ts`) that shows the data tabs full screen in any terminal, outside Claude Code. It is also published to npm as `cost-lens`, compiled to JavaScript by `npm run build` (`tools/build-package.ts`) into `dist/` with a package.json of its own. It runs the analyzer as a program and draws its own text views from core; it does not reuse the mod's JSX views (decision 0008).
 - **Mod** (`plugin/hooks/register.tsx` + `plugin/src/mod/`): the Claude Code hooks module. Runs in the engine's sandbox: no Node, no DOM, no npm packages. Reaches the outside only through `$`. Starts the analyzer with `$.process.run`.
 - The plugin is the `plugin/` folder (`plugin/.claude-plugin/plugin.json`, `plugin/hooks/hooks.json`); everything else in the repository is development tooling and docs, outside what the directory installs (decision 0007).
 
@@ -53,6 +53,7 @@ plugin/types/index.d.ts                the mod's $.state contract
 vendor/                         gitignored; the engine's API types (npm run engine-types)
 root config files, LICENSE and AGENTS.md, CLAUDE.md, DESIGN.md, PROGRESS.md, README.md
 .scratch/                       gitignored; throwaway work only
+dist/                           gitignored; the npm package, built by npm run build
 ```
 
 To add a new kind of path, propose it in PROGRESS.md under Open Questions first.
@@ -63,6 +64,7 @@ To add a new kind of path, propose it in PROGRESS.md under Open Questions first.
 - Everything: `npm run check`. It runs, in order: `prettier --check`, ESLint (strict type-checked rules plus complexity limits, zero warnings), `tsc` on both tsconfigs, knip (dead code), dependency-cruiser (module boundaries), the layout check, then the tests (`node --test`, `claude plugin validate .`, `claude plugin test plugin`). The pre-commit hook and CI run exactly this command.
 - Fix formatting: `npm run format`.
 - Run the analyzer by hand: `node plugin/src/analyzer/cli.ts`.
+- Build the npm package: `npm run build` (writes `dist/`; `tests/node/package.spec.ts` builds, packs and runs it in a temporary folder).
 - Run the terminal view: `node plugin/src/terminal/cli.ts` (full screen; piped, it prints every tab). To see it without a screen, run it in a detached tmux session and read it with `tmux capture-pane -p`.
 - Try the mod in a session: `claude --plugin-dir ~/Development/active/cost-lens/plugin`.
 
@@ -76,8 +78,9 @@ Merging to `main` is not a release. A fresh install gets the latest `main`, but 
 4. `gh release create cost-lens--vX.Y.Z --title "cost-lens X.Y.Z" --notes "..."` with what changed for users and the update command below.
 5. Check it as a new user would: install into a throwaway home (`HOME=<empty scratch folder> claude plugin install cost-lens --marketplace ZachFara/cost-lens`) and confirm `~/.claude/plugins/installed_plugins.json` there names the new version and the tagged commit.
 6. Anthropic's plugin directory (claude.ai/directory/manage, auto-publish off) does not publish on its own: the owner selects the new version and **Publish**, and an Anthropic reviewer then publishes it. Ask the owner to do this; an agent cannot.
+7. The npm package: on the same `main`, `npm run build && npm publish ./dist` (never `npm publish` at the root, which is private). It needs the owner's npm login (`npm whoami`; if it fails, ask the owner to run `npm login`, or to publish). Then check it as a new user would: `npm install -g --prefix <empty scratch folder> cost-lens@X.Y.Z` and run `<that folder>/bin/cost-lens --help`.
 
-Existing users get the release with `claude plugin update cost-lens@cost-lens` (or `/plugin` → update) and a restart, or automatically if they turned on auto-update for the marketplace. The README says so.
+Existing users get the release with `claude plugin update cost-lens@cost-lens` (or `/plugin` → update) and a restart, or automatically if they turned on auto-update for the marketplace, and the terminal command with `npm install -g cost-lens@latest`. The README says so.
 
 ## Gotchas and conventions
 
@@ -103,6 +106,7 @@ Existing users get the release with `claude plugin update cost-lens@cost-lens` (
 - All hooks, all shared state (atoms) and every call on `$` live in `plugin/hooks/register.tsx`; `plugin/src/mod` holds pure views and helpers that take plain data (`tools/check-mod-calls.ts` enforces it). Anthropic's plugin directory reads engine calls only in that shape: `$.noun.method(...)` called plainly, and `$` or `on` passed whole only to functions of the same file.
 - `plugin/README.md` is what the directory's reviewers read: keep its lists of what the mod runs, reads and sends, and of its hooks, current with every change.
 - A change to what a data tab shows lands twice: in the pane's view (`plugin/src/mod/*-view.tsx`) and in the terminal view (`plugin/src/terminal/views.ts`, `tips-lines.ts`). Keep their wording the same.
+- The npm package is built from the repository, not published from it: the root `package.json` is private and its `prepare` script (the git hooks) would read to npm as an install script. `tools/build-package.ts` writes the package's own manifest (no scripts, no dependencies). The terminal view finds the analyzer by its own file extension, so the same code runs as `.ts` from the plugin and as `.js` from the package.
 - Engine tests are `*.test.ts(x)` under `plugin/tests/`; Node tests are `*.spec.ts` under `tests/node/`, so `claude plugin test` never picks up a Node test.
 
 ## Workflow
