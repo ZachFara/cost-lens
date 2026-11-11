@@ -13,10 +13,12 @@ The owner asked for cost-lens to run in a plain terminal tab, the way btop or to
 - It draws its own lines of styled text (`plugin/src/terminal/`), from the same `plugin/src/core/` formatting and data as the pane, in the terminal's 16 theme colors. It does not import the mod's views.
 - Now and Model are left out: plan limits, the context window and per-prompt recommendations exist only inside a Claude Code session.
 - `plugin/src/terminal/` may import `plugin/src/core/` and Node built-ins only (dependency-cruiser); the mod and the analyzer never import it.
-- It ships inside the plugin folder, so an installed copy can run it. People start it themselves; no hook starts it.
+- It ships two ways, and people start it themselves (no hook starts it): inside the plugin folder (`node <plugin>/src/terminal/cli.ts`), and as the npm package `cost-lens`, whose `cost-lens` command anyone with Node can install (`npm install -g cost-lens`, or `npx cost-lens`).
+- The npm package is compiled, not the TypeScript itself: Node refuses to strip types from files under `node_modules`. `npm run build` (`tools/build-package.ts`) compiles the terminal view, the analyzer and core with `tsc` (`tsconfig.build.json`, imports rewritten to `.js`) into `dist/`, and writes a package.json of its own there, with the command and version and no scripts or dependencies. The repository's root `package.json` stays private: its `prepare` script would otherwise read to npm as an install script on every user's install. Releases publish `./dist`.
+- The package asks for Node 22.18 or later, as the plugin does; development still uses Node 26 (decision 0001, `.nvmrc`).
 
 ## Consequences
 
 - A change to a pane tab's content has a second place to land: the matching function in `plugin/src/terminal/views.ts` or `tips-lines.ts`. The core holds the numbers and formatting, so what is repeated is layout only.
-- There is no package to install: installed users run it with Node from the plugin's cache folder (the README gives a shell alias), and the owner runs it from the working copy.
+- A release has one more step, `npm publish ./dist`, under the owner's npm account (AGENTS.md, Releasing a new version).
 - Characters are counted as one cell each; an East Asian wide character or an emoji in a project or PR title can push that line one cell past the edge, where the terminal cuts it.
