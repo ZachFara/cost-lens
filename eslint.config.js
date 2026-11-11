@@ -19,6 +19,7 @@ export default tseslint.config(
       'plugin/.claude-plugin/types/',
       '.scratch/',
       'node_modules/',
+      'dist/',
       ...(hasEngineTypes ? [] : ENGINE_CODE),
     ],
   },

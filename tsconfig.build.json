@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.node.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rewriteRelativeImportExtensions": true,
+    "rootDir": "plugin/src",
+    "outDir": "dist",
+    "sourceMap": false
+  },
+  "include": ["plugin/src/terminal", "plugin/src/analyzer", "plugin/src/core"]
+}

@@ -3,3 +3,4 @@ vendor/
 plugin/.claude-plugin/types/
 .scratch/
 package-lock.json
+dist/
