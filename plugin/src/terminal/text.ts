@@ -80,13 +80,26 @@ const CODES: Record<Tone, string> = {
   selected: '7',
 }
 
+// Control characters (C0, DEL, C1) and bidirectional overrides and isolates.
+const UNSAFE = /[\p{Cc}\u202a-\u202e\u2066-\u2069]/gu
+
+/**
+ * Text from outside (PR titles, branch and folder names, error messages) as the terminal
+ * should show it: a control character could move the cursor or change the terminal, so
+ * each one reads as U+FFFD instead.
+ */
+export function printable(text: string): string {
+  return text.replace(UNSAFE, '\ufffd')
+}
+
 /** A line as terminal text, cut to `width` cells; with `color`, its tones as ANSI codes. */
 export function paint(line: Line, width: number, color: boolean): string {
   let left = width
   let out = ''
   for (const one of line) {
     if (left <= 0) break
-    const text = cells(one.text) > left ? cut(one.text, left) : one.text
+    const safe = printable(one.text)
+    const text = cells(safe) > left ? cut(safe, left) : safe
     left -= cells(text)
     out += color && one.tone !== undefined ? `\x1b[${CODES[one.tone]}m${text}\x1b[0m` : text
   }
