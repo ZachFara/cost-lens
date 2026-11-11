@@ -17,7 +17,7 @@ module.exports = {
         'The engine sandbox has no Node and no packages, and the mod never imports the analyzer.',
       severity: 'error',
       from: { path: '^plugin/(hooks|src/mod)/' },
-      to: { path: '^(plugin/src/analyzer|tools)/' },
+      to: { path: '^(plugin/src/analyzer|plugin/src/terminal|tools)/' },
     },
     {
       name: 'mod-no-node',
@@ -36,7 +36,15 @@ module.exports = {
       name: 'analyzer-not-mod',
       severity: 'error',
       from: { path: '^plugin/src/analyzer/' },
-      to: { path: '^(plugin/hooks|plugin/src/mod|tools)/' },
+      to: { path: '^(plugin/hooks|plugin/src/mod|plugin/src/terminal|tools)/' },
+    },
+    {
+      name: 'terminal-on-core',
+      comment:
+        'The terminal view runs under Node: core and Node built-ins only; it starts the analyzer as a program.',
+      severity: 'error',
+      from: { path: '^plugin/src/terminal/' },
+      to: { path: '^(plugin/hooks|plugin/src/mod|plugin/src/analyzer|tools)/' },
     },
     {
       name: 'no-runtime-packages',
