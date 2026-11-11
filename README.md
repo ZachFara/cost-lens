@@ -24,6 +24,8 @@ In the desktop app, where `/plugin` does not run: click + next to the prompt box
 
 Then type `/cost-lens` to open the pane. Click a tab, or give the pane the keyboard with `ctrl+x tab` (twice while the cache line shows above the prompt: the first press goes to that line) and press `1` to `9`. In Claude Code's fullscreen layout (`/tui fullscreen`) it docks beside the chat; otherwise it opens above the prompt.
 
+To update to a newer release, run `claude plugin update cost-lens@cost-lens` in a shell (or use `/plugin` in a session), then restart Claude Code.
+
 ## What it shows
 
 - **Model**: the model that fits your last prompts (needs LLM features, below), recent recommendations and how prompts are judged.

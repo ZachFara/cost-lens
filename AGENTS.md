@@ -62,6 +62,19 @@ To add a new kind of path, propose it in PROGRESS.md under Open Questions first.
 - Run the analyzer by hand: `node plugin/src/analyzer/cli.ts`.
 - Try the mod in a session: `claude --plugin-dir ~/Development/active/cost-lens/plugin`.
 
+## Releasing a new version
+
+Merging to `main` is not a release. A fresh install gets the latest `main`, but anyone who already installed cost-lens keeps the cached copy of the version in `plugin/.claude-plugin/plugin.json` until that `version` changes (Claude Code caches plugins at `~/.claude/plugins/cache/cost-lens/cost-lens/<version>/`). Auto-update is off by default for this marketplace. So every user-facing change ships only as a version bump, in these steps:
+
+1. On a `chore/release-X.Y.Z` branch, run `npm version X.Y.Z --no-git-tag-version` (updates `package.json` and `package-lock.json`), and set the same `version` in `plugin/.claude-plugin/plugin.json`. `tests/node/smoke.spec.ts` fails if the two differ. Use a patch version for fixes and a minor version for new features.
+2. Record the release in PROGRESS.md, run `npm run check`, open a PR and merge it once CI passes. The repository allows only rebase merges and requires the branch to be up to date with `main` (`gh pr update-branch <n> --rebase`, then wait for CI again).
+3. On an up-to-date `main`: `claude plugin tag plugin -m "cost-lens %s" --push`. This checks that `plugin.json` and the marketplace entry agree and pushes the tag `cost-lens--vX.Y.Z`.
+4. `gh release create cost-lens--vX.Y.Z --title "cost-lens X.Y.Z" --notes "..."` with what changed for users and the update command below.
+5. Check it as a new user would: install into a throwaway home (`HOME=<empty scratch folder> claude plugin install cost-lens --marketplace ZachFara/cost-lens`) and confirm `~/.claude/plugins/installed_plugins.json` there names the new version and the tagged commit.
+6. Anthropic's plugin directory (claude.ai/directory/manage, auto-publish off) does not publish on its own: the owner selects the new version and **Publish**, and an Anthropic reviewer then publishes it. Ask the owner to do this; an agent cannot.
+
+Existing users get the release with `claude plugin update cost-lens@cost-lens` (or `/plugin` → update) and a restart, or automatically if they turned on auto-update for the marketplace. The README says so.
+
 ## Gotchas and conventions
 
 - TypeScript is pinned to 6.0.x because typescript-eslint supports TypeScript below 6.1 (decision 0003).
