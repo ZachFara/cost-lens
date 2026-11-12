@@ -5,7 +5,8 @@ import { barWidths } from '../core/format.ts'
 
 import { contextGrid } from './context-grid.tsx'
 import { splitView } from './period-view.tsx'
-import type { SummaryTotals } from '../../types'
+import { planWindows } from './plan-windows.ts'
+import type { PlanWindow, SummaryTotals } from '../../types'
 
 import type { Ui } from './ui.ts'
 
@@ -16,24 +17,8 @@ export interface NowFacts {
   live: SummaryTotals
   /** The time now, in milliseconds. */
   now: number
-}
-
-/** The windows every subscription has, which `/usage` always shows. */
-const PLAN_KINDS = ['five_hour', 'seven_day']
-
-/**
- * The plan windows to draw. The engine reports the windows the last response did, so
- * after the session window resets it can drop it, or keep its old reading. On a
- * subscription the session and week windows always show; one past its reset shows empty.
- */
-function planWindows(known: readonly SessionRateLimit[], now: number): SessionRateLimit[] {
-  const isPlan = known.some((window) => /^(five_hour|seven_day)/.test(window.kind))
-  const others = known.map((window) => window.kind).filter((kind) => !PLAN_KINDS.includes(kind))
-  return [...(isPlan ? PLAN_KINDS : []), ...others].map((kind) => {
-    const window = known.find((one) => one.kind === kind)
-    const hasReset = window?.resetsAt !== undefined && Date.parse(window.resetsAt) <= now
-    return window === undefined || hasReset ? { kind, percentUsed: 0 } : window
-  })
+  /** The plan windows last read, kept for when the engine stops reporting one. */
+  remembered: readonly PlanWindow[]
 }
 
 /** The windows `/usage` shows, by the names the API reports them under. */
@@ -98,7 +83,7 @@ const FULL_GRID_ASK = 80
 export function nowView(ui: Ui, facts: NowFacts | undefined, columns: number) {
   const { Box, Text } = ui
   if (facts === undefined) return <Text dimColor>Session details are not available here.</Text>
-  const { usage, model, live, now } = facts
+  const { usage, model, live, now, remembered } = facts
   const { context } = usage
   const contextLine =
     context.tokens === undefined
@@ -107,7 +92,7 @@ export function nowView(ui: Ui, facts: NowFacts | undefined, columns: number) {
   return (
     <Box flexDirection="column" gap={1}>
       <Text weight="semibold">Plan usage</Text>
-      {limitsView(ui, planWindows(usage.rateLimits, now), now, columns)}
+      {limitsView(ui, planWindows(usage.rateLimits, remembered, now), now, columns)}
       <Box flexDirection="column">
         <Text weight="semibold">This session</Text>
         <Box flexDirection="row" justifyContent="space-between" columnGap={1}>

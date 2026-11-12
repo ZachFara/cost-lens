@@ -30,6 +30,7 @@ Nothing else leaves your machine.
 - `command.run` on `/cost-lens`: opens the pane; `/cost-lens band` shows the cache line again after you hid it. It answers only its own command.
 - `ui.render`: draws the pane and the line above the prompt.
 - `turn.step`: reads each model request's token usage after its response arrives. It never changes a request or a response.
+- `session.measure`: keeps the last reading of each plan usage window, so the Now tab can still show one that a later response stops reporting. It only observes.
 - `prompt.submit`: for a prompt you type, may show a cold-cache warning and, with LLM features on, a model suggestion. It never holds, changes or delays the prompt.
 
 ## Settings

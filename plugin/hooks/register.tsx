@@ -7,7 +7,7 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, On, Register } from 'claude-code'
 
-import type { History, LastRequest, PullRequests, Recommendation, Tab } from '../types'
+import type { History, LastRequest, PlanWindow, PullRequests, Recommendation, Tab } from '../types'
 import {
   KEPT,
   MIN_PROMPT_CHARS,
@@ -23,9 +23,11 @@ import { gridColumns } from '../src/mod/now-view.tsx'
 import type { NowFacts } from '../src/mod/now-view.tsx'
 import { paneView } from '../src/mod/pane-view.tsx'
 import type { PaneData, PaneHandlers } from '../src/mod/pane-view.tsx'
+import { rememberWindows } from '../src/mod/plan-windows.ts'
 import {
   ANALYZER_TIMEOUT_MS,
   GH_TIMEOUT_MS,
+  PR_LIST_ARGS,
   cacheLifetime,
   errorText,
   loaded,
@@ -49,6 +51,7 @@ const IDLE_HISTORY: History = { status: 'idle' }
 const IDLE_PRS: PullRequests = { status: 'idle' }
 const NO_RECOMMENDATIONS: Recommendation[] = []
 const NO_REQUEST: LastRequest | null = null
+const NO_WINDOWS: PlanWindow[] = []
 
 // Change a tag when its value's fields change: it declines what an earlier version stored.
 const selectedTab = atom({ plugin: 'cost-lens', key: 'tab' } as const, 'now')
@@ -74,6 +77,9 @@ const recommendations = atom(
   { shape: 'recommendations-1' },
 )
 const lastAdviceAt = atom({ plugin: 'cost-lens', key: 'lastAdviceAt' } as const, 0)
+const windowsState = atom({ plugin: 'cost-lens', key: 'planWindows' } as const, NO_WINDOWS, {
+  shape: 'plan-windows-1',
+})
 
 /** The repository the session runs in, else its folder; undefined if the engine cannot say. */
 async function sessionFolder($: EngineInterface): Promise<string | undefined> {
@@ -129,20 +135,10 @@ async function listPullRequests($: EngineInterface): Promise<PullRequests> {
     const repo = await $.session.repo()
     if (repo === null)
       return { status: 'error', message: 'this session is not in a git repository' }
-    const run = await $.process.run(
-      [
-        'gh',
-        'pr',
-        'list',
-        '--state',
-        'all',
-        '--limit',
-        '100',
-        '--json',
-        'number,title,state,headRefName',
-      ],
-      { cwd: repo.root, timeoutMs: GH_TIMEOUT_MS },
-    )
+    const run = await $.process.run(['gh', ...PR_LIST_ARGS], {
+      cwd: repo.root,
+      timeoutMs: GH_TIMEOUT_MS,
+    })
     return readGhRun(run)
   } catch {
     return { status: 'error', message: 'the GitHub CLI (gh) could not run here' }
@@ -182,14 +178,15 @@ function paneHandlers($: EngineInterface, tab: Tab): PaneHandlers {
 async function nowFacts($: EngineInterface, columns: number): Promise<NowFacts | undefined> {
   try {
     // Reading the minute redraws the tab each minute, so a window empties once it resets.
-    const [usage, model, live, now] = await Promise.all([
+    const [usage, model, live, now, remembered] = await Promise.all([
       $.session.usage({ breakdown: 'summary', columns: gridColumns(columns) }),
       $.session.model(),
       read($, liveState),
       $.clock.now(),
+      read($, windowsState),
       read($, minute),
     ])
-    return { usage, model, live, now }
+    return { usage, model, live, now, remembered }
   } catch {
     return undefined
   }
@@ -262,12 +259,8 @@ function registerSession(on: On): void {
       argumentHint: '[band]',
     })
     // The numbers refresh every five minutes while the pane is shown and loaded.
-    $.clock.every(REFRESH_EVERY_MS, () => {
-      void refreshIfShown($)
-    })
-    $.clock.every(MINUTE_MS, () => {
-      void update($, minute, (count) => count + 1)
-    })
+    $.clock.every(REFRESH_EVERY_MS, () => void refreshIfShown($))
+    $.clock.every(MINUTE_MS, () => void update($, minute, (count) => count + 1))
     return next(e)
   })
 }
@@ -330,6 +323,14 @@ function registerActivity(on: On, settings: Settings): void {
       await update($, lastRequest, () => ({ at, model: usage.model, promptTokens }))
     }
     return result
+  })
+
+  // Each reading of the plan windows, kept for when a response stops reporting one.
+  on('session.measure', async ($, e, next) => {
+    if (e.changed.includes('rateLimits')) {
+      await update($, windowsState, (known) => rememberWindows(known, e.rateLimits))
+    }
+    return next(e)
   })
 
   // A typed prompt: the cold-cache warning, then the model recommendation. Neither holds,

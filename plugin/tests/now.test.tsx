@@ -237,3 +237,37 @@ test('an open Now tab empties a window once its reset time passes', async ($, on
   expect((await planRows(ui))[0]).toEqual(['Current session', '0% used'])
   await ui.unmount()
 })
+
+for (const [label, resetsAt, expected] of [
+  ['stays at its last reading', inAnHour, '60% used'],
+  ['shows empty once it resets', anHourAgo, '0% used'],
+] as const) {
+  test(`a per-model week the engine stops reporting ${label}`, async ($, on) => {
+    const reported = [
+      [
+        { kind: 'five_hour', percentUsed: 10, resetsAt: inAnHour },
+        { kind: 'seven_day', percentUsed: 20, resetsAt: inAnHour },
+        { kind: 'seven_day_fable', percentUsed: 60, resetsAt },
+      ],
+      [
+        { kind: 'five_hour', percentUsed: 11, resetsAt: inAnHour },
+        { kind: 'seven_day', percentUsed: 21, resetsAt: inAnHour },
+      ],
+    ]
+    on('session.measure', (_, e) => ({ changed: e.changed }))
+    on('session.usage', () => ({ value: usageWith(reported[1] ?? []) }))
+    on('session.model', () => ({ value: 'claude-opus-5-5' }))
+    mock.clock(on, { now: NOW })
+    for (const rateLimits of reported) {
+      await $.session.measure({ context: USAGE.context, rateLimits, changed: ['rateLimits'] })
+    }
+    const ui = await mountNow($)
+
+    expect(await planRows(ui)).toEqual([
+      ['Current session', '11% used'],
+      ['Current week (all models)', '21% used'],
+      ['Current week (Fable)', expected],
+    ])
+    await ui.unmount()
+  })
+}
