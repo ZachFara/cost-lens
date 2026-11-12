@@ -1,6 +1,12 @@
 import type { SessionRateLimit, SessionUsage } from 'claude-code'
 
-import { formatResets, formatShare, formatTokens, formatUsd } from '../core/format.ts'
+import {
+  formatRequests,
+  formatResets,
+  formatShare,
+  formatTokens,
+  formatUsd,
+} from '../core/format.ts'
 import { barWidths } from '../core/format.ts'
 
 import { contextGrid } from './context-grid.tsx'
@@ -99,7 +105,7 @@ export function nowView(ui: Ui, facts: NowFacts | undefined, columns: number) {
           <Text>{model}</Text>
           <Text color="success">{usage.cost ? formatUsd(usage.cost.usd) : ''}</Text>
         </Box>
-        <Text dimColor>{`${contextLine} · ${String(live.requests)} requests`}</Text>
+        <Text dimColor>{`${contextLine} · ${formatRequests(live.requests)}`}</Text>
       </Box>
       {live.requests > 0 ? splitView(ui, live, columns) : null}
       {context.breakdown === undefined ? null : contextGrid(ui, context.breakdown)}

@@ -1,5 +1,5 @@
 import { totalCost } from '../core/cost.ts'
-import { formatCount, formatUsd } from '../core/format.ts'
+import { formatRequests, formatUsd } from '../core/format.ts'
 import { costPullRequests } from '../core/pull-requests.ts'
 import type { PullRequests } from '../../types'
 
@@ -31,7 +31,7 @@ export function prsView(ui: Ui, state: Ready, prs: PullRequests) {
       <Text weight="semibold">Pull requests, by what their branch cost</Text>
       {rows.map((one) => {
         const cost = one.spend ? formatUsd(totalCost(one.spend.cost)) : 'no Claude Code use'
-        const requests = one.spend ? ` · ${formatCount(one.spend.requests)} requests` : ''
+        const requests = one.spend ? ` · ${formatRequests(one.spend.requests)}` : ''
         return (
           <Box flexDirection="column">
             <Box flexDirection="row" justifyContent="space-between" columnGap={1}>
