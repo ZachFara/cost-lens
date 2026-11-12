@@ -50,6 +50,7 @@ The person at a Claude Code terminal session, and the same person in any termina
 
 - `plugin/hooks/register.tsx` is the only entry the engine loads; it wires hooks from `plugin/src/mod/`.
 - Live tracking: a `turn.step` hook reads each request's usage and model; the main loop's last request time and context size drive the band and the cold-cache warning.
+- A `session.measure` hook keeps the last reading of each plan window that has a reset time (`cost-lens.planWindows`): a response can stop reporting a window, such as a per-model week, and the Now tab then shows the remembered reading, or 0% once its reset time passes (`plugin/src/mod/plan-windows.ts`).
 - `$.session.usage()` supplies the session's exact cost and context window; `breakdown: 'summary'` (a local estimate, no API calls) supplies the context categories for the Now tab.
 - Pane, band and toasts use the engine's element tables (`$.ui.resolve`). State a drawing reads lives in `$.state`, declared in `plugin/types/index.d.ts`.
 
