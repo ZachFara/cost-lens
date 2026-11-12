@@ -46,6 +46,7 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 27. **(done)** **Keep a per-model week on the Now tab (MIT-686).** Entry: Now tab. Done when: a `session.measure` hook keeps the last reading of each plan window with a reset time, and a window a later response stops reporting (such as Current week (Fable)) still shows at that reading, or at 0% once its reset passes; `register.tsx` stays within 300 lines (the `gh pr list` arguments moved to `core/pull-requests.ts`, shared with the terminal view). (Follow-up of MIT-583, 2026-11-11.)
 28. **(done)** **Skill and MCP shares as `/usage` counts them (MIT-687).** Entry: Tips tab. Done when: the analyzer counts toward a skill or MCP server the requests Claude Code tagged with it in the log (`attributionSkill`, `attributionMcpServer`; a subagent's request, tagged `attributionAgent`, does not count for its skill), as `/usage` does; a log file with no tags (older versions) counts the request that called the skill or tool, as before; tests cover both. (Owner request, 2026-11-11.)
 29. **(done)** **Release 0.3.0.** Entry: `claude plugin update cost-lens@cost-lens`. Done when: `version` is 0.3.0 in `plugin.json` and `package.json`, the tag `cost-lens--v0.3.0` and its GitHub release exist, and a fresh plugin install names 0.3.0. It ships tasks 25 to 28 and "1 request" for a single request. The npm package and Anthropic's plugin directory are the owner's steps. (Owner request, 2026-11-11.)
+30. **(done)** **Publish the terminal view to npm.** Entry: `npm install -g @zachfara/cost-lens`, command `cost-lens`. Done when: the package is published under the scoped name with public access (`publishConfig`), the README and AGENTS.md name it, and a fresh install runs `cost-lens --help`. (Owner request, 2026-11-11.)
 
 ## Open Questions
 
@@ -54,10 +55,10 @@ None.
 ## Next steps
 
 - Task 19 (publish), with the owner.
-- The first `npm publish ./dist` of the terminal view needs the owner's npm login (`npm whoami` failed on 2026-11-11). The name `cost-lens` was free on npm that day.
 
 ## Learned
 
+- npm refused the unscoped name `cost-lens` ("too similar to existing package costlens") although no package of that exact name existed, and refused publishing with granular tokens that were meant to bypass two-factor. A passkey-only account publishes from the CLI by approving a browser link (2026-11-11).
 - `/usage` attributes cost from tags Claude Code writes on each assistant line of the log: `attributionSkill`, `attributionPlugin`, `attributionMcpServer` and `attributionAgent` (2.1.319; read from its bundled code, 2026-11-11). A request with `attributionAgent` counts for the agent (keyed by its skill if it has one), not for the skill. The request that invokes a skill is not itself tagged.
 - Claude Code cannot show a mod's pane outside a session, and Node runs TypeScript but not JSX, so the terminal view (decision 0008) draws its own text views from core rather than reusing the pane's. Node's `.ts` type stripping also refuses files under `node_modules` (`ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`), so the npm package ships compiled JavaScript, built into `dist/`. npm 11 warns on install about any `prepare` script in a package (as an install script not covered by allowScripts), so the package gets a manifest of its own without the repository's scripts.
 

@@ -33,7 +33,8 @@ await test('the npm package is the terminal view as a command, and installing ru
       string,
       unknown
     >
-    assert.equal(manifest.name, 'cost-lens')
+    assert.equal(manifest.name, '@zachfara/cost-lens')
+    assert.deepEqual(manifest.publishConfig, { access: 'public' })
     assert.equal(manifest.version, root.version)
     assert.deepEqual(manifest.bin, { 'cost-lens': 'terminal/cli.js' })
     assert.equal(manifest.scripts, undefined)

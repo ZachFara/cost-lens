@@ -19,16 +19,25 @@ const TSC = join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc')
 /** The compiled code needs no type stripping, so it runs on the Node the plugin asks for. */
 const NODE = '>=22.18'
 
+/**
+ * npm refused the plain name `cost-lens` as too close to an existing package (`costlens`),
+ * so the package is scoped; its command is still `cost-lens`.
+ */
+const PACKAGE = '@zachfara/cost-lens'
+
 interface RootPackage {
   name: string
   version: string
   license: string
 }
 
-/** The published package's manifest, from the repository's own name, version and license. */
+/**
+ * The published package's manifest: the scoped package, its command named as the
+ * repository is, with the repository's version and license.
+ */
 function manifest({ name, version, license }: RootPackage): Record<string, unknown> {
   return {
-    name,
+    name: PACKAGE,
     version,
     description: 'See where your Claude Code tokens and dollars go, full screen in any terminal.',
     keywords: ['claude-code', 'claude', 'tokens', 'cost', 'usage', 'terminal', 'tui'],
@@ -39,6 +48,8 @@ function manifest({ name, version, license }: RootPackage): Record<string, unkno
     type: 'module',
     bin: { [name]: 'terminal/cli.js' },
     engines: { node: NODE },
+    // A scoped package is private unless published as public.
+    publishConfig: { access: 'public' },
   }
 }
 

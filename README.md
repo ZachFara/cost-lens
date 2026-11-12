@@ -31,11 +31,11 @@ To update to a newer release, run `claude plugin update cost-lens@cost-lens` in 
 cost-lens also runs on its own in any terminal tab, outside Claude Code, full screen like `top`. It needs Node.js 22.18 or later, and works whether or not the plugin is installed:
 
 ```sh
-npm install -g cost-lens
+npm install -g @zachfara/cost-lens
 cost-lens
 ```
 
-Or run it once without installing: `npx cost-lens`. Update it with `npm install -g cost-lens@latest`.
+Or run it once without installing: `npx @zachfara/cost-lens`. Update it with `npm install -g @zachfara/cost-lens@latest`. The command is `cost-lens` either way.
 
 Run it in a project folder. Its Now tab lists your Claude Code sessions of the last 24 hours: what each has cost, its context size, and whether its prompt cache is still warm (with a countdown) or what the next message would pay to re-write it. Then come Today, 30 days, All time, Projects, that folder's Branches and PRs, and Tips. Press `1` to `8` or `←`/`→` to switch tabs, `↑`/`↓` or space to scroll, `r` to refresh (it also refreshes every five minutes), and `q` to quit. Piped (`cost-lens | less`), it prints every tab once. Plan usage, the context grid and the Model tab need a Claude Code session, so they show only in the pane.
 
