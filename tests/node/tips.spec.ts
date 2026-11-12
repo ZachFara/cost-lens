@@ -85,3 +85,43 @@ await test('the analyzer finds cold rebuilds, large context, and what skills and
     rmSync(root, { recursive: true, force: true })
   }
 })
+
+await test('skills and MCP servers count the requests Claude Code attributed to them, as /usage does', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'cost-lens-tips-'))
+  try {
+    const now = new Date(2026, 10, 7, 12, 0)
+    const at = (hoursAgo: number) => new Date(now.getTime() - hoursAgo * HOUR)
+    const million = { output_tokens: 1_000_000 }
+    const invoke = (skill: string) => ({
+      content: [{ type: 'tool_use', name: 'Skill', input: { skill } }],
+    })
+    // A log that tags its requests: the request that invokes the skill is not tagged, the
+    // ones made while it is in use are; a subagent's request counts for the agent instead.
+    const tagged = [
+      line('a1', at(3), million, invoke('docs')),
+      line('a2', at(2.9), million, { attributionSkill: 'docs', attributionPlugin: 'p' }),
+      line('a3', at(2.8), million, {
+        attributionSkill: 'docs',
+        attributionMcpServer: 'claude.ai Linear',
+      }),
+      line('a4', at(2.7), million, {
+        isSidechain: true,
+        attributionAgent: 'general-purpose',
+        attributionSkill: 'docs',
+      }),
+    ]
+    // An older log, with no tags: the request that called a skill or tool counts.
+    const untagged = [line('b1', at(1), million, invoke('old-skill'))]
+    writeFileSync(join(root, 'tagged.jsonl'), tagged.join('\n'))
+    writeFileSync(join(root, 'untagged.jsonl'), untagged.join('\n'))
+    const { tips } = await summarize(root, now)
+
+    assert.deepEqual(tips.last24h.skills, [
+      { name: 'docs', cost: 40 },
+      { name: 'old-skill', cost: 20 },
+    ])
+    assert.deepEqual(tips.last24h.mcpServers, [{ name: 'claude.ai Linear', cost: 20 }])
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})

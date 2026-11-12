@@ -22,10 +22,12 @@ export interface TipsRequest {
 export interface FileState {
   lastAt: number | undefined
   lifetimeMs: number
+  /** Claude Code tagged this file's requests with what they worked for (newer versions). */
+  isTagged: boolean
 }
 
 export function fileState(): FileState {
-  return { lastAt: undefined, lifetimeMs: FIVE_MINUTES_MS }
+  return { lastAt: undefined, lifetimeMs: FIVE_MINUTES_MS, isTagged: false }
 }
 
 export interface TipsTracker {
@@ -33,8 +35,10 @@ export interface TipsTracker {
   tips: Tips
   /** Skills and MCP servers each message called (`skill:<name>`, `mcp:<server>`). */
   uses: Map<string, Set<string>>
-  /** Last-24-hours cost by message id, for attributing to what it called. */
-  dayCosts: Map<string, number>
+  /** Skills and MCP servers Claude Code tagged each message with, in the same form. */
+  tagged: Map<string, Set<string>>
+  /** Last-24-hours cost by message id, and its file, for attributing it. */
+  dayCosts: Map<string, { cost: number; file: FileState }>
   /** The latest cache write: when, and how long it was to last. */
   latestWrite: { at: number; lifetimeMs: number } | undefined
 }
@@ -47,17 +51,32 @@ export function tipsTracker(now: Date): TipsTracker {
       last24h: { cost: 0, largeContextCost: 0, skills: [], mcpServers: [] },
     },
     uses: new Map(),
+    tagged: new Map(),
     dayCosts: new Map(),
     latestWrite: undefined,
   }
 }
 
-/** Records what one log line of a message called; a message spans several lines. */
-export function noteUses(tracker: TipsTracker, id: string, uses: readonly string[]): void {
+function addUses(into: Map<string, Set<string>>, id: string, uses: readonly string[]): void {
   if (uses.length === 0) return
-  const known = tracker.uses.get(id) ?? new Set<string>()
+  const known = into.get(id) ?? new Set<string>()
   for (const use of uses) known.add(use)
-  tracker.uses.set(id, known)
+  into.set(id, known)
+}
+
+/**
+ * Records what one log line of a message called, and what Claude Code tagged it with; a
+ * message spans several lines.
+ */
+export function noteUses(
+  tracker: TipsTracker,
+  file: FileState,
+  line: { id: string; uses: readonly string[]; attribution: readonly string[] | undefined },
+): void {
+  addUses(tracker.uses, line.id, line.uses)
+  if (line.attribution === undefined) return
+  file.isTagged = true
+  addUses(tracker.tagged, line.id, line.attribution)
 }
 
 function noteColdRebuild(tracker: TipsTracker, file: FileState, request: TipsRequest): void {
@@ -92,7 +111,7 @@ export function addTipsRequest(tracker: TipsTracker, file: FileState, request: T
   if (Number.isNaN(request.at) || tracker.now - request.at > DAY_MS) return
   last24h.cost += cost
   if (isLarge) last24h.largeContextCost += cost
-  tracker.dayCosts.set(request.id, cost)
+  tracker.dayCosts.set(request.id, { cost, file })
 }
 
 function ranked(costs: Map<string, number>): UseCost[] {
@@ -110,8 +129,11 @@ export function latestCacheLifetimeMs(tracker: TipsTracker): number {
 export function tipsSummary(tracker: TipsTracker): Tips {
   const skills = new Map<string, number>()
   const servers = new Map<string, number>()
-  for (const [id, cost] of tracker.dayCosts) {
-    for (const use of tracker.uses.get(id) ?? []) {
+  // As /usage counts them: the requests tagged with a skill or server. Files without tags
+  // (older versions) count the request that called it instead.
+  for (const [id, { cost, file }] of tracker.dayCosts) {
+    const uses = file.isTagged ? tracker.tagged : tracker.uses
+    for (const use of uses.get(id) ?? []) {
       const cut = use.indexOf(':')
       const name = use.slice(cut + 1)
       const into = use.slice(0, cut) === 'skill' ? skills : servers

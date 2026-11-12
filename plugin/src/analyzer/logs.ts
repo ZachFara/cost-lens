@@ -84,6 +84,7 @@ export function recordFromLine(line: string): Found | undefined {
     branch: text(entry.gitBranch),
     sessionId: text(entry.sessionId),
     uses: usesOf(message),
+    attribution: attributionOf(entry),
     isSidechain: entry.isSidechain === true,
   }
 }
@@ -97,6 +98,23 @@ function useOf(block: Json): string | undefined {
   }
   const server = name === undefined ? undefined : /^mcp__(.+?)__/.exec(name)?.[1]
   return server === undefined ? undefined : `mcp:${server}`
+}
+
+/**
+ * What Claude Code tagged a request as working for, as `/usage` counts it: the skill (not
+ * when the request is a subagent's, which counts for the agent) and the MCP server.
+ * Undefined when the line carries no tags at all, as logs of older versions do.
+ */
+function attributionOf(entry: Json): string[] | undefined {
+  const agent = text(entry.attributionAgent)
+  const skill = text(entry.attributionSkill)
+  const server = text(entry.attributionMcpServer)
+  const plugin = text(entry.attributionPlugin)
+  if ([agent, skill, server, plugin].every((tag) => tag === undefined)) return undefined
+  const uses: string[] = []
+  if (skill !== undefined && agent === undefined) uses.push(`skill:${skill}`)
+  if (server !== undefined) uses.push(`mcp:${server}`)
+  return uses
 }
 
 function usesOf(message: Json | undefined): string[] {
@@ -122,6 +140,8 @@ interface Found {
   sessionId: string | undefined
   /** The skills and MCP servers this line's content called. */
   uses: string[]
+  /** What Claude Code tagged the request with; undefined in logs without tags. */
+  attribution: string[] | undefined
   /** A subagent's request inside the main session's log. */
   isSidechain: boolean
 }
@@ -221,7 +241,7 @@ async function addFile(
     if (!line.includes('"usage"')) continue
     const found = recordFromLine(line)
     if (found === undefined) continue
-    noteUses(into.tips, found.id, found.uses)
+    noteUses(into.tips, file, found)
     if (seen.has(found.id)) continue
     seen.add(found.id)
     addFound(into, found, today, file)
