@@ -9,6 +9,8 @@ import type { History, PullRequests } from '../../types'
 
 import type { Ready } from './ui.ts'
 
+export { PR_LIST_ARGS } from '../core/pull-requests.ts'
+
 /** How long a log read and a `gh pr list` may take. */
 export const ANALYZER_TIMEOUT_MS = 5 * 60 * 1000
 export const GH_TIMEOUT_MS = 30 * 1000

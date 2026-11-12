@@ -1,6 +1,18 @@
 import { totalCost } from './cost.ts'
 import type { Spend } from './spend.ts'
 
+/** The arguments of `gh` that list a repository's pull requests, as the PRs tab reads them. */
+export const PR_LIST_ARGS: readonly string[] = [
+  'pr',
+  'list',
+  '--state',
+  'all',
+  '--limit',
+  '100',
+  '--json',
+  'number,title,state,headRefName',
+]
+
 export interface PullRequest {
   number: number
   title: string

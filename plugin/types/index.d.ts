@@ -107,6 +107,13 @@ export interface LastRequest {
   promptTokens: number
 }
 
+/** A plan usage window as a response last reported it. */
+export interface PlanWindow {
+  kind: string
+  percentUsed: number
+  resetsAt: string
+}
+
 /** Which model fits the session's last judged prompt. */
 export interface Recommendation {
   tier: 'trivial' | 'routine' | 'complex' | 'hardest'
@@ -139,6 +146,8 @@ declare module 'claude-code' {
       lastAdviceAt: number
       /** This session's model recommendations, newest first (no prompt text). */
       recommendations: Shaped<Recommendation[]>
+      /** The last reading of each plan window with a reset time. */
+      planWindows: Shaped<PlanWindow[]>
     }
   }
 }

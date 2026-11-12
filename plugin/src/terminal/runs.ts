@@ -7,7 +7,7 @@ import { execFile } from 'node:child_process'
 import { extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { parsePullRequests } from '../core/pull-requests.ts'
+import { PR_LIST_ARGS, parsePullRequests } from '../core/pull-requests.ts'
 import { parseSummary } from '../core/summary.ts'
 import type { Summary } from '../core/summary.ts'
 
@@ -90,9 +90,7 @@ export async function listPullRequests(
   if (repository === undefined) {
     return { status: 'error', message: 'this folder is not in a git repository' }
   }
-  const args = ['pr', 'list', '--state', 'all', '--limit', '100']
-  args.push('--json', 'number,title,state,headRefName')
-  const done = await run('gh', args, {
+  const done = await run('gh', [...PR_LIST_ARGS], {
     cwd: repository,
     timeout: GH_TIMEOUT_MS,
     ...(signal === undefined ? {} : { signal }),
