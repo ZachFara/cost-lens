@@ -2,6 +2,8 @@ import { familyOf, priceComparison, tiersFor } from '../core/models.ts'
 import type { TierModel } from '../core/models.ts'
 import type { History } from '../../types'
 
+import { pricesOf } from './runs.ts'
+
 /** Shorter prompts ("continue", "yes") carry on earlier work; they are not judged. */
 export const MIN_PROMPT_CHARS = 40
 /** At most one suggestion this often. */
@@ -26,8 +28,8 @@ export function shouldSuggest(fit: TierModel, current: string, now: number, last
   return familyOf(current) !== fit.family && now - lastAt >= ADVICE_EVERY_MS
 }
 
-export function adviceText(fit: TierModel, current: string): string {
-  const comparison = priceComparison(current, fit.model)
+export function adviceText(fit: TierModel, current: string, history: History): string {
+  const comparison = priceComparison(current, fit.model, pricesOf(history))
   const cheaper = comparison?.endsWith('less per token') === true
   const why = cheaper
     ? `${fit.name} fits, at ${comparison}`

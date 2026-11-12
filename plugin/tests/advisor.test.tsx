@@ -143,12 +143,12 @@ test(
     on('state.get', { key: 'history' }, () => ({
       value: {
         value: {
-          shape: 'history-9',
+          shape: 'history-10',
           value: {
             status: 'ready',
             isRefreshing: false,
             refreshError: null,
-            summary: { models: ['claude-fable-5-2', 'claude-fable-5-3'] },
+            summary: { models: ['claude-fable-5-2', 'claude-fable-5-3'], prices: [] },
           },
         },
         version: 1,

@@ -8,6 +8,14 @@ import { test } from 'node:test'
 import { localDay } from '../../plugin/src/core/days.ts'
 import { buildPackage } from '../../tools/build-package.ts'
 
+/**
+ * The environment without git's own variables: a git hook (the pre-push check) exports
+ * GIT_DIR, which would put the temporary folder inside this repository.
+ */
+function outsideGit(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  return Object.fromEntries(Object.entries(env).filter(([name]) => !name.startsWith('GIT_')))
+}
+
 interface Packed {
   files: { path: string }[]
 }
@@ -60,7 +68,7 @@ await test('the npm package is the terminal view as a command, and installing ru
     const printed = execFileSync(process.execPath, [command, join(home, 'logs')], {
       cwd: home,
       encoding: 'utf8',
-      env: { ...process.env, HOME: home },
+      env: outsideGit({ ...process.env, HOME: home }),
     })
     assert.match(printed, /No Claude Code use today yet\./)
   } finally {

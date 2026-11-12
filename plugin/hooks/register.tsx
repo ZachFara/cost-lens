@@ -29,6 +29,7 @@ import {
   cacheLifetime,
   errorText,
   loaded,
+  pricesOf,
   projectArgs,
   readAnalyzerRun,
   readGhRun,
@@ -52,7 +53,7 @@ const NO_REQUEST: LastRequest | null = null
 // Change a tag when its value's fields change: it declines what an earlier version stored.
 const selectedTab = atom({ plugin: 'cost-lens', key: 'tab' } as const, 'now')
 const historyState = atom({ plugin: 'cost-lens', key: 'history' } as const, IDLE_HISTORY, {
-  shape: 'history-9',
+  shape: 'history-10',
 })
 const prsState = atom({ plugin: 'cost-lens', key: 'pullRequests' } as const, IDLE_PRS, {
   shape: 'pull-requests-1',
@@ -91,9 +92,7 @@ async function runAnalyzer($: EngineInterface): Promise<AnalyzerRead> {
     // The plugin's own log reader, at low CPU priority, with today's prices.
     const run = await $.process.run(
       ['nice', '-n', '10', 'node', cli, '--live-prices', ...project],
-      {
-        timeoutMs: ANALYZER_TIMEOUT_MS,
-      },
+      { timeoutMs: ANALYZER_TIMEOUT_MS },
     )
     return readAnalyzerRun(run)
   } catch (error) {
@@ -228,7 +227,7 @@ async function paneData($: EngineInterface, tab: Tab, columns: number, settings:
 
 async function cacheState($: EngineInterface) {
   const [request, history] = await Promise.all([read($, lastRequest), read($, historyState)])
-  return { request, lifetimeMs: cacheLifetime(history) }
+  return { request, lifetimeMs: cacheLifetime(history), prices: pricesOf(history) }
 }
 
 /**
@@ -240,7 +239,8 @@ async function adviseModel($: EngineInterface, text: string, settings: Settings)
   if (!settings.llmFeatures || text.trim().length < MIN_PROMPT_CHARS) return
   try {
     const answer = await $.model.classify(text, TIER_LABELS, { model: 'haiku' })
-    const fit = tierOf(answer, await read($, historyState))
+    const history = await read($, historyState)
+    const fit = tierOf(answer, history)
     if (fit === undefined) return
     const [current, now] = await Promise.all([$.session.model(), $.clock.now()])
     const entry: Recommendation = { tier: fit.tier, model: fit.model, current, at: now }
@@ -248,7 +248,7 @@ async function adviseModel($: EngineInterface, text: string, settings: Settings)
     if (!settings.recommendationAlerts) return
     if (!shouldSuggest(fit, current, now, await read($, lastAdviceAt))) return
     await update($, lastAdviceAt, () => now)
-    $.ui.toast(adviceText(fit, current), { timeoutMs: TOAST_MS })
+    $.ui.toast(adviceText(fit, current, history), { timeoutMs: TOAST_MS })
   } catch {
     // Advice is optional: a failed classification changes nothing.
   }
@@ -307,10 +307,10 @@ function registerViews(on: On, settings: Settings): void {
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     await read($, minute)
-    const { request, lifetimeMs } = await cacheState($)
+    const { request, lifetimeMs, prices } = await cacheState($)
     if (e.props.hasSurvey || request === null || (await read($, isBandHidden))) return next(e)
     const now = await $.clock.now()
-    return bandView($.ui.resolve(e), { request, lifetimeMs, now }, () => {
+    return bandView($.ui.resolve(e), { request, lifetimeMs, now, prices }, () => {
       void update($, isBandHidden, () => true)
     })
   })
@@ -322,7 +322,8 @@ function registerActivity(on: On, settings: Settings): void {
     const result = yield* next(e)
     const usage = result.usage
     if (usage === null) return result
-    await update($, liveState, (totals) => addStep(totals, usage))
+    const prices = pricesOf(await read($, historyState))
+    await update($, liveState, (totals) => addStep(totals, usage, prices))
     if (e.agentId === undefined) {
       const at = await $.clock.now()
       const promptTokens = stepPromptTokens(usage)
@@ -335,8 +336,7 @@ function registerActivity(on: On, settings: Settings): void {
   // delays or changes the prompt; a failure lets it through.
   on('prompt.submit', async ($, e, next) => {
     if (e.command !== undefined || e.origin.kind !== 'composer') return next(e)
-    const { request, lifetimeMs } = await cacheState($)
-    const warning = coldCacheWarning(request, lifetimeMs, await $.clock.now())
+    const warning = coldCacheWarning(await cacheState($), await $.clock.now())
     const result = await next(e)
     if (warning !== undefined) $.ui.toast(warning, { timeoutMs: TOAST_MS })
     await adviseModel($, e.text, settings)

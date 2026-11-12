@@ -1,6 +1,7 @@
 import { formatClock } from '../core/format.ts'
 import { familyOf, priceComparison } from '../core/models.ts'
 import type { TierModel } from '../core/models.ts'
+import type { PriceTable } from '../core/pricing.ts'
 import type { Recommendation } from '../../types'
 
 import type { Settings } from './settings.ts'
@@ -20,12 +21,13 @@ function settingsLine(ui: Ui, settings: Settings) {
   )
 }
 
-function latestCard(ui: Ui, tiers: readonly TierModel[], latest: Recommendation, current: string) {
+function latestCard(ui: Ui, facts: ModelFacts, latest: Recommendation) {
   const { Box, Text } = ui
-  const fit = tiers.find((one) => one.tier === latest.tier)
+  const { current } = facts
+  const fit = facts.tiers.find((one) => one.tier === latest.tier)
   if (fit === undefined) return null
   const isOn = familyOf(current) === fit.family
-  const comparison = priceComparison(current, fit.model)
+  const comparison = priceComparison(current, fit.model, facts.prices)
   const detail = isOn
     ? `You're on ${current}: it fits.`
     : `You're on ${current}${comparison === undefined ? '' : ` · ${comparison}`} · /model ${fit.alias}`
@@ -79,11 +81,14 @@ export interface ModelFacts {
   recent: readonly Recommendation[]
   /** The session's model ('' while LLM features are off). */
   current: string
+  /** The last summary's prices; the built-in snapshot's when undefined. */
+  prices?: PriceTable | undefined
 }
 
 /** Model: which model fits the last prompts, with the settings that govern it. */
-export function modelView(ui: Ui, { settings, tiers, recent, current }: ModelFacts) {
+export function modelView(ui: Ui, facts: ModelFacts) {
   const { Box, Text } = ui
+  const { settings, tiers, recent } = facts
   if (!settings.llmFeatures) {
     return (
       <Box flexDirection="column" gap={1}>
@@ -102,7 +107,7 @@ export function modelView(ui: Ui, { settings, tiers, recent, current }: ModelFac
           Send a prompt of 40 characters or more and the model that fits it appears here.
         </Text>
       ) : (
-        latestCard(ui, tiers, latest, current)
+        latestCard(ui, facts, latest)
       )}
       {historyView(ui, tiers, recent)}
       {tiersView(ui, tiers)}

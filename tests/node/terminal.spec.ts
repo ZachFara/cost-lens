@@ -13,6 +13,14 @@ import type { Tab, View } from '../../plugin/src/terminal/screen.ts'
 import { cells, paint, printable, span, spread, wrap } from '../../plugin/src/terminal/text.ts'
 import type { Line } from '../../plugin/src/terminal/text.ts'
 
+/**
+ * The environment without git's own variables: a git hook (the pre-push check) exports
+ * GIT_DIR, which would put the temporary folder inside this repository.
+ */
+function outsideGit(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  return Object.fromEntries(Object.entries(env).filter(([name]) => !name.startsWith('GIT_')))
+}
+
 const NOW = new Date(2026, 10, 7, 12, 0)
 const CLI = new URL('../../plugin/src/terminal/cli.ts', import.meta.url)
 
@@ -218,7 +226,7 @@ await test('piped, cost-lens prints every tab once and exits', () => {
     const output = execFileSync(process.execPath, [CLI.pathname, logs], {
       cwd: home,
       encoding: 'utf8',
-      env: { ...process.env, HOME: home },
+      env: outsideGit({ ...process.env, HOME: home }),
     })
     const headings = ['Now', 'Today', '30 days', 'All time', 'Projects', 'Branches', 'PRs', 'Tips']
     for (const heading of headings) assert.match(output, new RegExp(`^${heading}$`, 'm'))

@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { ratesFor } from '../../plugin/src/core/pricing.ts'
+import { summarize } from '../../plugin/src/analyzer/logs.ts'
+import { contextCost } from '../../plugin/src/core/cache.ts'
+import { costOf, emptyTotals, plusRecord } from '../../plugin/src/core/cost.ts'
+import { priceComparison } from '../../plugin/src/core/models.ts'
+import { pricesInUse, ratesFor } from '../../plugin/src/core/pricing.ts'
 
 await test('published models get their published rates', () => {
   assert.deepEqual(ratesFor({ model: 'claude-fable-5-1', promptTokens: 1000 }), {
@@ -39,4 +43,23 @@ await test('US-only inference multiplies every category by 1.1', () => {
   assert.ok(Math.abs(us.input - 4.4) < 1e-9)
   assert.ok(Math.abs(us.output - 22) < 1e-9)
   assert.equal(ratesFor({ model: 'claude-opus-5-5', promptTokens: 1, geo: 'global' })?.input, 4)
+})
+
+await test('estimates take a price table; the summary carries the one in use', async () => {
+  const rates = { input: 8, write5m: 10, write1h: 16, read: 0.4, output: 40 }
+  const table = [{ id: 'claude-opus-5-5', rates }]
+  assert.equal(ratesFor({ model: 'claude-opus-5-5', promptTokens: 1 }, table)?.input, 8)
+  assert.equal(ratesFor({ model: 'claude-sonnet-5-5', promptTokens: 1 }, table), undefined)
+  assert.equal(contextCost('claude-opus-5-5', 1_000_000, 60 * 60 * 1000, table)?.cold, 16)
+  const usage = { input: 1_000_000, output: 0, cacheWrite5m: 0, cacheWrite1h: 0, cacheRead: 0 }
+  assert.equal(costOf({ model: 'claude-opus-5-5', usage }, table)?.input, 8)
+  assert.equal(plusRecord(emptyTotals(), { model: 'claude-opus-5-5', usage }, table).cost.input, 8)
+  assert.equal(priceComparison('claude-opus-5-5', 'claude-sonnet-5-5', table), undefined)
+  const summary = await summarize('/nonexistent/cost-lens-logs', new Date())
+  assert.deepEqual(summary.prices, pricesInUse())
+  assert.deepEqual(
+    summary.prices.find((one) => one.id === 'claude-opus-5-5')?.fast,
+    { input: 8, output: 40 },
+    'fast-mode rates travel with the table',
+  )
 })

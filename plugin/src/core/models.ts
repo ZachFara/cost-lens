@@ -1,4 +1,5 @@
 import { ratesFor, snapshotModels } from './pricing.ts'
+import type { PriceTable } from './pricing.ts'
 
 type Tier = 'trivial' | 'routine' | 'complex' | 'hardest'
 
@@ -87,9 +88,13 @@ export function familyOf(model: string): string | undefined {
 }
 
 /** How a recommended model's input price compares with the current one's, e.g. "2x less". */
-export function priceComparison(current: string, recommended: string): string | undefined {
-  const now = ratesFor({ model: current, promptTokens: 0 })?.input
-  const next = ratesFor({ model: recommended, promptTokens: 0 })?.input
+export function priceComparison(
+  current: string,
+  recommended: string,
+  prices?: PriceTable,
+): string | undefined {
+  const now = ratesFor({ model: current, promptTokens: 0 }, prices)?.input
+  const next = ratesFor({ model: recommended, promptTokens: 0 }, prices)?.input
   if (now === undefined || next === undefined || now === next) return undefined
   return now > next
     ? `${String(Math.round(now / next))}x less per token`

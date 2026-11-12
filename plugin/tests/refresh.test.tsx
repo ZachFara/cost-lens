@@ -40,6 +40,7 @@ function summary(output: number) {
     currentProject: null,
     cacheLifetimeMs: 3_600_000,
     sessions: [],
+    prices: [],
     tips: {
       last30: { cost: 0, coldRebuilds: 0, coldWaste: 0, largeContextCost: 0 },
       last24h: { cost: 0, largeContextCost: 0, skills: [], mcpServers: [] },
