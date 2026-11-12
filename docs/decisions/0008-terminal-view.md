@@ -19,6 +19,7 @@ The owner asked for cost-lens to run in a plain terminal tab, the way btop or to
 
 ## Consequences
 
+- Addendum (MIT-684): the terminal view gained a Now tab of its own, from the logs (the last day's sessions and their caches), as tab 1; keys are now 1 to 8.
 - A change to a pane tab's content has a second place to land: the matching function in `plugin/src/terminal/views.ts` or `tips-lines.ts`. The core holds the numbers and formatting, so what is repeated is layout only.
 - A release has one more step, `npm publish ./dist`, under the owner's npm account (AGENTS.md, Releasing a new version).
 - Characters are counted as one cell each; an East Asian wide character or an emoji in a project or PR title can push that line one cell past the edge, where the terminal cuts it.

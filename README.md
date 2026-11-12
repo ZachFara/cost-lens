@@ -37,7 +37,7 @@ cost-lens
 
 Or run it once without installing: `npx cost-lens`. Update it with `npm install -g cost-lens@latest`.
 
-Run it in a project folder. It shows Today, 30 days, All time, Projects, and that folder's Branches and PRs, plus Tips. Press `1` to `7` or `←`/`→` to switch tabs, `↑`/`↓` or space to scroll, `r` to refresh (it also refreshes every five minutes), and `q` to quit. Piped (`cost-lens | less`), it prints every tab once. Now and Model need a Claude Code session, so they show only in the pane.
+Run it in a project folder. Its Now tab lists your Claude Code sessions of the last 24 hours: what each has cost, its context size, and whether its prompt cache is still warm (with a countdown) or what the next message would pay to re-write it. Then come Today, 30 days, All time, Projects, that folder's Branches and PRs, and Tips. Press `1` to `8` or `←`/`→` to switch tabs, `↑`/`↓` or space to scroll, `r` to refresh (it also refreshes every five minutes), and `q` to quit. Piped (`cost-lens | less`), it prints every tab once. Plan usage, the context grid and the Model tab need a Claude Code session, so they show only in the pane.
 
 ## What it shows
 
