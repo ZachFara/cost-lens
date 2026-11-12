@@ -22,7 +22,7 @@ import {
 import type { FileState, TipsTracker } from './tips.ts'
 import { noteTitle, recentSessions, sessionTracker, trackSession } from './sessions.ts'
 import type { SessionTracker } from './sessions.ts'
-import { offeredModels, pricesFetched } from '../core/pricing.ts'
+import { offeredModels, pricesFetched, pricesInUse } from '../core/pricing.ts'
 import { withTilde } from '../core/paths.ts'
 import { addSpend, emptySpend } from '../core/spend.ts'
 import type { Spend } from '../core/spend.ts'
@@ -258,6 +258,7 @@ export async function summarize(
     generatedAt: now.toISOString(),
     pricesFetched: pricesFetched(),
     models: offeredModels(),
+    prices: pricesInUse(),
     today: periods.today.totals,
     last30: periods.last30.totals,
     allTime: periods.allTime.totals,

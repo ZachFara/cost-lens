@@ -1,4 +1,5 @@
 import { ratesFor } from './pricing.ts'
+import type { PriceTable } from './pricing.ts'
 
 export interface TokenUsage {
   input: number
@@ -37,14 +38,15 @@ export function promptTokens(usage: TokenUsage): number {
 }
 
 /** What one request cost by category, or undefined when its model has no published price. */
-export function costOf(record: UsageRecord): CostSplit | undefined {
+export function costOf(record: UsageRecord, prices?: PriceTable): CostSplit | undefined {
   const { usage } = record
-  const rates = ratesFor({
+  const request = {
     model: record.model,
     promptTokens: promptTokens(usage),
     speed: record.speed,
     geo: record.geo,
-  })
+  }
+  const rates = ratesFor(request, prices)
   if (rates === undefined) return undefined
   return {
     input: (usage.input * rates.input) / PER_MILLION,
@@ -74,22 +76,22 @@ function addTokens(into: TokenUsage, usage: TokenUsage): void {
 }
 
 /** The totals with one more request, as a new value (for state that must not be mutated). */
-export function plusRecord(totals: Totals, record: UsageRecord): Totals {
+export function plusRecord(totals: Totals, record: UsageRecord, prices?: PriceTable): Totals {
   const next: Totals = {
     ...totals,
     unpricedModels: [...totals.unpricedModels],
     tokens: { ...totals.tokens },
     cost: { ...totals.cost },
   }
-  addRecord(next, record)
+  addRecord(next, record, prices)
   return next
 }
 
 /** Adds one request to the totals, in place. */
-export function addRecord(totals: Totals, record: UsageRecord): void {
+export function addRecord(totals: Totals, record: UsageRecord, prices?: PriceTable): void {
   totals.requests += 1
   addTokens(totals.tokens, record.usage)
-  const cost = costOf(record)
+  const cost = costOf(record, prices)
   if (cost === undefined) {
     totals.unpricedRequests += 1
     if (!totals.unpricedModels.includes(record.model)) totals.unpricedModels.push(record.model)

@@ -9,6 +9,7 @@ import type { NowFacts } from './now-view.tsx'
 import { periodView } from './period-view.tsx'
 import { projectsView } from './projects-view.tsx'
 import { prsView } from './prs-view.tsx'
+import { pricesOf } from './runs.ts'
 import type { Settings } from './settings.ts'
 import { PERIOD_OF, TABS } from './tabs.ts'
 import { tipsView } from './tips-view.tsx'
@@ -74,6 +75,7 @@ function tabBody(ui: Ui, data: PaneData, handlers: PaneHandlers) {
       tiers: currentTiers(data.history),
       recent: data.recommendations,
       current: data.currentModel,
+      prices: pricesOf(data.history),
     })
   }
   const readyView = readyViewFor(ui, data)

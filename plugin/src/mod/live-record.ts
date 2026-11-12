@@ -1,5 +1,6 @@
 import { emptyTotals, plusRecord, promptTokens } from '../core/cost.ts'
 import type { Totals, UsageRecord } from '../core/cost.ts'
+import type { PriceTable } from '../core/pricing.ts'
 
 /** A model request's usage as the engine reports it on `turn.step`. */
 interface StepUsage {
@@ -30,9 +31,9 @@ function stepRecord(usage: StepUsage): UsageRecord {
 /** The session before its first request. */
 export const NO_REQUESTS: Totals = emptyTotals()
 
-/** The session's totals with one more request. */
-export function addStep(totals: Totals, usage: StepUsage): Totals {
-  return plusRecord(totals, stepRecord(usage))
+/** The session's totals with one more request, at the last summary's prices if given. */
+export function addStep(totals: Totals, usage: StepUsage, prices?: PriceTable): Totals {
+  return plusRecord(totals, stepRecord(usage), prices)
 }
 
 /** The request's whole prompt: what the next message builds on. */

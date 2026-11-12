@@ -34,6 +34,21 @@ export interface SummarySpend {
   lastActive: string
 }
 
+export interface SummaryRates {
+  input: number
+  write5m: number
+  write1h: number
+  read: number
+  output: number
+}
+
+export interface SummaryPrice {
+  id: string
+  rates: SummaryRates
+  longPrompt?: SummaryRates
+  fast?: { input: number; output: number }
+}
+
 /** The analyzer's last run, as the pane shows it. */
 export type History =
   | { status: 'idle' }
@@ -44,6 +59,7 @@ export type History =
         generatedAt: string
         pricesFetched: string
         models: string[]
+        prices: SummaryPrice[]
         today: SummaryTotals
         last30: SummaryTotals
         allTime: SummaryTotals

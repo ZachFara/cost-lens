@@ -1,6 +1,7 @@
 import type { ProcessRunResult } from 'claude-code'
 
 import { DEFAULT_CACHE_LIFETIME_MS } from '../core/cache.ts'
+import type { PriceTable } from '../core/pricing.ts'
 import { parsePullRequests } from '../core/pull-requests.ts'
 import { parseSummary } from '../core/summary.ts'
 import type { Summary } from '../core/summary.ts'
@@ -59,6 +60,16 @@ export function refreshed(current: Ready, result: AnalyzerRead): History {
   return 'summary' in result
     ? loaded(result)
     : { ...current, isRefreshing: false, refreshError: result.error }
+}
+
+/**
+ * The prices the last summary used (today's pricing page, decision 0006), or undefined
+ * before the first one, when estimates use the built-in snapshot.
+ */
+export function pricesOf(history: History): PriceTable | undefined {
+  return history.status === 'ready' && history.summary.prices.length > 0
+    ? history.summary.prices
+    : undefined
 }
 
 /** How long the prompt cache lasts: as the logs last showed, else one hour. */

@@ -64,6 +64,7 @@ const SUMMARY = {
   },
   cacheLifetimeMs: 3_600_000,
   sessions: [],
+  prices: [],
   tips: {
     last30: { cost: 200, coldRebuilds: 3, coldWaste: 12.5, largeContextCost: 150 },
     last24h: {

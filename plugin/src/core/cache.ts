@@ -1,4 +1,5 @@
 import { ratesFor } from './pricing.ts'
+import type { PriceTable } from './pricing.ts'
 
 /** Claude Code sessions write one-hour cache entries unless the logs say otherwise. */
 export const DEFAULT_CACHE_LIFETIME_MS = 60 * 60 * 1000
@@ -19,8 +20,9 @@ export function contextCost(
   model: string,
   promptTokens: number,
   lifetimeMs: number,
+  prices?: PriceTable,
 ): { cold: number; warm: number } | undefined {
-  const rates = ratesFor({ model, promptTokens })
+  const rates = ratesFor({ model, promptTokens }, prices)
   if (rates === undefined) return undefined
   const write = lifetimeMs <= FIVE_MINUTES_MS ? rates.write5m : rates.write1h
   return {

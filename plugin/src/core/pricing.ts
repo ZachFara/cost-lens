@@ -21,6 +21,9 @@ export interface ModelPrice {
   fast?: { input: number; output: number }
 }
 
+/** A price table: the snapshot, or a fresh copy of the pricing page. */
+export type PriceTable = readonly ModelPrice[]
+
 export interface PricedRequest {
   model: string
   promptTokens: number
@@ -77,7 +80,7 @@ const SNAPSHOT: readonly ModelPrice[] = [
 /** A model id names a priced model exactly, or with a date suffix and/or a bracketed tag. */
 const SUFFIX = /^(-\d{8})?(\[[^\]]*\])?$/
 
-let table: readonly ModelPrice[] = SNAPSHOT
+let table: PriceTable = SNAPSHOT
 let tableFetched = PRICES_FETCHED
 
 /**
@@ -98,6 +101,14 @@ export function offeredModels(): string[] {
   return table.map((one) => one.id)
 }
 
+/**
+ * The price table in use, fast-mode rates included: the analyzer's summary carries it, so
+ * the mod prices its own estimates as the analyzer does.
+ */
+export function pricesInUse(): ModelPrice[] {
+  return [...table]
+}
+
 /** The ids of the built-in snapshot's models. */
 export function snapshotModels(): string[] {
   return SNAPSHOT.map((one) => one.id)
@@ -108,8 +119,8 @@ export function pricesFetched(): string {
   return tableFetched
 }
 
-function modelPrice(model: string): ModelPrice | undefined {
-  return table.find((one) => model.startsWith(one.id) && SUFFIX.test(model.slice(one.id.length)))
+function modelPrice(model: string, prices: PriceTable): ModelPrice | undefined {
+  return prices.find((one) => model.startsWith(one.id) && SUFFIX.test(model.slice(one.id.length)))
 }
 
 function scale(base: Rates, inputFactor: number, outputFactor: number): Rates {
@@ -122,9 +133,12 @@ function scale(base: Rates, inputFactor: number, outputFactor: number): Rates {
   }
 }
 
-/** The rates one request is billed at, or undefined for a model with no published price. */
-export function ratesFor(request: PricedRequest): Rates | undefined {
-  const price = modelPrice(request.model)
+/**
+ * The rates one request is billed at, or undefined for a model with no published price.
+ * `prices` is the table in use unless given (the mod passes the summary's).
+ */
+export function ratesFor(request: PricedRequest, prices: PriceTable = table): Rates | undefined {
+  const price = modelPrice(request.model, prices)
   if (price === undefined) return undefined
   const isLong = request.promptTokens > LONG_PROMPT_TOKENS
   let billed = isLong && price.longPrompt ? price.longPrompt : price.rates

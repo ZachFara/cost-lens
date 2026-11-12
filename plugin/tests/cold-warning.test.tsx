@@ -25,6 +25,14 @@ function harness(on: On, minutesAgo: number, promptTokens: number) {
   return { toasts, entered }
 }
 
+/** A summary whose prices are not the built-in snapshot's: Opus 5.5 at twice its rates. */
+function historyWithPrices() {
+  const rates = { input: 8, write5m: 10, write1h: 16, read: 0.4, output: 40 }
+  const summary = { cacheLifetimeMs: 3_600_000, prices: [{ id: 'claude-opus-5-5', rates }] }
+  const history = { status: 'ready', summary, isRefreshing: false, refreshError: null }
+  return { value: { value: { shape: 'history-10', value: history }, version: 1 } }
+}
+
 const typed = { text: 'fix the bug', wait: false, origin: { kind: 'composer' } } as const
 
 test('a prompt over a cold cache goes out unchanged, with a warning', async ($, on) => {
@@ -60,4 +68,13 @@ test('slash commands and prompts that are not typed by the person get no warning
   await $.prompt.submit({ ...typed, origin: { kind: 'plugin', name: 'other' } })
 
   expect(toasts).toEqual([])
+})
+
+test('the warning prices the cache as the last summary did, not at the snapshot rates', async ($, on) => {
+  const { toasts } = harness(on, 120, 84_000)
+  on('state.get', { key: 'history' }, () => historyWithPrices())
+
+  await $.prompt.submit(typed)
+
+  expect(toasts[0]).toMatch(/re-writes 84\.0k tokens ≈ \$1\.34 instead of \$0\.03\./)
 })

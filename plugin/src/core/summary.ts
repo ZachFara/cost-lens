@@ -1,4 +1,5 @@
 import type { ModelTotals, Totals } from './cost.ts'
+import type { ModelPrice } from './pricing.ts'
 import type { Spend } from './spend.ts'
 
 /** What the analyzer prints and the mod reads. */
@@ -7,6 +8,8 @@ export interface Summary {
   pricesFetched: string
   /** The models Anthropic's pricing page lists (the built-in snapshot's when offline). */
   models: string[]
+  /** The price table the analyzer used, so the mod's own estimates match its numbers. */
+  prices: ModelPrice[]
   /** Requests made on the analyzer's local calendar day. */
   today: Totals
   /** Today and the 29 calendar days before it. */
@@ -182,6 +185,22 @@ function isTips(value: unknown): value is Tips {
   )
 }
 
+const RATE_KEYS = ['input', 'write5m', 'write1h', 'read', 'output'] as const
+
+function isPrices(value: unknown): value is ModelPrice[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (one) =>
+        isObject(one) &&
+        typeof one.id === 'string' &&
+        hasNumbers(one.rates, RATE_KEYS) &&
+        (one.longPrompt === undefined || hasNumbers(one.longPrompt, RATE_KEYS)) &&
+        (one.fast === undefined || hasNumbers(one.fast, ['input', 'output'])),
+    )
+  )
+}
+
 function isNext(value: unknown): boolean {
   return value === null || hasNumbers(value, ['cold', 'warm'])
 }
@@ -199,11 +218,19 @@ function isSessions(value: unknown): value is RecentSession[] {
   )
 }
 
+/** Where the numbers came from: when, with which prices and models. */
+function hasSource(value: Json): boolean {
+  return (
+    hasStrings(value, ['generatedAt', 'pricesFetched']) &&
+    isStrings(value.models) &&
+    isPrices(value.prices)
+  )
+}
+
 function isSummary(value: unknown): value is Summary {
   return (
     isObject(value) &&
-    hasStrings(value, ['generatedAt', 'pricesFetched']) &&
-    isStrings(value.models) &&
+    hasSource(value) &&
     PERIODS.every((period) => isTotals(value[period])) &&
     isByModel(value.byModel) &&
     isProjects(value.projects) &&
