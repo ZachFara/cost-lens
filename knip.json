@@ -15,6 +15,5 @@
     "tests/**/*.ts",
     "plugin/tests/**/*.{ts,tsx}"
   ],
-  "ignore": ["vendor/**"],
   "ignoreDependencies": ["claude-code"]
 }

@@ -54,7 +54,6 @@ None.
 - Possible follow-up (not scheduled): a per-model week (for example Current week (Fable)) that Claude Code stops reporting still disappears from the Now tab. Keeping it needs an atom and a `session.measure` hook in `plugin/hooks/register.tsx`, which is at the 300-line lint limit; that needs room made first (MIT-583).
 - Possible follow-up (not scheduled): skill shares count only the request that invoked a skill, so they read lower than `/usage`, which appears to count the skill's text in later requests too.
 - The first `npm publish ./dist` of the terminal view needs the owner's npm login (`npm whoami` failed on 2026-11-11). The name `cost-lens` was free on npm that day.
-- Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
 ## Learned
 
