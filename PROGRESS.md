@@ -43,6 +43,7 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 24. **(done)** **Release 0.2.0.** Entry: `claude plugin update cost-lens@cost-lens`, and the npm package `cost-lens`. Done when: `version` is 0.2.0 in `plugin.json` and `package.json`, the tag `cost-lens--v0.2.0` and its GitHub release exist, a fresh plugin install names 0.2.0; the npm publish of `dist` is done when the owner is logged in to npm, and otherwise is left to the owner. Publishing in Anthropic's plugin directory is the owner's step in the portal. (Owner request, 2026-11-11.)
 25. **(done)** **A Now tab in the terminal view (MIT-684).** Entry: `cost-lens` in a terminal, tab 1. Done when: it lists the sessions whose main thread made a request in the last 24 hours, most recent first (at most 8), each with its title, folder, model, last activity, requests and cost so far (subagents included), and a cache line as the band words it: warm with a countdown that redraws each minute, or cold with what the next message pays to re-write the context at live prices; titles cannot reach the terminal as codes; tests cover the analyzer and the tab. (Owner request, 2026-11-11.)
 26. **(done)** **Live prices in the mod's own estimates (MIT-685).** Entry: the cache line, the cold-cache warning, the Now tab's cost split and the model recommendation. Done when: the analyzer's summary carries the price table it used, and each of these prices with it once a summary has loaded (the snapshot before then); the history state's tag is `history-10`; tests cover a warning priced from the summary. (Owner request, 2026-11-11.)
+27. **(done)** **Keep a per-model week on the Now tab (MIT-686).** Entry: Now tab. Done when: a `session.measure` hook keeps the last reading of each plan window with a reset time, and a window a later response stops reporting (such as Current week (Fable)) still shows at that reading, or at 0% once its reset passes; `register.tsx` stays within 300 lines (the `gh pr list` arguments moved to `core/pull-requests.ts`, shared with the terminal view). (Follow-up of MIT-583, 2026-11-11.)
 
 ## Open Questions
 
@@ -51,7 +52,6 @@ None.
 ## Next steps
 
 - Task 19 (publish), with the owner. Other candidates: skill shares closer to `/usage` (count a skill's text in later requests).
-- Possible follow-up (not scheduled): a per-model week (for example Current week (Fable)) that Claude Code stops reporting still disappears from the Now tab. Keeping it needs an atom and a `session.measure` hook in `plugin/hooks/register.tsx`, which is at the 300-line lint limit; that needs room made first (MIT-583).
 - Possible follow-up (not scheduled): skill shares count only the request that invoked a skill, so they read lower than `/usage`, which appears to count the skill's text in later requests too.
 - The first `npm publish ./dist` of the terminal view needs the owner's npm login (`npm whoami` failed on 2026-11-11). The name `cost-lens` was free on npm that day.
 
