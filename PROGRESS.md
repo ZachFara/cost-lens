@@ -40,6 +40,7 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 22. **(done)** **Release 0.1.1.** Entry: `claude plugin update cost-lens@cost-lens`. Done when: `version` is 0.1.1 in `plugin.json` and `package.json`, the tag `cost-lens--v0.1.1` and its GitHub release exist, a fresh install names 0.1.1, AGENTS.md has the release steps, and the README says how to update. Publishing 0.1.1 in Anthropic's plugin directory is the owner's step in the portal. (Owner request, 2026-11-11.)
 
 23. **(done)** **cost-lens in a plain terminal (MIT-677).** Entry: the `cost-lens` command (npm package, `npm install -g cost-lens`) or `node <plugin>/src/terminal/cli.ts`, in any terminal tab outside Claude Code. Done when: it runs full screen like top with the data tabs (Today, 30 days, All time, Projects, Branches, PRs, Tips), keys 1 to 7 and ←/→ switch tabs, ↑/↓, space and page keys scroll, r refreshes and it refreshes every five minutes, q quits and gives the terminal back; piped, it prints every tab once; it fits narrow terminals; `npm run build` makes a package whose install runs no scripts; decision 0008. (Owner request, 2026-11-11.)
+24. **(done)** **Release 0.2.0.** Entry: `claude plugin update cost-lens@cost-lens`, and the npm package `cost-lens`. Done when: `version` is 0.2.0 in `plugin.json` and `package.json`, the tag `cost-lens--v0.2.0` and its GitHub release exist, a fresh plugin install names 0.2.0; the npm publish of `dist` is done when the owner is logged in to npm, and otherwise is left to the owner. Publishing in Anthropic's plugin directory is the owner's step in the portal. (Owner request, 2026-11-11.)
 
 ## Open Questions
 
@@ -51,7 +52,7 @@ None.
 - Possible follow-up (not scheduled): a per-model week (for example Current week (Fable)) that Claude Code stops reporting still disappears from the Now tab. Keeping it needs an atom and a `session.measure` hook in `plugin/hooks/register.tsx`, which is at the 300-line lint limit; that needs room made first (MIT-583).
 - Possible follow-up (not scheduled): skill shares count only the request that invoked a skill, so they read lower than `/usage`, which appears to count the skill's text in later requests too.
 - Possible follow-up (not scheduled): a Now tab for the terminal view, from the logs alone: the most recent sessions with their model, context size and whether their prompt cache is still warm (plan limits and the context grid need a Claude Code session).
-- Ship the terminal view: release 0.2.0 (AGENTS.md, Releasing a new version), including the first `npm publish ./dist`, which needs the owner's npm login (`npm whoami` failed on 2026-11-11). The name `cost-lens` was free on npm that day.
+- The first `npm publish ./dist` of the terminal view needs the owner's npm login (`npm whoami` failed on 2026-11-11). The name `cost-lens` was free on npm that day.
 - Small cleanup (separate chore branch): knip reports `vendor/**` in `knip.json` `ignore` as unnecessary, because `vendor/` is outside the project patterns; remove it.
 
 ## Learned
