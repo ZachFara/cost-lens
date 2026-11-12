@@ -44,6 +44,7 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 25. **(done)** **A Now tab in the terminal view (MIT-684).** Entry: `cost-lens` in a terminal, tab 1. Done when: it lists the sessions whose main thread made a request in the last 24 hours, most recent first (at most 8), each with its title, folder, model, last activity, requests and cost so far (subagents included), and a cache line as the band words it: warm with a countdown that redraws each minute, or cold with what the next message pays to re-write the context at live prices; titles cannot reach the terminal as codes; tests cover the analyzer and the tab. (Owner request, 2026-11-11.)
 26. **(done)** **Live prices in the mod's own estimates (MIT-685).** Entry: the cache line, the cold-cache warning, the Now tab's cost split and the model recommendation. Done when: the analyzer's summary carries the price table it used, and each of these prices with it once a summary has loaded (the snapshot before then); the history state's tag is `history-10`; tests cover a warning priced from the summary. (Owner request, 2026-11-11.)
 27. **(done)** **Keep a per-model week on the Now tab (MIT-686).** Entry: Now tab. Done when: a `session.measure` hook keeps the last reading of each plan window with a reset time, and a window a later response stops reporting (such as Current week (Fable)) still shows at that reading, or at 0% once its reset passes; `register.tsx` stays within 300 lines (the `gh pr list` arguments moved to `core/pull-requests.ts`, shared with the terminal view). (Follow-up of MIT-583, 2026-11-11.)
+28. **(done)** **Skill and MCP shares as `/usage` counts them (MIT-687).** Entry: Tips tab. Done when: the analyzer counts toward a skill or MCP server the requests Claude Code tagged with it in the log (`attributionSkill`, `attributionMcpServer`; a subagent's request, tagged `attributionAgent`, does not count for its skill), as `/usage` does; a log file with no tags (older versions) counts the request that called the skill or tool, as before; tests cover both. (Owner request, 2026-11-11.)
 
 ## Open Questions
 
@@ -51,12 +52,12 @@ None.
 
 ## Next steps
 
-- Task 19 (publish), with the owner. Other candidates: skill shares closer to `/usage` (count a skill's text in later requests).
-- Possible follow-up (not scheduled): skill shares count only the request that invoked a skill, so they read lower than `/usage`, which appears to count the skill's text in later requests too.
+- Task 19 (publish), with the owner.
 - The first `npm publish ./dist` of the terminal view needs the owner's npm login (`npm whoami` failed on 2026-11-11). The name `cost-lens` was free on npm that day.
 
 ## Learned
 
+- `/usage` attributes cost from tags Claude Code writes on each assistant line of the log: `attributionSkill`, `attributionPlugin`, `attributionMcpServer` and `attributionAgent` (2.1.319; read from its bundled code, 2026-11-11). A request with `attributionAgent` counts for the agent (keyed by its skill if it has one), not for the skill. The request that invokes a skill is not itself tagged.
 - Claude Code cannot show a mod's pane outside a session, and Node runs TypeScript but not JSX, so the terminal view (decision 0008) draws its own text views from core rather than reusing the pane's. Node's `.ts` type stripping also refuses files under `node_modules` (`ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`), so the npm package ships compiled JavaScript, built into `dist/`. npm 11 warns on install about any `prepare` script in a package (as an install script not covered by allowScripts), so the package gets a manifest of its own without the repository's scripts.
 
 - Merging to `main` reaches only new installs: existing installs keep the cached copy of their `version` until it changes, and auto-update is off by default for this marketplace (2026-11-11). Releases follow AGENTS.md, "Releasing a new version".
