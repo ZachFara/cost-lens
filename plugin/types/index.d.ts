@@ -51,6 +51,17 @@ export type History =
         projects: { path: string; last30: SummarySpend }[]
         currentProject: { path: string; branches: { branch: string; spend: SummarySpend }[] } | null
         cacheLifetimeMs: number
+        sessions: {
+          title: string
+          path: string
+          model: string
+          lastAt: string
+          contextTokens: number
+          cacheLifetimeMs: number
+          next: { cold: number; warm: number } | null
+          cost: number
+          requests: number
+        }[]
         tips: {
           last30: {
             cost: number

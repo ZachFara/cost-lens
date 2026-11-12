@@ -12,6 +12,9 @@ import { paint } from './text.ts'
 /** As the pane: the numbers refresh on their own every five minutes while shown. */
 const REFRESH_MS = 5 * 60 * 1000
 
+/** The Now tab's cache countdowns are in minutes, so the screen redraws each minute. */
+const TICK_MS = 60 * 1000
+
 // The alternate screen, the cursor hidden and line wrap off (a line too long is cut at
 // the edge), and back.
 const ENTER = '\u001b[?1049h\u001b[?25l\u001b[?7l'
@@ -32,6 +35,7 @@ function size(): Size {
 }
 
 function draw(app: App): void {
+  app.view = { ...app.view, now: Date.now() }
   const screen = size()
   const color = process.env.NO_COLOR === undefined
   const lines = frame(app.view, screen)
@@ -91,7 +95,13 @@ function onKeys(app: App, data: Buffer): void {
 
 export function runApp(source: Source, repository: string | undefined): void {
   const app: App = {
-    view: { tab: 'today', scroll: 0, history: { status: 'loading' }, prs: { status: 'loading' } },
+    view: {
+      tab: 'now',
+      scroll: 0,
+      history: { status: 'loading' },
+      prs: { status: 'loading' },
+      now: Date.now(),
+    },
     source,
     repository,
     isReading: false,
@@ -109,5 +119,8 @@ export function runApp(source: Source, repository: string | undefined): void {
     draw(app)
   })
   setInterval(() => void readAgain(app), REFRESH_MS)
+  setInterval(() => {
+    draw(app)
+  }, TICK_MS)
   void readAgain(app)
 }
