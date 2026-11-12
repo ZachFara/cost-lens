@@ -1,5 +1,5 @@
 import { totalCost } from '../core/cost.ts'
-import { formatCount, formatUsd, formatWhen } from '../core/format.ts'
+import { formatRequests, formatUsd, formatWhen } from '../core/format.ts'
 
 import type { Ready, Ui } from './ui.ts'
 
@@ -24,7 +24,7 @@ export function projectsView(ui: Ui, state: Ready) {
         const when = formatWhen(project.last30.lastActive, now)
         const details = [
           folder,
-          `${formatCount(project.last30.requests)} requests`,
+          formatRequests(project.last30.requests),
           when === '' ? '' : `last active ${when}`,
         ].filter((part) => part !== '')
         return (

@@ -4,7 +4,7 @@
  */
 import { cacheHitRate, totalCost } from '../core/cost.ts'
 import type { ModelTotals, Totals } from '../core/cost.ts'
-import { barWidths, formatCount, formatShare, formatUsd, formatWhen } from '../core/format.ts'
+import { barWidths, formatRequests, formatShare, formatUsd, formatWhen } from '../core/format.ts'
 import { costPullRequests } from '../core/pull-requests.ts'
 import type { PullRequest } from '../core/pull-requests.ts'
 import type { Spend } from '../core/spend.ts'
@@ -62,7 +62,7 @@ function modelLines(models: readonly ModelTotals[], width: number): Line[] {
       ? span(formatUsd(totalCost(one.cost)), 'success')
       : span('no published price', 'warning')
     const details =
-      `${formatCount(one.requests)} requests · ` +
+      `${formatRequests(one.requests)} · ` +
       `cache hit rate ${formatShare(cacheHitRate(one.tokens))}`
     return costRow(one.model, price, details, width)
   })
@@ -77,11 +77,12 @@ function modelLines(models: readonly ModelTotals[], width: number): Line[] {
 export function periodLines(summary: Summary, period: Period, width: number): Line[] {
   const totals = summary[period]
   if (totals.requests === 0) return [[span(EMPTY[period], 'dim')]]
-  const requests = `${formatCount(totals.requests)} requests`
+  const requests = formatRequests(totals.requests)
   const hitRate = `cache hit rate ${formatShare(cacheHitRate(totals.tokens))}`
   const unpriced =
-    `${formatCount(totals.unpricedRequests)} requests from models without a published ` +
-    `price are not in the total: ${totals.unpricedModels.join(', ')}`
+    `${formatRequests(totals.unpricedRequests)} from models without a published ` +
+    `price ${totals.unpricedRequests === 1 ? 'is' : 'are'} not in the total: ` +
+    totals.unpricedModels.join(', ')
   return [
     [span(formatUsd(totalCost(totals.cost)), 'success')],
     [span(`${requests} · ${hitRate}`, 'dim')],
@@ -95,7 +96,7 @@ export function periodLines(summary: Summary, period: Period, width: number): Li
 
 function activity(spend: Spend, now: Date): string {
   const when = formatWhen(spend.lastActive, now)
-  return `${formatCount(spend.requests)} requests${when === '' ? '' : ` · last active ${when}`}`
+  return `${formatRequests(spend.requests)}${when === '' ? '' : ` · last active ${when}`}`
 }
 
 function splitPath(path: string): { name: string; folder: string } {
@@ -154,7 +155,7 @@ export function prsLines(summary: Summary, prs: PullRequests, width: number): Li
       const cost = one.spend
         ? span(formatUsd(totalCost(one.spend.cost)), 'success')
         : span('no Claude Code use', 'dim')
-      const requests = one.spend ? ` · ${formatCount(one.spend.requests)} requests` : ''
+      const requests = one.spend ? ` · ${formatRequests(one.spend.requests)}` : ''
       return [
         BLANK,
         spread(span(`#${String(one.number)} ${one.title}`), cost, width),

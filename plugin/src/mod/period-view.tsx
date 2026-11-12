@@ -2,7 +2,7 @@ import type { RenderElement } from 'claude-code'
 
 import { cacheHitRate, totalCost } from '../core/cost.ts'
 import type { ModelTotals, Totals } from '../core/cost.ts'
-import { barWidths, formatCount, formatShare, formatUsd } from '../core/format.ts'
+import { barWidths, formatRequests, formatShare, formatUsd } from '../core/format.ts'
 import type { Period } from '../core/summary.ts'
 
 import type { Ready, Ui } from './ui.ts'
@@ -60,7 +60,7 @@ function modelsView(ui: Ui, models: readonly ModelTotals[]) {
       {models.slice(0, MODELS_SHOWN).map((one) => {
         const price = one.isPriced ? formatUsd(totalCost(one.cost)) : 'no published price'
         const details =
-          `${formatCount(one.requests)} requests · ` +
+          `${formatRequests(one.requests)} · ` +
           `cache hit rate ${formatShare(cacheHitRate(one.tokens))}`
         return (
           <Box flexDirection="column">
@@ -84,11 +84,12 @@ export function periodView(ui: Ui, state: Ready, period: Period, columns: number
   const { Box, Text } = ui
   const totals = state.summary[period]
   if (totals.requests === 0) return <Text dimColor>{EMPTY[period]}</Text>
-  const requests = `${formatCount(totals.requests)} requests`
+  const requests = formatRequests(totals.requests)
   const hitRate = `cache hit rate ${formatShare(cacheHitRate(totals.tokens))}`
   const unpriced =
-    `${formatCount(totals.unpricedRequests)} requests from models without a published ` +
-    `price are not in the total: ${totals.unpricedModels.join(', ')}`
+    `${formatRequests(totals.unpricedRequests)} from models without a published ` +
+    `price ${totals.unpricedRequests === 1 ? 'is' : 'are'} not in the total: ` +
+    totals.unpricedModels.join(', ')
   return (
     <Box flexDirection="column" gap={1}>
       <Box flexDirection="column">

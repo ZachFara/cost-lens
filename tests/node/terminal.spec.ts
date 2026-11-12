@@ -104,7 +104,7 @@ await test('the data tabs show what the summary holds', async () => {
     assert.match(text('projects'), /shop +\$12\.00\n~\/code · 2 requests · last active today 10:00/)
     assert.match(text('branches'), /Branches in ~\/code\/shop/)
     assert.match(text('branches'), /feat\/cart +\$6\.00/)
-    assert.match(text('prs'), /#7 Add a cart +\$6\.00\nopen feat\/cart · 1 requests/)
+    assert.match(text('prs'), /#7 Add a cart +\$6\.00\nopen feat\/cart · 1 request$/m)
     assert.match(text('tips'), /What is contributing to your usage\?/)
   })
 })

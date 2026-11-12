@@ -4,7 +4,13 @@
  * from a running Claude Code session, so only the pane's Now tab has them.
  */
 import { cacheMsLeft } from '../core/cache.ts'
-import { formatCount, formatDuration, formatTokens, formatUsd, formatWhen } from '../core/format.ts'
+import {
+  formatDuration,
+  formatRequests,
+  formatTokens,
+  formatUsd,
+  formatWhen,
+} from '../core/format.ts'
 import type { RecentSession, Summary } from '../core/summary.ts'
 
 import { cells, span, spread, wrap } from './text.ts'
@@ -54,7 +60,7 @@ function sessionLines(session: RecentSession, now: number, width: number): Line[
     session.path,
     session.model,
     formatWhen(session.lastAt, new Date(now)),
-    `${formatCount(session.requests)} requests`,
+    formatRequests(session.requests),
   ].filter((part) => part !== '')
   return [
     BLANK,

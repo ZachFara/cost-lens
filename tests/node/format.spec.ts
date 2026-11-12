@@ -5,8 +5,9 @@ import {
   barWidths,
   formatClock,
   formatCount,
-  formatShare,
+  formatRequests,
   formatResets,
+  formatShare,
   formatTokens,
   formatUsd,
   formatWhen,
@@ -53,4 +54,10 @@ await test('token counts read short, and reset times read like /usage', () => {
     formatResets(new Date(2026, 10, 12, 22, 59).toISOString(), now),
     'Resets Nov 12 at 22:59',
   )
+})
+
+await test('a request count takes its noun in the singular for one', () => {
+  assert.equal(formatRequests(1), '1 request')
+  assert.equal(formatRequests(0), '0 requests')
+  assert.equal(formatRequests(1234), '1,234 requests')
 })

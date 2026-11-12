@@ -9,6 +9,11 @@ export function formatCount(count: number): string {
   return COUNT.format(count)
 }
 
+/** A request count with its noun: "1 request", "1,234 requests". */
+export function formatRequests(count: number): string {
+  return `${formatCount(count)} ${count === 1 ? 'request' : 'requests'}`
+}
+
 /** A share from 0 to 1 as a whole percentage; a small non-zero share reads "<1%". */
 export function formatShare(share: number): string {
   if (share > 0 && share < 0.005) return '<1%'

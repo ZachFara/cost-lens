@@ -1,5 +1,5 @@
 import { totalCost } from '../core/cost.ts'
-import { formatCount, formatUsd, formatWhen } from '../core/format.ts'
+import { formatRequests, formatUsd, formatWhen } from '../core/format.ts'
 
 import type { Ready, Ui } from './ui.ts'
 
@@ -17,7 +17,7 @@ export function branchesView(ui: Ui, state: Ready) {
       <Text weight="semibold">{`Branches in ${project.path}`}</Text>
       {project.branches.map(({ branch, spend }) => {
         const when = formatWhen(spend.lastActive, now)
-        const details = `${formatCount(spend.requests)} requests${when === '' ? '' : ` · last active ${when}`}`
+        const details = `${formatRequests(spend.requests)}${when === '' ? '' : ` · last active ${when}`}`
         return (
           <Box flexDirection="column">
             <Box flexDirection="row" justifyContent="space-between" columnGap={1}>
