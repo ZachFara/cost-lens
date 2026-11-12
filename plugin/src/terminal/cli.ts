@@ -19,7 +19,7 @@ const USAGE = `Usage: cost-lens [logs folder]
 Shows where your Claude Code tokens and dollars go, from the session logs on this
 machine (~/.claude/projects unless a folder is given).
 
-Keys: 1-7 or ←/→ switch tabs, ↑/↓ and space scroll, r refreshes, q quits.
+Keys: 1-8 or ←/→ switch tabs, ↑/↓ and space scroll, r refreshes, q quits.
 Piped or redirected, it prints every tab once and exits.
 `
 
@@ -34,7 +34,7 @@ async function printAll(source: Source, repository: string | undefined): Promise
   const lines = TABS.flatMap((one) => [
     [span(one.label, 'bold')],
     [span('─'.repeat(width), 'dim')],
-    ...tabLines({ tab: one.id, scroll: 0, history, prs }, width),
+    ...tabLines({ tab: one.id, scroll: 0, history, prs, now: Date.now() }, width),
     [],
   ])
   process.stdout.write(`${lines.map((line) => paint(line, width, color)).join('\n')}\n`)

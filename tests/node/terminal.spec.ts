@@ -7,7 +7,7 @@ import { test } from 'node:test'
 
 import { summarize } from '../../plugin/src/analyzer/logs.ts'
 import { localDay } from '../../plugin/src/core/days.ts'
-import type { Summary } from '../../plugin/src/core/summary.ts'
+import type { RecentSession, Summary } from '../../plugin/src/core/summary.ts'
 import { afterRead, frame, keysIn, pressKey, tabLines } from '../../plugin/src/terminal/screen.ts'
 import type { Tab, View } from '../../plugin/src/terminal/screen.ts'
 import { cells, paint, printable, span, spread, wrap } from '../../plugin/src/terminal/text.ts'
@@ -66,6 +66,7 @@ function viewOf(summary: Summary, tab: Tab): View {
       status: 'ready',
       prs: [{ number: 7, title: 'Add a cart', state: 'OPEN', branch: 'feat/cart' }],
     },
+    now: NOW.getTime(),
   }
 }
 
@@ -105,8 +106,8 @@ await test('the screen fills the terminal: tab rows, the tab, and a status line'
     const lines = frame(viewOf(summary, 'today'), SIZE).map(plain)
     assert.equal(lines.length, SIZE.rows)
     assert.ok(lines.every((line) => cells(line) <= SIZE.columns))
-    assert.match(lines[0] ?? '', /^cost-lens {2}1 Today {3}2 30 days/)
-    assert.match(lines[1] ?? '', /^ 5 Branches {3}6 PRs {3}7 Tips/)
+    assert.match(lines[0] ?? '', /^cost-lens {2}1 Now {3}2 Today {3}3 30 days/)
+    assert.match(lines[1] ?? '', /^ 5 Projects {3}6 Branches {3}7 PRs {3}8 Tips/)
     assert.match(lines.at(-1) ?? '', /^Read at \d\d:\d\d · prices of .+ q quit$/)
     const narrow = frame(viewOf(summary, 'today'), { columns: 30, rows: 12 }).map(plain)
     assert.equal(narrow.length, 12)
@@ -119,10 +120,11 @@ await test('keys switch tabs, scroll within the tab, refresh and quit', async ()
   const SIZE = { columns: 60, rows: 10 }
   await withSummary((summary) => {
     const start = viewOf(summary, 'today')
-    assert.equal(pressKey(start, '4', SIZE).view.tab, 'projects')
+    assert.equal(pressKey(start, '5', SIZE).view.tab, 'projects')
     assert.equal(pressKey(start, '9', SIZE).view.tab, 'today')
     assert.equal(pressKey(start, '\u001b[C', SIZE).view.tab, 'last30')
-    assert.equal(pressKey(start, '\u001b[D', SIZE).view.tab, 'tips')
+    assert.equal(pressKey(start, '\u001b[D', SIZE).view.tab, 'now')
+    assert.equal(pressKey(viewOf(summary, 'now'), '\u001b[D', SIZE).view.tab, 'tips')
     assert.equal(pressKey(start, 'q', SIZE).command, 'quit')
     assert.equal(pressKey(start, '\u0003', SIZE).command, 'quit')
     assert.equal(pressKey(start, 'r', SIZE).command, 'refresh')
@@ -133,7 +135,51 @@ await test('keys switch tabs, scroll within the tab, refresh and quit', async ()
     const bottom = pressKey(start, 'G', SIZE).view
     const length = tabLines(start, SIZE.columns).length
     assert.equal(bottom.scroll, length - 5)
-    assert.equal(pressKey(bottom, '2', SIZE).view.scroll, 0)
+    assert.equal(pressKey(bottom, '3', SIZE).view.scroll, 0)
+  })
+})
+
+const MINUTE = 60 * 1000
+
+function session(minutesAgo: number, overrides: Partial<RecentSession> = {}): RecentSession {
+  return {
+    title: 'Add a cart',
+    path: '~/code/shop',
+    model: 'claude-opus-5-5',
+    lastAt: new Date(NOW.getTime() - minutesAgo * MINUTE).toISOString(),
+    contextTokens: 182_300,
+    cacheLifetimeMs: 60 * MINUTE,
+    next: { cold: 1.82, warm: 0.09 },
+    cost: 12.5,
+    requests: 41,
+    ...overrides,
+  }
+}
+
+await test("Now lists the last day's sessions, with a warm countdown or the cold cost", async () => {
+  await withSummary((summary) => {
+    const sessions = [
+      session(19),
+      session(90, { title: '', path: '~/code/blog', next: null, requests: 1 }),
+      session(30, { title: 'Spoof\u001b[2J', cacheLifetimeMs: 5 * MINUTE }),
+    ]
+    const view = viewOf({ ...summary, sessions }, 'now')
+    const text = tabLines(view, 60).map(plain).join('\n')
+    assert.match(text, /^Sessions in the last 24 hours\n\nAdd a cart +\$12\.50\n/)
+    assert.match(text, /~\/code\/shop · claude-opus-5-5 · today 11:41 · 41 requests\n/)
+    assert.match(text, /● cache warm · 41m left · 182\.3k context\n/)
+    assert.match(text, /\nblog +\$12\.50\n/, 'an untitled session goes by its folder')
+    assert.match(text, /● cache cold · next message re-writes 182\.3k tokens\n/)
+    assert.match(text, /Spoof\ufffd\[2J/, 'a title cannot reach the terminal as codes')
+    assert.match(
+      text,
+      /● cache cold · next message re-writes 182\.3k tokens ≈ \$1\.82\n {2}\(warm: \$0\.09\)/,
+    )
+    const later = tabLines({ ...view, now: NOW.getTime() + 30 * MINUTE }, 60).map(plain)
+    assert.match(later.join('\n'), /● cache warm · 11m left/, 'the countdown follows the clock')
+    const empty = tabLines(viewOf(summary, 'now'), 60).map(plain).join('\n')
+    assert.match(empty, /^No Claude Code sessions in the last 24 hours\./)
+    assert.match(empty, /show in the Claude\sCode pane \(\/cost-lens\)/)
   })
 })
 
@@ -174,7 +220,7 @@ await test('piped, cost-lens prints every tab once and exits', () => {
       encoding: 'utf8',
       env: { ...process.env, HOME: home },
     })
-    const headings = ['Today', '30 days', 'All time', 'Projects', 'Branches', 'PRs', 'Tips']
+    const headings = ['Now', 'Today', '30 days', 'All time', 'Projects', 'Branches', 'PRs', 'Tips']
     for (const heading of headings) assert.match(output, new RegExp(`^${heading}$`, 'm'))
     assert.match(output, /^\$22\.50$/m)
     assert.match(output, /No pull requests: this folder is not in a git repository/)

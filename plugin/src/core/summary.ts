@@ -21,6 +21,29 @@ export interface Summary {
   tips: Tips
   /** The cache lifetime of the latest request that wrote the cache (5 minutes or 1 hour). */
   cacheLifetimeMs: number
+  /** Sessions whose main thread made a request in the last 24 hours, most recent first. */
+  sessions: RecentSession[]
+}
+
+/** A Claude Code session as its main thread (not its subagents) last left it. */
+export interface RecentSession {
+  /** The title the person gave it, else Claude Code's own; '' when it has none. */
+  title: string
+  /** The working folder, with the home folder written as ~; '' when the log has none. */
+  path: string
+  /** The model of the latest request. */
+  model: string
+  /** When the latest request was logged (ISO 8601). */
+  lastAt: string
+  /** The latest request's prompt: what the next message sends again. */
+  contextTokens: number
+  /** How long its cache stays warm after the latest request (5 minutes or 1 hour). */
+  cacheLifetimeMs: number
+  /** What the next message pays for that context, re-written or read; null when unpriced. */
+  next: { cold: number; warm: number } | null
+  /** Every request of the session so far, subagents' included. */
+  cost: number
+  requests: number
 }
 
 /** What a skill or MCP server's calls cost: the requests that called it, so shares overlap. */
@@ -159,6 +182,23 @@ function isTips(value: unknown): value is Tips {
   )
 }
 
+function isNext(value: unknown): boolean {
+  return value === null || hasNumbers(value, ['cold', 'warm'])
+}
+
+function isSessions(value: unknown): value is RecentSession[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (one) =>
+        isObject(one) &&
+        hasStrings(one, ['title', 'path', 'model', 'lastAt']) &&
+        hasNumbers(one, ['contextTokens', 'cacheLifetimeMs', 'cost', 'requests']) &&
+        isNext(one.next),
+    )
+  )
+}
+
 function isSummary(value: unknown): value is Summary {
   return (
     isObject(value) &&
@@ -169,7 +209,8 @@ function isSummary(value: unknown): value is Summary {
     isProjects(value.projects) &&
     isCurrentProject(value.currentProject) &&
     isTips(value.tips) &&
-    typeof value.cacheLifetimeMs === 'number'
+    typeof value.cacheLifetimeMs === 'number' &&
+    isSessions(value.sessions)
   )
 }
 

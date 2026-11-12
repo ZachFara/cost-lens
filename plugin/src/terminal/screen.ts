@@ -5,16 +5,21 @@
 import { formatClock } from '../core/format.ts'
 import type { Period, Summary } from '../core/summary.ts'
 
+import { nowLines } from './now-lines.ts'
 import { cells, span, spread, wrap } from './text.ts'
 import type { Line, Span } from './text.ts'
 import { tipsLines } from './tips-lines.ts'
 import { BLANK, branchesLines, periodLines, projectsLines, prsLines } from './views.ts'
 import type { PullRequests } from './views.ts'
 
-export type Tab = 'today' | 'last30' | 'all' | 'projects' | 'branches' | 'prs' | 'tips'
+export type Tab = 'now' | 'today' | 'last30' | 'all' | 'projects' | 'branches' | 'prs' | 'tips'
 
-/** The pane's data tabs; Now and Model need a Claude Code session, so they are not here. */
+/**
+ * The pane's tabs, but Model, which needs a Claude Code session; Now shows the sessions
+ * in the logs instead of the running one.
+ */
 export const TABS: readonly { id: Tab; label: string }[] = [
+  { id: 'now', label: 'Now' },
   { id: 'today', label: 'Today' },
   { id: 'last30', label: '30 days' },
   { id: 'all', label: 'All time' },
@@ -38,6 +43,8 @@ export interface View {
   scroll: number
   history: History
   prs: PullRequests
+  /** The time the screen is drawn at, in milliseconds: the Now tab counts down from it. */
+  now: number
 }
 
 /** The selected tab's lines, before scrolling. */
@@ -49,6 +56,7 @@ export function tabLines(view: View, width: number): Line[] {
   }
   const { summary } = history
   const period = PERIOD_OF[view.tab]
+  if (view.tab === 'now') return nowLines(summary, view.now, width)
   if (period !== undefined) return periodLines(summary, period, width)
   if (view.tab === 'projects') return projectsLines(summary, width)
   if (view.tab === 'branches') return branchesLines(summary, width)
@@ -87,7 +95,11 @@ function status(history: History): Span {
 }
 
 /** The key hints, longest first: a narrow screen shows the longest that fits. */
-const HINTS = ['1-7 tabs · ↑↓ scroll · r refresh · q quit', 'r refresh · q quit', 'q quit']
+const HINTS = [
+  `1-${String(TABS.length)} tabs · ↑↓ scroll · r refresh · q quit`,
+  'r refresh · q quit',
+  'q quit',
+]
 
 function footer(history: History, more: string, width: number): Line {
   const left = status(history)
@@ -162,7 +174,7 @@ function withTab(view: View, index: number): View {
 }
 
 /**
- * What a key does on a screen this size: switch tabs (1 to 7, ←/→, tab), scroll (↑/↓,
+ * What a key does on a screen this size: switch tabs (1 to 8, ←/→, tab), scroll (↑/↓,
  * page up/down, space, g/G), refresh (r) or quit (q, ctrl+c). Other keys do nothing.
  */
 export function pressKey(view: View, key: string, size: Size): { view: View; command?: Command } {

@@ -20,6 +20,8 @@ import {
   tipsTracker,
 } from './tips.ts'
 import type { FileState, TipsTracker } from './tips.ts'
+import { noteTitle, recentSessions, sessionTracker, trackSession } from './sessions.ts'
+import type { SessionTracker } from './sessions.ts'
 import { offeredModels, pricesFetched } from '../core/pricing.ts'
 import { withTilde } from '../core/paths.ts'
 import { addSpend, emptySpend } from '../core/spend.ts'
@@ -80,6 +82,7 @@ export function recordFromLine(line: string): Found | undefined {
     timestamp: text(entry.timestamp),
     cwd: text(entry.cwd),
     branch: text(entry.gitBranch),
+    sessionId: text(entry.sessionId),
     uses: usesOf(message),
     isSidechain: entry.isSidechain === true,
   }
@@ -115,6 +118,8 @@ interface Found {
   cwd: string | undefined
   /** The git branch checked out then; undefined outside a repository. */
   branch: string | undefined
+  /** The Claude Code session; a subagent's log carries its session's id. */
+  sessionId: string | undefined
   /** The skills and MCP servers this line's content called. */
   uses: string[]
   /** A subagent's request inside the main session's log. */
@@ -145,6 +150,7 @@ interface Accumulator {
   projects: Map<string, Spend>
   branches: BranchTracker
   tips: TipsTracker
+  sessions: SessionTracker
 }
 
 const PROJECTS_SHOWN = 15
@@ -170,6 +176,7 @@ function addFound(into: Accumulator, found: Found, today: string, file: FileStat
   const age = Number.isNaN(at) ? Number.NaN : daysBefore(localDay(new Date(at)), today)
   const isRecent = age >= 0 && age < LAST_DAYS
   addTipsRequest(into.tips, file, { ...found, at, isRecent })
+  trackSession(into.sessions, { ...found, at })
   if (!isRecent) return
   if (age === 0) add(periods.today, found.record)
   add(periods.last30, found.record)
@@ -210,6 +217,7 @@ async function addFile(
   const lines = createInterface({ input: createReadStream(path), crlfDelay: Infinity })
   const file = fileState()
   for await (const line of lines) {
+    if (line.includes('-title"')) noteTitle(into.sessions, line)
     if (!line.includes('"usage"')) continue
     const found = recordFromLine(line)
     if (found === undefined) continue
@@ -238,6 +246,7 @@ export async function summarize(
     projects: new Map(),
     branches: branchTracker(project),
     tips: tipsTracker(now),
+    sessions: sessionTracker(now),
   }
   const { periods } = into
   const today = localDay(now)
@@ -261,5 +270,6 @@ export async function summarize(
     currentProject: currentProject(into.branches, home),
     tips: tipsSummary(into.tips),
     cacheLifetimeMs: latestCacheLifetimeMs(into.tips),
+    sessions: recentSessions(into.sessions, home),
   }
 }
