@@ -81,31 +81,26 @@ function sessionLines(session: RecentSession, now: number, width: number): Line[
   ]
 }
 
-/** What sits under a heading starts this far in, and ends this far before the edge. */
-const INSET = '  '
-
-function inset(lines: readonly Line[]): Line[] {
-  return lines.map((line) => (line.length === 0 ? line : [span(INSET), ...line]))
-}
+/** A slim line, where the pane draws a block: a block would touch the text above and below it. */
+const BAR = '━'
 
 /** The pane's plan usage: each window's label, percent used, bar and reset time. */
 function planLines(plan: PlanReading, now: number, width: number): Line[] {
   const at = new Date(now)
-  const inner = Math.max(1, width - 2 * INSET.length)
   const windows = planWindows(plan.windows, [], now).flatMap((limit): Line[] => {
     const used = Math.min(100, Math.max(0, limit.percentUsed))
-    const [filled = 0, rest = 0] = barWidths([used, 100 - used], inner)
+    const [filled = 0, rest = 0] = barWidths([used, 100 - used], width)
     const resets = limit.resetsAt === undefined ? '' : formatResets(limit.resetsAt, at)
     return [
       BLANK,
-      spread(span(limitLabel(limit.kind)), span(`${String(limit.percentUsed)}% used`), inner),
-      [span('█'.repeat(filled), limitTone(limit.percentUsed)), span('░'.repeat(rest), 'dim')],
+      spread(span(limitLabel(limit.kind)), span(`${String(limit.percentUsed)}% used`), width),
+      [span(BAR.repeat(filled), limitTone(limit.percentUsed)), span(BAR.repeat(rest), 'dim')],
       ...(resets === '' ? [] : [[span(resets, 'dim')]]),
     ]
   })
   // When Claude Code last reported the windows: the terminal view cannot ask for them.
   const read = span(`as of ${formatWhen(new Date(plan.at).toISOString(), at)}`, 'dim')
-  return [spread(span('Plan usage', 'bold'), read, width), ...inset(windows), BLANK]
+  return [spread(span('Plan usage', 'bold'), read, width), ...windows, BLANK]
 }
 
 const CONTEXT_NOTE = 'What fills the context shows in the Claude Code pane (/cost-lens).'
@@ -130,11 +125,10 @@ export function nowLines(
       ...note,
     ]
   }
-  const inner = Math.max(1, width - 2 * INSET.length)
   return [
     ...usage,
     [span('Sessions in the last 24 hours', 'bold')],
-    ...inset(summary.sessions.flatMap((session) => sessionLines(session, now, inner))),
+    ...summary.sessions.flatMap((session) => sessionLines(session, now, width)),
     BLANK,
     ...note,
   ]

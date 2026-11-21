@@ -184,21 +184,24 @@ await test("Now lists the last day's sessions, with a warm countdown or the cold
     ]
     const view = viewOf({ ...summary, sessions }, 'now')
     const text = tabLines(view, 60).map(plain).join('\n')
-    assert.match(text, /^Sessions in the last 24 hours\n\n {2}Add a cart +\$12\.50\n/)
+    assert.match(text, /^Sessions in the last 24 hours\n\nAdd a cart +\$12\.50\n/)
     assert.match(
       text,
-      /\n {2}~\/code\/shop\n {2}claude-opus-5-5 · today 11:41 · 41 requests\n/,
-      'details too long for one line: the folder, then the rest',
+      /\n~\/code\/shop · claude-opus-5-5 · today 11:41 · 41 requests\n/,
+      'details that fit go on one line',
     )
-    assert.match(text, /\n {2}~\/code\/blog · claude-opus-5-5 · today 10:30 · 1 request\n/)
-    assert.match(text, /\n {2}…x{52}\/wt\n/, 'a long folder keeps its end')
+    assert.match(
+      text,
+      /\n…x{56}\/wt\nclaude-opus-5-5 · today 11:30 · 41 requests\n/,
+      'a long folder keeps its end, on its own line',
+    )
     assert.match(text, /● cache warm · 41m left · 182\.3k context\n/)
-    assert.match(text, /\n {2}blog +\$12\.50\n/, 'an untitled session goes by its folder')
+    assert.match(text, /\nblog +\$12\.50\n/, 'an untitled session goes by its folder')
     assert.match(text, /● cache cold · next message re-writes 182\.3k tokens\n/)
     assert.match(text, /Spoof\ufffd\[2J/, 'a title cannot reach the terminal as codes')
     assert.match(
       text,
-      /● cache cold · next message re-writes 182\.3k tokens\n {4}≈\s\$1\.82 \(warm:\s\$0\.09\)/,
+      /● cache cold · next message re-writes 182\.3k tokens ≈\s\$1\.82\n {2}\(warm:\s\$0\.09\)/,
       'the amounts stay with their words',
     )
     const later = tabLines({ ...view, now: NOW.getTime() + 30 * MINUTE }, 60).map(plain)
@@ -209,7 +212,7 @@ await test("Now lists the last day's sessions, with a warm countdown or the cold
   })
 })
 
-await test('Now shows the saved plan usage above the sessions, inset under its heading', async () => {
+await test('Now shows the saved plan usage above the sessions, as the pane does, with a slim bar', async () => {
   await withSummary((summary) => {
     const at = (minutes: number) => new Date(NOW.getTime() + minutes * MINUTE).toISOString()
     const plan = {
@@ -221,23 +224,30 @@ await test('Now shows the saved plan usage above the sessions, inset under its h
     }
     const withPlan = tabLines({ ...viewOf(summary, 'now'), plan }, 40)
     const row = (left: string, right: string) =>
-      `  ${left}${' '.repeat(36 - left.length - right.length)}${right}`
+      `${left}${' '.repeat(40 - left.length - right.length)}${right}`
     assert.deepEqual(withPlan.slice(0, 13).map(plain), [
       `Plan usage${' '.repeat(13)}as of today 11:55`,
       '',
       row('Current session', '0% used'),
-      `  ${'░'.repeat(36)}`,
+      '━'.repeat(40),
       '',
       row('Current week (all models)', '0% used'),
-      `  ${'░'.repeat(36)}`,
+      '━'.repeat(40),
       '',
       row('Current week (Fable)', '50% used'),
-      `  ${'█'.repeat(18)}${'░'.repeat(18)}`,
-      '  Resets 12:55',
+      '━'.repeat(40),
+      'Resets 12:55',
       '',
       'No Claude Code sessions in the last 24 hours.',
     ])
-    assert.equal(withPlan[9]?.[1]?.tone, 'warning')
+    assert.deepEqual(
+      withPlan[9]?.map((one) => [one.text.length, one.tone]),
+      [
+        [20, 'warning'],
+        [20, 'dim'],
+      ],
+      'half used: half the bar in the warning colour',
+    )
   })
 })
 
