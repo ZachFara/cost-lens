@@ -33,8 +33,13 @@ interface App {
   stop: AbortController
 }
 
+/** Empty cells kept on each side, so text does not touch the terminal's edge. */
+const SIDE = '  '
+
+/** The room the view draws in: the terminal less the side padding. */
 function size(): Size {
-  return { columns: process.stdout.columns, rows: process.stdout.rows }
+  const columns = Math.max(1, process.stdout.columns - 2 * SIDE.length)
+  return { columns, rows: process.stdout.rows }
 }
 
 function draw(app: App): void {
@@ -46,7 +51,7 @@ function draw(app: App): void {
     .map((line) => paint(line, screen.columns, color))
   // Each row is cleared before it is drawn: with line wrap off, a full row leaves the
   // cursor on its last cell, which clearing after it would erase.
-  process.stdout.write(`\u001b[H${lines.map((line) => `\u001b[2K${line}`).join('\r\n')}`)
+  process.stdout.write(`\u001b[H${lines.map((line) => `\u001b[2K${SIDE}${line}`).join('\r\n')}`)
 }
 
 /** Reads the logs; one read at a time, the last numbers staying on screen meanwhile. */
