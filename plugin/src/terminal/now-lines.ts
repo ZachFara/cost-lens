@@ -20,7 +20,7 @@ import type { RecentSession, Summary } from '../core/summary.ts'
 
 import { cells, span, spread, wrap } from './text.ts'
 import type { Line } from './text.ts'
-import { BLANK } from './views.ts'
+import { BAR_INSET, BLANK } from './views.ts'
 
 function nameOf(session: RecentSession): string {
   if (session.title !== '') return session.title
@@ -80,7 +80,10 @@ function planLines(plan: PlanReading, now: number, width: number): Line[] {
   const at = new Date(now)
   const windows = planWindows(plan.windows, [], now).flatMap((limit): Line[] => {
     const used = Math.min(100, Math.max(0, limit.percentUsed))
-    const [filled = 0, rest = 0] = barWidths([used, 100 - used], width)
+    const [filled = 0, rest = 0] = barWidths(
+      [used, 100 - used],
+      Math.max(1, width - 2 * BAR_INSET.length),
+    )
     const resets = limit.resetsAt === undefined ? '' : formatResets(limit.resetsAt, at)
     return [
       BLANK,
@@ -89,7 +92,11 @@ function planLines(plan: PlanReading, now: number, width: number): Line[] {
         span(`${String(limit.percentUsed)}% used`),
         width,
       ),
-      [span('█'.repeat(filled), limitTone(limit.percentUsed)), span('░'.repeat(rest), 'dim')],
+      [
+        span(BAR_INSET),
+        span('█'.repeat(filled), limitTone(limit.percentUsed)),
+        span('░'.repeat(rest), 'dim'),
+      ],
       ...(resets === '' ? [] : [[span(resets, 'dim')]]),
     ]
   })

@@ -50,6 +50,7 @@ Small tasks, one session each, in dependency order. Each starts at a user-facing
 31. **(done)** **Plan usage in the terminal view's Now tab.** Entry: `cost-lens` in a terminal, tab 1. Done when: the mod saves each plan usage reading (`session.measure`) through the analyzer's `--save-plan` to `~/Library/Caches/cost-lens/plan.json`; the terminal's Now tab draws it above the sessions as the pane does (label, percent, bar, reset time, a window past its reset at 0%), says when it was read, and re-reads the file every five seconds; without a saved reading it says how to get one; tests cover the save, the read and the tab. (Owner request, 2026-11-20.)
 32. **(done)** **Release 0.4.0.** Entry: `claude plugin update cost-lens@cost-lens`. Done when: `version` is 0.4.0 in `plugin.json` and `package.json`, the tag `cost-lens--v0.4.0` and its GitHub release exist, and a fresh plugin install names 0.4.0. It ships task 31. The npm package and Anthropic's plugin directory are the owner's steps. (Owner request, 2026-11-20.)
 33. **(done)** **Side padding in the terminal view.** Entry: `cost-lens` in a terminal. Done when: the full-screen view keeps two empty cells on the left and right, so text and bars do not touch the terminal's edge; piped output is unchanged. (Owner request, 2026-11-20.)
+34. **(done)** **Bars inset in the terminal view.** Entry: `cost-lens` in a terminal. Done when: the plan usage bars and the cost split bar sit two cells in from the text on each side. (Owner request, 2026-11-20.)
 
 ## Open Questions
 
