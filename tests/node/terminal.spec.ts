@@ -6,8 +6,10 @@ import { join } from 'node:path'
 import { test } from 'node:test'
 
 import { summarize } from '../../plugin/src/analyzer/logs.ts'
+import { savePlan } from '../../plugin/src/analyzer/plan.ts'
 import { localDay } from '../../plugin/src/core/days.ts'
 import type { RecentSession, Summary } from '../../plugin/src/core/summary.ts'
+import { readPlan } from '../../plugin/src/terminal/runs.ts'
 import { afterRead, frame, keysIn, pressKey, tabLines } from '../../plugin/src/terminal/screen.ts'
 import type { Tab, View } from '../../plugin/src/terminal/screen.ts'
 import { cells, paint, printable, span, spread, wrap } from '../../plugin/src/terminal/text.ts'
@@ -74,6 +76,7 @@ function viewOf(summary: Summary, tab: Tab): View {
       status: 'ready',
       prs: [{ number: 7, title: 'Add a cart', state: 'OPEN', branch: 'feat/cart' }],
     },
+    plan: undefined,
     now: NOW.getTime(),
   }
 }
@@ -187,8 +190,52 @@ await test("Now lists the last day's sessions, with a warm countdown or the cold
     assert.match(later.join('\n'), /● cache warm · 11m left/, 'the countdown follows the clock')
     const empty = tabLines(viewOf(summary, 'now'), 60).map(plain).join('\n')
     assert.match(empty, /^No Claude Code sessions in the last 24 hours\./)
-    assert.match(empty, /show in the Claude\sCode pane \(\/cost-lens\)/)
+    assert.match(empty.replace(/\s+/g, ' '), /Plan usage shows here once .* \(\/cost-lens\)\./)
+    const at = (minutes: number) => new Date(NOW.getTime() + minutes * MINUTE).toISOString()
+    const plan = {
+      at: NOW.getTime() - 5 * MINUTE,
+      windows: [
+        { kind: 'five_hour', percentUsed: 85, resetsAt: at(-1) },
+        { kind: 'seven_day_fable', percentUsed: 50, resetsAt: at(55) },
+      ],
+    }
+    const withPlan = tabLines({ ...view, plan }, 40)
+    assert.deepEqual(withPlan.slice(0, 16).map(plain), [
+      'Plan usage',
+      '',
+      'Current session                  0% used',
+      '░'.repeat(40),
+      '',
+      'Current week (all models)        0% used',
+      '░'.repeat(40),
+      '',
+      'Current week (Fable)            50% used',
+      '█'.repeat(20) + '░'.repeat(20),
+      'Resets 12:55',
+      '',
+      'As Claude Code last reported it, today',
+      '11:55.',
+      '',
+      'Sessions in the last 24 hours',
+    ])
+    assert.equal(withPlan[9]?.[0]?.tone, 'warning')
   })
+})
+
+await test('the plan usage the mod saves is what the terminal view reads back', async () => {
+  const folder = mkdtempSync(join(tmpdir(), 'cost-lens-plan-'))
+  try {
+    const path = join(folder, 'nested', 'plan.json')
+    assert.equal(await readPlan(path), undefined, 'nothing saved yet')
+    const windows = [{ kind: 'five_hour', percentUsed: 15, resetsAt: '2026-11-07T15:00:00.000Z' }]
+    const saved = JSON.stringify({ at: 5, windows: [...windows, { kind: 7 }], extra: true })
+    assert.equal(await savePlan(saved, path), true)
+    assert.deepEqual(await readPlan(path), { at: 5, windows }, 'only well-formed windows are kept')
+    assert.equal(await savePlan('{"windows": []}', path), false, 'not a reading: nothing written')
+    assert.deepEqual(await readPlan(path), { at: 5, windows })
+  } finally {
+    rmSync(folder, { recursive: true, force: true })
+  }
 })
 
 await test('what the terminal sends splits into keys', () => {

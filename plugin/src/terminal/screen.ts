@@ -3,6 +3,7 @@
  * and a status line; and what each key does. Pure: the program in cli.ts does the I/O.
  */
 import { formatClock } from '../core/format.ts'
+import type { PlanReading } from '../core/plan.ts'
 import type { Period, Summary } from '../core/summary.ts'
 
 import { nowLines } from './now-lines.ts'
@@ -43,6 +44,8 @@ export interface View {
   scroll: number
   history: History
   prs: PullRequests
+  /** The plan usage the mod last saved; undefined when it has saved none. */
+  plan: PlanReading | undefined
   /** The time the screen is drawn at, in milliseconds: the Now tab counts down from it. */
   now: number
 }
@@ -56,7 +59,7 @@ export function tabLines(view: View, width: number): Line[] {
   }
   const { summary } = history
   const period = PERIOD_OF[view.tab]
-  if (view.tab === 'now') return nowLines(summary, view.now, width)
+  if (view.tab === 'now') return nowLines(summary, view.plan, view.now, width)
   if (period !== undefined) return periodLines(summary, period, width)
   if (view.tab === 'projects') return projectsLines(summary, width)
   if (view.tab === 'branches') return branchesLines(summary, width)

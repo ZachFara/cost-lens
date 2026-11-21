@@ -1,9 +1,10 @@
 import type { SessionRateLimit } from 'claude-code'
 
+import { planWindows } from '../core/plan.ts'
 import type { PlanWindow } from '../../types'
 
-/** The windows every subscription has, which `/usage` always shows. */
-const PLAN_KINDS = ['five_hour', 'seven_day']
+/** How long the analyzer may take to save a reading. */
+export const SAVE_TIMEOUT_MS = 10_000
 
 /**
  * The windows to remember: the last reading of each that has a reset time, so one the
@@ -22,24 +23,14 @@ export function rememberWindows(
   return [...byKind.values()]
 }
 
-/**
- * The plan windows to draw. The engine reports the windows the last response did, so
- * after the session window resets it can drop it, or keep its old reading, and a
- * per-model week can drop out. Windows it dropped show as remembered; on a subscription
- * the session and week windows always show; one past its reset shows empty.
- */
-export function planWindows(
+/** The reading the terminal view shows, as the analyzer's `--save-plan` takes it. */
+export function planJson(
   reported: readonly SessionRateLimit[],
   remembered: readonly PlanWindow[],
-  now: number,
-): SessionRateLimit[] {
-  const reportedKinds = new Set(reported.map((window) => window.kind))
-  const known = [...reported, ...remembered.filter((one) => !reportedKinds.has(one.kind))]
-  const isPlan = known.some((window) => /^(five_hour|seven_day)/.test(window.kind))
-  const others = known.map((window) => window.kind).filter((kind) => !PLAN_KINDS.includes(kind))
-  return [...(isPlan ? PLAN_KINDS : []), ...others].map((kind) => {
-    const window = known.find((one) => one.kind === kind)
-    const hasReset = window?.resetsAt !== undefined && Date.parse(window.resetsAt) <= now
-    return window === undefined || hasReset ? { kind, percentUsed: 0 } : window
-  })
+  at: number,
+): string {
+  const windows = planWindows(reported, remembered, at).map(({ kind, percentUsed, resetsAt }) =>
+    resetsAt === undefined ? { kind, percentUsed } : { kind, percentUsed, resetsAt },
+  )
+  return JSON.stringify({ at, windows })
 }

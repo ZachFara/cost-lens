@@ -5,7 +5,7 @@
  * Everything else (views, parsing, wording) is a pure function under src/mod.
  */
 import { atom, read, update } from 'claude-code'
-import type { EngineInterface, On, Register } from 'claude-code'
+import type { EngineInterface, On, Register, SessionRateLimit } from 'claude-code'
 
 import type { History, LastRequest, PlanWindow, PullRequests, Recommendation, Tab } from '../types'
 import {
@@ -21,9 +21,9 @@ import { coldCacheWarning } from '../src/mod/cold-warning.ts'
 import { NO_REQUESTS, addStep, stepPromptTokens } from '../src/mod/live-record.ts'
 import { gridColumns } from '../src/mod/now-view.tsx'
 import type { NowFacts } from '../src/mod/now-view.tsx'
-import { paneView } from '../src/mod/pane-view.tsx'
+import { openedText, paneView } from '../src/mod/pane-view.tsx'
 import type { PaneData, PaneHandlers } from '../src/mod/pane-view.tsx'
-import { rememberWindows } from '../src/mod/plan-windows.ts'
+import { SAVE_TIMEOUT_MS, planJson, rememberWindows } from '../src/mod/plan-windows.ts'
 import {
   ANALYZER_TIMEOUT_MS,
   GH_TIMEOUT_MS,
@@ -89,6 +89,16 @@ async function sessionFolder($: EngineInterface): Promise<string | undefined> {
   } catch {
     return undefined
   }
+}
+
+/** Saves the plan windows where the terminal view (`cost-lens`) reads them. */
+async function savePlan($: EngineInterface, reported: readonly SessionRateLimit[]): Promise<void> {
+  const plan = planJson(reported, await read($, windowsState), await $.clock.now())
+  const cli = `${$.plugin.root}/src/analyzer/cli.ts`
+  // On a failure the terminal view keeps the last reading saved.
+  await $.process
+    .run(['node', cli, '--save-plan', plan], { timeoutMs: SAVE_TIMEOUT_MS })
+    .catch(() => undefined)
 }
 
 async function runAnalyzer($: EngineInterface): Promise<AnalyzerRead> {
@@ -208,7 +218,7 @@ async function paneData($: EngineInterface, tab: Tab, columns: number, settings:
     read($, prsState),
     read($, recommendations),
   ])
-  const data: PaneData = {
+  return {
     tab,
     columns,
     settings,
@@ -218,8 +228,7 @@ async function paneData($: EngineInterface, tab: Tab, columns: number, settings:
     currentModel: tab === 'model' && settings.llmFeatures ? await $.session.model() : '',
     facts: tab === 'now' ? await nowFacts($, columns) : undefined,
     mcpTokens: tab === 'tips' ? await loadedMcpTokens($) : undefined,
-  }
-  return data
+  } satisfies PaneData
 }
 
 async function cacheState($: EngineInterface) {
@@ -274,14 +283,7 @@ function registerCommands(on: On): void {
       title: 'cost-lens',
       backgroundColor: 'transparent',
     })
-    if (!opened.isPlaced)
-      return { text: `cost-lens pane is open but not shown yet: ${opened.reason}` }
-    // Panes dock beside the chat only in the fullscreen layout; elsewhere they sit above the prompt.
-    return {
-      text: e.presentation.isFullscreen
-        ? 'cost-lens pane opened.'
-        : 'cost-lens pane opened above the prompt. Run /tui fullscreen to dock it beside the chat.',
-    }
+    return { text: openedText(opened, e.presentation.isFullscreen) }
   })
 
   on('command.run', { command: 'cost-lens', args: 'band' }, async ($) => {
@@ -329,6 +331,7 @@ function registerActivity(on: On, settings: Settings): void {
   on('session.measure', async ($, e, next) => {
     if (e.changed.includes('rateLimits')) {
       await update($, windowsState, (known) => rememberWindows(known, e.rateLimits))
+      await savePlan($, e.rateLimits)
     }
     return next(e)
   })

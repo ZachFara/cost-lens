@@ -1,4 +1,4 @@
-import type { SessionRateLimit, SessionUsage } from 'claude-code'
+import type { SessionUsage } from 'claude-code'
 
 import {
   formatRequests,
@@ -8,10 +8,11 @@ import {
   formatUsd,
 } from '../core/format.ts'
 import { barWidths } from '../core/format.ts'
+import { limitLabel, limitTone, planWindows } from '../core/plan.ts'
+import type { PlanLimit } from '../core/plan.ts'
 
 import { contextGrid } from './context-grid.tsx'
 import { splitView } from './period-view.tsx'
-import { planWindows } from './plan-windows.ts'
 import type { PlanWindow, SummaryTotals } from '../../types'
 
 import type { Ui } from './ui.ts'
@@ -27,22 +28,7 @@ export interface NowFacts {
   remembered: readonly PlanWindow[]
 }
 
-/** The windows `/usage` shows, by the names the API reports them under. */
-function limitLabel(kind: string): string {
-  if (kind === 'five_hour') return 'Current session'
-  if (kind === 'seven_day') return 'Current week (all models)'
-  if (kind === 'spend_limit') return 'Spend limit'
-  const model = /^seven_day_(.+)$/.exec(kind)?.[1]
-  if (model !== undefined) return `Current week (${model[0]?.toUpperCase() ?? ''}${model.slice(1)})`
-  return kind
-}
-
-function limitColor(percent: number): 'success' | 'warning' | 'error' {
-  if (percent >= 80) return 'error'
-  return percent >= 50 ? 'warning' : 'success'
-}
-
-function limitsView(ui: Ui, limits: readonly SessionRateLimit[], at: number, columns: number) {
+function limitsView(ui: Ui, limits: readonly PlanLimit[], at: number, columns: number) {
   const { Box, Text } = ui
   if (limits.length === 0) {
     return <Text dimColor>Plan usage appears after this session's first reply.</Text>
@@ -62,7 +48,7 @@ function limitsView(ui: Ui, limits: readonly SessionRateLimit[], at: number, col
               <Text>{`${String(limit.percentUsed)}% used`}</Text>
             </Box>
             <Box flexDirection="row">
-              <Text color={limitColor(limit.percentUsed)}>{'█'.repeat(filled)}</Text>
+              <Text color={limitTone(limit.percentUsed)}>{'█'.repeat(filled)}</Text>
               <Text dimColor>{'░'.repeat(rest)}</Text>
             </Box>
             {resets === '' ? null : <Text dimColor>{resets}</Text>}

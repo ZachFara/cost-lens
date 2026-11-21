@@ -7,8 +7,9 @@ Requires Claude Code 2.1.319 or later, Node.js 22.18 or later on your `PATH`, an
 ## What it runs
 
 - `nice -n 10 node <this plugin>/src/analyzer/cli.ts --live-prices [--project <repository folder>]`: the plugin's own log reader, at low CPU priority. It runs when you open a data tab, when you press Refresh, and every five minutes while the pane is shown. It reads Claude Code's session logs and prints a JSON summary for the pane.
+- `node <this plugin>/src/analyzer/cli.ts --save-plan <json>`: the same program, when Claude Code reports a change in your plan's usage limits. It writes those windows (name, percent used, reset time) and the time to `~/Library/Caches/cost-lens/plan.json`, which the terminal view reads to show plan usage outside Claude Code. It reads no logs and sends nothing.
 - `gh pr list --state all --limit 100 --json number,title,state,headRefName`, in the session's repository, when you open the PRs tab or press Refresh there. It runs with your own GitHub CLI login; cost-lens never reads or stores that credential.
-- The plugin also holds a terminal view, `<this plugin>/src/terminal/cli.ts`, that you can start yourself with `node` in any terminal, outside Claude Code. No hook starts it. It runs the same log reader and `gh pr list` (in the folder it starts in), plus `git rev-parse --show-toplevel` to find that folder's repository, reads and sends nothing else, and draws only in that terminal.
+- The plugin also holds a terminal view, `<this plugin>/src/terminal/cli.ts`, that you can start yourself with `node` in any terminal, outside Claude Code. No hook starts it. It runs the same log reader and `gh pr list` (in the folder it starts in), plus `git rev-parse --show-toplevel` to find that folder's repository, reads the plan usage file above, reads and sends nothing else, and draws only in that terminal.
 
 ## What it reads
 
@@ -30,7 +31,7 @@ Nothing else leaves your machine.
 - `command.run` on `/cost-lens`: opens the pane; `/cost-lens band` shows the cache line again after you hid it. It answers only its own command.
 - `ui.render`: draws the pane and the line above the prompt.
 - `turn.step`: reads each model request's token usage after its response arrives. It never changes a request or a response.
-- `session.measure`: keeps the last reading of each plan usage window, so the Now tab can still show one that a later response stops reporting. It only observes.
+- `session.measure`: keeps the last reading of each plan usage window, so the Now tab can still show one that a later response stops reporting, and saves the reading for the terminal view (the `--save-plan` run above). It only observes.
 - `prompt.submit`: for a prompt you type, may show a cold-cache warning and, with LLM features on, a model suggestion. It never holds, changes or delays the prompt.
 
 ## Settings
