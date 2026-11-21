@@ -65,7 +65,7 @@ To add a new kind of path, propose it in PROGRESS.md under Open Questions first.
 - Fix formatting: `npm run format`.
 - Run the analyzer by hand: `node plugin/src/analyzer/cli.ts`.
 - Build the npm package: `npm run build` (writes `dist/`; `tests/node/package.spec.ts` builds, packs and runs it in a temporary folder).
-- Run the terminal view: `node plugin/src/terminal/cli.ts` (full screen; piped, it prints every tab). To see it without a screen, run it in a detached tmux session and read it with `tmux capture-pane -p`.
+- Run the terminal view: `node plugin/src/terminal/cli.ts` (full screen; piped, it prints every tab). To see it without a screen, run it in a detached tmux session and read it with `tmux capture-pane -p`. To look at it as the owner sees it, `node tools/screenshot.ts <out.png> [columns] [rows] [keys]` draws the screen to a PNG in kitty's font and colours (needs tmux and Google Chrome); read the PNG before calling a layout change done.
 - Try the mod in a session: `claude --plugin-dir ~/Development/active/cost-lens/plugin`.
 
 ## Releasing a new version
