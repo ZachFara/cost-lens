@@ -118,7 +118,11 @@ await test('the screen fills the terminal: tab rows, the tab, and a status line'
     assert.equal(lines.length, SIZE.rows)
     assert.ok(lines.every((line) => cells(line) <= SIZE.columns))
     assert.match(lines[0] ?? '', /^cost-lens {2}1 Now {3}2 Today {3}3 30 days/)
-    assert.match(lines[1] ?? '', /^ 5 Projects {3}6 Branches {3}7 PRs {3}8 Tips/)
+    assert.match(
+      lines[1] ?? '',
+      /^ {10} 5 Projects {3}6 Branches {3}7 PRs {3}8 Tips/,
+      'under the first tab',
+    )
     assert.match(lines.at(-1) ?? '', /^Read at \d\d:\d\d · prices of .+ q quit$/)
     const narrow = frame(viewOf(summary, 'today'), { columns: 30, rows: 12 }).map(plain)
     assert.equal(narrow.length, 12)
@@ -172,25 +176,41 @@ await test("Now lists the last day's sessions, with a warm countdown or the cold
     const sessions = [
       session(19),
       session(90, { title: '', path: '~/code/blog', next: null, requests: 1 }),
-      session(30, { title: 'Spoof\u001b[2J', cacheLifetimeMs: 5 * MINUTE }),
+      session(30, {
+        title: 'Spoof\u001b[2J',
+        path: `/private/tmp/${'x'.repeat(80)}/wt`,
+        cacheLifetimeMs: 5 * MINUTE,
+      }),
     ]
     const view = viewOf({ ...summary, sessions }, 'now')
     const text = tabLines(view, 60).map(plain).join('\n')
-    assert.match(text, /^Sessions in the last 24 hours\n\nAdd a cart +\$12\.50\n/)
-    assert.match(text, /~\/code\/shop · claude-opus-5-5 · today 11:41 · 41 requests\n/)
+    assert.match(text, /^Sessions in the last 24 hours\n\n {2}Add a cart +\$12\.50\n/)
+    assert.match(
+      text,
+      /\n {2}~\/code\/shop\n {2}claude-opus-5-5 · today 11:41 · 41 requests\n/,
+      'details too long for one line: the folder, then the rest',
+    )
+    assert.match(text, /\n {2}~\/code\/blog · claude-opus-5-5 · today 10:30 · 1 request\n/)
+    assert.match(text, /\n {2}…x{52}\/wt\n/, 'a long folder keeps its end')
     assert.match(text, /● cache warm · 41m left · 182\.3k context\n/)
-    assert.match(text, /\nblog +\$12\.50\n/, 'an untitled session goes by its folder')
+    assert.match(text, /\n {2}blog +\$12\.50\n/, 'an untitled session goes by its folder')
     assert.match(text, /● cache cold · next message re-writes 182\.3k tokens\n/)
     assert.match(text, /Spoof\ufffd\[2J/, 'a title cannot reach the terminal as codes')
     assert.match(
       text,
-      /● cache cold · next message re-writes 182\.3k tokens ≈ \$1\.82\n {2}\(warm: \$0\.09\)/,
+      /● cache cold · next message re-writes 182\.3k tokens\n {4}≈\s\$1\.82 \(warm:\s\$0\.09\)/,
+      'the amounts stay with their words',
     )
     const later = tabLines({ ...view, now: NOW.getTime() + 30 * MINUTE }, 60).map(plain)
     assert.match(later.join('\n'), /● cache warm · 11m left/, 'the countdown follows the clock')
     const empty = tabLines(viewOf(summary, 'now'), 60).map(plain).join('\n')
     assert.match(empty, /^No Claude Code sessions in the last 24 hours\./)
     assert.match(empty.replace(/\s+/g, ' '), /Plan usage shows here once .* \(\/cost-lens\)\./)
+  })
+})
+
+await test('Now shows the saved plan usage above the sessions, inset under its heading', async () => {
+  await withSummary((summary) => {
     const at = (minutes: number) => new Date(NOW.getTime() + minutes * MINUTE).toISOString()
     const plan = {
       at: NOW.getTime() - 5 * MINUTE,
@@ -199,24 +219,23 @@ await test("Now lists the last day's sessions, with a warm countdown or the cold
         { kind: 'seven_day_fable', percentUsed: 50, resetsAt: at(55) },
       ],
     }
-    const withPlan = tabLines({ ...view, plan }, 40)
-    assert.deepEqual(withPlan.slice(0, 16).map(plain), [
-      'Plan usage',
+    const withPlan = tabLines({ ...viewOf(summary, 'now'), plan }, 40)
+    const row = (left: string, right: string) =>
+      `  ${left}${' '.repeat(36 - left.length - right.length)}${right}`
+    assert.deepEqual(withPlan.slice(0, 13).map(plain), [
+      `Plan usage${' '.repeat(13)}as of today 11:55`,
       '',
-      'Current session                  0% used',
+      row('Current session', '0% used'),
       `  ${'░'.repeat(36)}`,
       '',
-      'Current week (all models)        0% used',
+      row('Current week (all models)', '0% used'),
       `  ${'░'.repeat(36)}`,
       '',
-      'Current week (Fable)            50% used',
+      row('Current week (Fable)', '50% used'),
       `  ${'█'.repeat(18)}${'░'.repeat(18)}`,
-      'Resets 12:55',
+      '  Resets 12:55',
       '',
-      'As Claude Code last reported it, today',
-      '11:55.',
-      '',
-      'Sessions in the last 24 hours',
+      'No Claude Code sessions in the last 24 hours.',
     ])
     assert.equal(withPlan[9]?.[1]?.tone, 'warning')
   })

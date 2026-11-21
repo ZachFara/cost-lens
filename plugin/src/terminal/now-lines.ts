@@ -20,7 +20,7 @@ import type { RecentSession, Summary } from '../core/summary.ts'
 
 import { cells, span, spread, wrap } from './text.ts'
 import type { Line } from './text.ts'
-import { BAR_INSET, BLANK } from './views.ts'
+import { BLANK } from './views.ts'
 
 function nameOf(session: RecentSession): string {
   if (session.title !== '') return session.title
@@ -34,7 +34,9 @@ function cacheLines(session: RecentSession, now: number, width: number): Line[] 
   const left = cacheMsLeft(now, at, session.cacheLifetimeMs)
   const context = formatTokens(session.contextTokens)
   const { next } = session
-  const price = next === null ? '' : ` ≈ ${formatUsd(next.cold)} (warm: ${formatUsd(next.warm)})`
+  // No-break spaces: a line never ends on "≈" or splits "(warm: $0.09)".
+  const price =
+    next === null ? '' : ` ≈\u00a0${formatUsd(next.cold)} (warm:\u00a0${formatUsd(next.warm)})`
   const isWarm = left > 0
   const text = isWarm
     ? `cache warm · ${formatDuration(left)} left · ${context} context`
@@ -46,68 +48,64 @@ function cacheLines(session: RecentSession, now: number, width: number): Line[] 
   ])
 }
 
-/** Parts joined with " · ", a line broken only between parts (a part too long is cut). */
-function joinParts(parts: readonly string[], width: number): Line[] {
-  const lines: string[] = []
-  for (const part of parts) {
-    const last = lines.at(-1)
-    if (last !== undefined && cells(last) + 3 + cells(part) <= width) {
-      lines[lines.length - 1] = `${last} · ${part}`
-    } else {
-      lines.push(part)
-    }
-  }
+/** A path too long for the line keeps its end, which names the folder. */
+function pathEnd(path: string, width: number): string {
+  const chars = Array.from(path)
+  return chars.length <= width ? path : `…${chars.slice(chars.length - width + 1).join('')}`
+}
+
+/** Where and how the session ran: on one line when it fits, else the folder on its own. */
+function detailLines(session: RecentSession, now: number, width: number): Line[] {
+  const rest = [
+    session.model,
+    formatWhen(session.lastAt, new Date(now)),
+    formatRequests(session.requests),
+  ]
+    .filter((part) => part !== '')
+    .join(' · ')
+  const lines =
+    session.path === ''
+      ? [rest]
+      : cells(session.path) + 3 + cells(rest) <= width
+        ? [`${session.path} · ${rest}`]
+        : [pathEnd(session.path, width), rest]
   return lines.map((line) => [span(line, 'dim')])
 }
 
 function sessionLines(session: RecentSession, now: number, width: number): Line[] {
-  const details = [
-    session.path,
-    session.model,
-    formatWhen(session.lastAt, new Date(now)),
-    formatRequests(session.requests),
-  ].filter((part) => part !== '')
   return [
     BLANK,
     spread(span(nameOf(session)), span(formatUsd(session.cost), 'success'), width),
-    ...joinParts(details, width),
+    ...detailLines(session, now, width),
     ...cacheLines(session, now, width),
   ]
+}
+
+/** What sits under a heading starts this far in, and ends this far before the edge. */
+const INSET = '  '
+
+function inset(lines: readonly Line[]): Line[] {
+  return lines.map((line) => (line.length === 0 ? line : [span(INSET), ...line]))
 }
 
 /** The pane's plan usage: each window's label, percent used, bar and reset time. */
 function planLines(plan: PlanReading, now: number, width: number): Line[] {
   const at = new Date(now)
+  const inner = Math.max(1, width - 2 * INSET.length)
   const windows = planWindows(plan.windows, [], now).flatMap((limit): Line[] => {
     const used = Math.min(100, Math.max(0, limit.percentUsed))
-    const [filled = 0, rest = 0] = barWidths(
-      [used, 100 - used],
-      Math.max(1, width - 2 * BAR_INSET.length),
-    )
+    const [filled = 0, rest = 0] = barWidths([used, 100 - used], inner)
     const resets = limit.resetsAt === undefined ? '' : formatResets(limit.resetsAt, at)
     return [
       BLANK,
-      spread(
-        span(limitLabel(limit.kind), 'bold'),
-        span(`${String(limit.percentUsed)}% used`),
-        width,
-      ),
-      [
-        span(BAR_INSET),
-        span('█'.repeat(filled), limitTone(limit.percentUsed)),
-        span('░'.repeat(rest), 'dim'),
-      ],
+      spread(span(limitLabel(limit.kind)), span(`${String(limit.percentUsed)}% used`), inner),
+      [span('█'.repeat(filled), limitTone(limit.percentUsed)), span('░'.repeat(rest), 'dim')],
       ...(resets === '' ? [] : [[span(resets, 'dim')]]),
     ]
   })
-  const when = formatWhen(new Date(plan.at).toISOString(), at)
-  return [
-    [span('Plan usage', 'bold')],
-    ...windows,
-    BLANK,
-    ...wrap(`As Claude Code last reported it, ${when}.`, width, 'dim'),
-    BLANK,
-  ]
+  // When Claude Code last reported the windows: the terminal view cannot ask for them.
+  const read = span(`as of ${formatWhen(new Date(plan.at).toISOString(), at)}`, 'dim')
+  return [spread(span('Plan usage', 'bold'), read, width), ...inset(windows), BLANK]
 }
 
 const CONTEXT_NOTE = 'What fills the context shows in the Claude Code pane (/cost-lens).'
@@ -132,10 +130,11 @@ export function nowLines(
       ...note,
     ]
   }
+  const inner = Math.max(1, width - 2 * INSET.length)
   return [
     ...usage,
     [span('Sessions in the last 24 hours', 'bold')],
-    ...summary.sessions.flatMap((session) => sessionLines(session, now, width)),
+    ...inset(summary.sessions.flatMap((session) => sessionLines(session, now, inner))),
     BLANK,
     ...note,
   ]

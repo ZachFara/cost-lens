@@ -67,18 +67,24 @@ export function tabLines(view: View, width: number): Line[] {
   return tipsLines(summary, width)
 }
 
-/** The title and a button per tab, in as many rows as the width needs. */
+const TITLE_CELLS = cells('cost-lens')
+
+/** Narrower than this, later tab rows start at the margin: lining them up would cost rows. */
+const ALIGNED_TABS_MIN = 48
+
+/** The title and a button per tab, in as many rows as the width needs; later rows line up under the first tab. */
 function tabRows(selected: Tab, width: number): Line[] {
   const buttons = TABS.map((one, index) =>
     span(` ${String(index + 1)} ${one.label} `, one.id === selected ? 'selected' : 'dim'),
   )
   const rows: Span[][] = [[span('cost-lens', 'bold')]]
-  let used = cells('cost-lens')
+  const indent = width >= ALIGNED_TABS_MIN ? TITLE_CELLS + 1 : 0
+  let used = TITLE_CELLS
   for (const button of buttons) {
     const row = rows[rows.length - 1] ?? []
     if (used + 1 + cells(button.text) > width) {
-      rows.push([button])
-      used = cells(button.text)
+      rows.push([span(' '.repeat(indent)), button])
+      used = indent + cells(button.text)
       continue
     }
     row.push(span(' '), button)
