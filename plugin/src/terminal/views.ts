@@ -21,6 +21,9 @@ export type PullRequests =
 
 export const BLANK: Line = []
 
+/** Bars sit this far in from the text on each side. */
+export const BAR_INSET = '  '
+
 const EMPTY: Record<Period, string> = {
   today: 'No Claude Code use today yet.',
   last30: 'No Claude Code use in the last 30 days.',
@@ -37,10 +40,11 @@ const CATEGORIES = [
 function splitLines(totals: Totals, width: number): Line[] {
   const total = totalCost(totals.cost)
   const values = CATEGORIES.map((category) => totals.cost[category.key])
-  const widths = barWidths(values, Math.max(10, width))
-  const bar = CATEGORIES.map((category, index) =>
-    span('█'.repeat(widths[index] ?? 0), category.tone),
-  )
+  const widths = barWidths(values, Math.max(10, width - 2 * BAR_INSET.length))
+  const bar = [
+    span(BAR_INSET),
+    ...CATEGORIES.map((category, index) => span('█'.repeat(widths[index] ?? 0), category.tone)),
+  ]
   const legend = CATEGORIES.map((category, index) => {
     const value = values[index] ?? 0
     const share = formatShare(total === 0 ? 0 : value / total)

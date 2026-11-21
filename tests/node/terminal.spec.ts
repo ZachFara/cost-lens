@@ -204,13 +204,13 @@ await test("Now lists the last day's sessions, with a warm countdown or the cold
       'Plan usage',
       '',
       'Current session                  0% used',
-      '░'.repeat(40),
+      `  ${'░'.repeat(36)}`,
       '',
       'Current week (all models)        0% used',
-      '░'.repeat(40),
+      `  ${'░'.repeat(36)}`,
       '',
       'Current week (Fable)            50% used',
-      '█'.repeat(20) + '░'.repeat(20),
+      `  ${'█'.repeat(18)}${'░'.repeat(18)}`,
       'Resets 12:55',
       '',
       'As Claude Code last reported it, today',
@@ -218,7 +218,7 @@ await test("Now lists the last day's sessions, with a warm countdown or the cold
       '',
       'Sessions in the last 24 hours',
     ])
-    assert.equal(withPlan[9]?.[0]?.tone, 'warning')
+    assert.equal(withPlan[9]?.[1]?.tone, 'warning')
   })
 })
 
