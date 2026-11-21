@@ -20,7 +20,7 @@ import type { RecentSession, Summary } from '../core/summary.ts'
 
 import { cells, span, spread, wrap } from './text.ts'
 import type { Line } from './text.ts'
-import { BLANK } from './views.ts'
+import { BLANK, BLOCK, SHADE } from './views.ts'
 
 function nameOf(session: RecentSession): string {
   if (session.title !== '') return session.title
@@ -81,10 +81,7 @@ function sessionLines(session: RecentSession, now: number, width: number): Line[
   ]
 }
 
-/** A slim line, where the pane draws a block: a block would touch the text above and below it. */
-const BAR = '━'
-
-/** The pane's plan usage: each window's label, percent used, bar and reset time. */
+/** The pane's plan usage: each window's label, percent used and reset time, then its bar. */
 function planLines(plan: PlanReading, now: number, width: number): Line[] {
   const at = new Date(now)
   const windows = planWindows(plan.windows, [], now).flatMap((limit): Line[] => {
@@ -94,8 +91,9 @@ function planLines(plan: PlanReading, now: number, width: number): Line[] {
     return [
       BLANK,
       spread(span(limitLabel(limit.kind)), span(`${String(limit.percentUsed)}% used`), width),
-      [span(BAR.repeat(filled), limitTone(limit.percentUsed)), span(BAR.repeat(rest), 'dim')],
       ...(resets === '' ? [] : [[span(resets, 'dim')]]),
+      BLANK,
+      [span(BLOCK.repeat(filled), limitTone(limit.percentUsed)), span(SHADE.repeat(rest), 'dim')],
     ]
   })
   // When Claude Code last reported the windows: the terminal view cannot ask for them.
