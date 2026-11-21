@@ -212,7 +212,7 @@ await test("Now lists the last day's sessions, with a warm countdown or the cold
   })
 })
 
-await test('Now shows the saved plan usage above the sessions, as the pane does, with a slim bar', async () => {
+await test('Now shows the saved plan usage above the sessions, each bar with an empty row around it', async () => {
   await withSummary((summary) => {
     const at = (minutes: number) => new Date(NOW.getTime() + minutes * MINUTE).toISOString()
     const plan = {
@@ -225,23 +225,26 @@ await test('Now shows the saved plan usage above the sessions, as the pane does,
     const withPlan = tabLines({ ...viewOf(summary, 'now'), plan }, 40)
     const row = (left: string, right: string) =>
       `${left}${' '.repeat(40 - left.length - right.length)}${right}`
-    assert.deepEqual(withPlan.slice(0, 13).map(plain), [
+    assert.deepEqual(withPlan.slice(0, 16).map(plain), [
       `Plan usage${' '.repeat(13)}as of today 11:55`,
       '',
       row('Current session', '0% used'),
-      '━'.repeat(40),
+      '',
+      '░'.repeat(40),
       '',
       row('Current week (all models)', '0% used'),
-      '━'.repeat(40),
+      '',
+      '░'.repeat(40),
       '',
       row('Current week (Fable)', '50% used'),
-      '━'.repeat(40),
       'Resets 12:55',
+      '',
+      '█'.repeat(20) + '░'.repeat(20),
       '',
       'No Claude Code sessions in the last 24 hours.',
     ])
     assert.deepEqual(
-      withPlan[9]?.map((one) => [one.text.length, one.tone]),
+      withPlan[13]?.map((one) => [one.text.length, one.tone]),
       [
         [20, 'warning'],
         [20, 'dim'],

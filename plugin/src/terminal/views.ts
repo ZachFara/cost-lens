@@ -21,6 +21,13 @@ export type PullRequests =
 
 export const BLANK: Line = []
 
+/**
+ * Every bar in the terminal view: full blocks, a shade for what is left, and an empty row
+ * above and below, since a block fills its row and would touch text next to it.
+ */
+export const BLOCK = '█'
+export const SHADE = '░'
+
 const EMPTY: Record<Period, string> = {
   today: 'No Claude Code use today yet.',
   last30: 'No Claude Code use in the last 30 days.',
@@ -39,7 +46,7 @@ function splitLines(totals: Totals, width: number): Line[] {
   const values = CATEGORIES.map((category) => totals.cost[category.key])
   const widths = barWidths(values, Math.max(10, width))
   const bar = CATEGORIES.map((category, index) =>
-    span('█'.repeat(widths[index] ?? 0), category.tone),
+    span(BLOCK.repeat(widths[index] ?? 0), category.tone),
   )
   const legend = CATEGORIES.map((category, index) => {
     const value = values[index] ?? 0
