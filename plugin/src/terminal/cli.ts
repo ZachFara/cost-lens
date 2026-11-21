@@ -9,7 +9,7 @@
  * Branches and PRs are those of the repository it is started in.
  */
 import { runApp } from './app.ts'
-import { listPullRequests, readLogs, repositoryOf } from './runs.ts'
+import { listPullRequests, readLogs, readPlan, repositoryOf } from './runs.ts'
 import type { Source } from './runs.ts'
 import { afterRead, TABS, tabLines } from './screen.ts'
 import { paint, span } from './text.ts'
@@ -27,14 +27,18 @@ const WIDTH = 80
 
 /** Every tab once, one after another, for a pipe or a file. */
 async function printAll(source: Source, repository: string | undefined): Promise<void> {
-  const [read, prs] = await Promise.all([readLogs(source), listPullRequests(repository)])
+  const [read, prs, plan] = await Promise.all([
+    readLogs(source),
+    listPullRequests(repository),
+    readPlan(),
+  ])
   const history = afterRead({ status: 'loading' }, read)
   const width = Math.min(process.stdout.columns || WIDTH, WIDTH)
   const color = process.stdout.isTTY && process.env.NO_COLOR === undefined
   const lines = TABS.flatMap((one) => [
     [span(one.label, 'bold')],
     [span('─'.repeat(width), 'dim')],
-    ...tabLines({ tab: one.id, scroll: 0, history, prs, now: Date.now() }, width),
+    ...tabLines({ tab: one.id, scroll: 0, history, prs, plan, now: Date.now() }, width),
     [],
   ])
   process.stdout.write(`${lines.map((line) => paint(line, width, color)).join('\n')}\n`)

@@ -3,7 +3,7 @@
  * alternate screen), redraws on every key and resize, re-reads the logs every five
  * minutes, and gives the terminal back as it was when it quits.
  */
-import { listPullRequests, readLogs } from './runs.ts'
+import { listPullRequests, readLogs, readPlan } from './runs.ts'
 import type { Source } from './runs.ts'
 import { afterRead, frame, keysIn, pressKey } from './screen.ts'
 import type { Command, Size, View } from './screen.ts'
@@ -14,6 +14,9 @@ const REFRESH_MS = 5 * 60 * 1000
 
 /** The Now tab's cache countdowns are in minutes, so the screen redraws each minute. */
 const TICK_MS = 60 * 1000
+
+/** The saved plan usage is one small file, so it is re-read often: it follows a running session. */
+const PLAN_MS = 5 * 1000
 
 // The alternate screen, the cursor hidden and line wrap off (a line too long is cut at
 // the edge), and back.
@@ -55,9 +58,9 @@ async function readAgain(app: App): Promise<void> {
     app.view = { ...app.view, history: { ...history, isRefreshing: true } }
   }
   draw(app)
-  const result = await readLogs(app.source, app.stop.signal)
+  const [result, plan] = await Promise.all([readLogs(app.source, app.stop.signal), readPlan()])
   app.isReading = false
-  app.view = { ...app.view, history: afterRead(app.view.history, result) }
+  app.view = { ...app.view, plan, history: afterRead(app.view.history, result) }
   draw(app)
 }
 
@@ -66,6 +69,14 @@ async function listAgain(app: App): Promise<void> {
   app.hasListed = true
   const prs = await listPullRequests(app.repository, app.stop.signal)
   app.view = { ...app.view, prs }
+  draw(app)
+}
+
+/** Redraws when a Claude Code session has saved a newer plan reading. */
+async function readPlanAgain(app: App): Promise<void> {
+  const plan = await readPlan()
+  if (plan?.at === app.view.plan?.at) return
+  app.view = { ...app.view, plan }
   draw(app)
 }
 
@@ -100,6 +111,7 @@ export function runApp(source: Source, repository: string | undefined): void {
       scroll: 0,
       history: { status: 'loading' },
       prs: { status: 'loading' },
+      plan: undefined,
       now: Date.now(),
     },
     source,
@@ -122,5 +134,6 @@ export function runApp(source: Source, repository: string | undefined): void {
   setInterval(() => {
     draw(app)
   }, TICK_MS)
+  setInterval(() => void readPlanAgain(app), PLAN_MS)
   void readAgain(app)
 }

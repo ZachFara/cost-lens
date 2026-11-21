@@ -4,9 +4,13 @@
  * Their output is untrusted data.
  */
 import { execFile } from 'node:child_process'
+import { readFile } from 'node:fs/promises'
+import { homedir } from 'node:os'
 import { extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { parsePlan, planFile } from '../core/plan.ts'
+import type { PlanReading } from '../core/plan.ts'
 import { PR_LIST_ARGS, parsePullRequests } from '../core/pull-requests.ts'
 import { parseSummary } from '../core/summary.ts'
 import type { Summary } from '../core/summary.ts'
@@ -80,6 +84,15 @@ export async function readLogs(source: Source, signal?: AbortSignal): Promise<Lo
   }
   const summary = parseSummary(done.stdout)
   return summary ? { summary } : { error: 'the analyzer printed something unexpected' }
+}
+
+/** The plan usage a Claude Code session with the mod last saved; undefined when none. */
+export async function readPlan(path = planFile(homedir())): Promise<PlanReading | undefined> {
+  try {
+    return parsePlan(await readFile(path, 'utf8'))
+  } catch {
+    return undefined
+  }
 }
 
 /** The repository's pull requests from `gh`, or why there are none. */

@@ -37,7 +37,7 @@ cost-lens
 
 Or run it once without installing: `npx @zachfara/cost-lens`. Update it with `npm install -g @zachfara/cost-lens@latest`. The command is `cost-lens` either way.
 
-Run it in a project folder. Its Now tab lists your Claude Code sessions of the last 24 hours: what each has cost, its context size, and whether its prompt cache is still warm (with a countdown) or what the next message would pay to re-write it. Then come Today, 30 days, All time, Projects, that folder's Branches and PRs, and Tips. Press `1` to `8` or `←`/`→` to switch tabs, `↑`/`↓` or space to scroll, `r` to refresh (it also refreshes every five minutes), and `q` to quit. Piped (`cost-lens | less`), it prints every tab once. Plan usage, the context grid and the Model tab need a Claude Code session, so they show only in the pane.
+Run it in a project folder. Its Now tab shows your plan's usage limits as your last Claude Code session with the plugin reported them (they follow a running session within seconds), then lists your Claude Code sessions of the last 24 hours: what each has cost, its context size, and whether its prompt cache is still warm (with a countdown) or what the next message would pay to re-write it. Then come Today, 30 days, All time, Projects, that folder's Branches and PRs, and Tips. Press `1` to `8` or `←`/`→` to switch tabs, `↑`/`↓` or space to scroll, `r` to refresh (it also refreshes every five minutes), and `q` to quit. Piped (`cost-lens | less`), it prints every tab once. The context grid and the Model tab need a Claude Code session, so they show only in the pane; plan usage needs the plugin installed, which saves each reading for the terminal view.
 
 ## What it shows
 

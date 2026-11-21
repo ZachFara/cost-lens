@@ -254,6 +254,19 @@ for (const [label, resetsAt, expected] of [
         { kind: 'seven_day', percentUsed: 21, resetsAt: inAnHour },
       ],
     ]
+    const saved: string[][] = []
+    on('process.run', (_, e) => {
+      saved.push([...e.argv])
+      return {
+        value: {
+          exitCode: 0,
+          stdout: '',
+          stderr: '',
+          isStdoutTruncated: false,
+          isStderrTruncated: false,
+        },
+      }
+    })
     on('session.measure', (_, e) => ({ changed: e.changed }))
     on('session.usage', () => ({ value: usageWith(reported[1] ?? []) }))
     on('session.model', () => ({ value: 'claude-opus-5-5' }))
@@ -261,6 +274,18 @@ for (const [label, resetsAt, expected] of [
     for (const rateLimits of reported) {
       await $.session.measure({ context: USAGE.context, rateLimits, changed: ['rateLimits'] })
     }
+    // Each reading is saved for the terminal view, as the pane would draw it.
+    expect(saved.map((argv) => argv.slice(0, 1).concat(argv.slice(2, 3)))).toEqual([
+      ['node', '--save-plan'],
+      ['node', '--save-plan'],
+    ])
+    const last = JSON.parse(saved[1]?.[3] ?? '') as { at: number; windows: Window[] }
+    expect(last.at).toBe(NOW)
+    expect(last.windows.map((one) => `${one.kind} ${String(one.percentUsed)}`)).toEqual([
+      'five_hour 11',
+      'seven_day 21',
+      `seven_day_fable ${expected.split('%')[0] ?? ''}`,
+    ])
     const ui = await mountNow($)
 
     expect(await planRows(ui)).toEqual([

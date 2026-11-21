@@ -1,3 +1,5 @@
+import type { UiOpenResult } from 'claude-code'
+
 import type { History, PullRequests, Recommendation, Tab } from '../../types'
 
 import { currentTiers } from './advice.ts'
@@ -94,4 +96,13 @@ export function paneView(ui: Ui, data: PaneData, handlers: PaneHandlers) {
       {tabBody(ui, data, handlers)}
     </ui.Box>
   )
+}
+
+/** What `/cost-lens` answers once the pane is open. */
+export function openedText(opened: UiOpenResult, isFullscreen: boolean): string {
+  if (!opened.isPlaced) return `cost-lens pane is open but not shown yet: ${opened.reason}`
+  // Panes dock beside the chat only in the fullscreen layout; elsewhere they sit above the prompt.
+  return isFullscreen
+    ? 'cost-lens pane opened.'
+    : 'cost-lens pane opened above the prompt. Run /tui fullscreen to dock it beside the chat.'
 }
